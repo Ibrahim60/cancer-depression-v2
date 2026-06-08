@@ -234,6 +234,70 @@ SEVERITY_INFO = {
 RESET_COLOR = '\033[0m'
 BOLD = '\033[1m'
 
+# Demographic options
+GENDER_OPTIONS = ['Male', 'Female', 'Other/Prefer not to say']
+
+AGE_GROUP_OPTIONS = [
+    'Under 18',
+    '18-30',
+    '31-45',
+    '46-60',
+    'Over 60'
+]
+
+# Age and gender specific risk factors and suggestions
+DEMOGRAPHIC_INSIGHTS = {
+    'Female': {
+        'risk_factor': 1.2,  # Higher baseline risk
+        'additional_suggestions': [
+            'Hormonal changes can affect mood - discuss with your doctor if relevant.',
+            'Consider joining a women\'s cancer support group.'
+        ]
+    },
+    'Male': {
+        'risk_factor': 1.0,
+        'additional_suggestions': [
+            'Men often express depression as irritability or anger - this is valid.',
+            'Seeking help is a sign of strength, not weakness.'
+        ]
+    },
+    'Under 18': {
+        'risk_factor': 1.1,
+        'additional_suggestions': [
+            'Talk to a school counselor or trusted adult about your feelings.',
+            'Peer support from other young cancer patients can be very helpful.'
+        ]
+    },
+    '18-30': {
+        'risk_factor': 1.15,
+        'additional_suggestions': [
+            'Young adult cancer patients face unique challenges (career, relationships, fertility).',
+            'Organizations like Stupid Cancer provide support for young adults with cancer.'
+        ]
+    },
+    '31-45': {
+        'risk_factor': 1.1,
+        'additional_suggestions': [
+            'Balancing treatment with family/work responsibilities is challenging.',
+            'Consider family counseling to help loved ones understand your needs.'
+        ]
+    },
+    '46-60': {
+        'risk_factor': 1.05,
+        'additional_suggestions': [
+            'Career and financial concerns during treatment are common - seek social worker support.',
+            'Maintaining social connections during treatment helps mental health.'
+        ]
+    },
+    'Over 60': {
+        'risk_factor': 1.0,
+        'additional_suggestions': [
+            'Physical symptoms can mask depression - report all changes to your doctor.',
+            'Stay engaged with hobbies and social activities as much as possible.'
+        ]
+    }
+}
+
 
 def load_models():
     """Load trained models and scaler."""
@@ -283,6 +347,45 @@ def ask_question(question_data, question_num, total_questions):
                 print(f"Please enter a number between 1 and {len(question_data['options'])}")
         except ValueError:
             print("Please enter a valid number.")
+
+
+def collect_demographics():
+    """Collect demographic information from user."""
+    demographics = {}
+    
+    print(f"\n{BOLD}--- Basic Information ---{RESET_COLOR}")
+    
+    # Gender
+    print(f"\n{BOLD}What is your gender?{RESET_COLOR}")
+    for i, option in enumerate(GENDER_OPTIONS, 1):
+        print(f"  {i}. {option}")
+    
+    while True:
+        try:
+            choice = int(input(f"\nYour answer (1-{len(GENDER_OPTIONS)}): ").strip())
+            if 1 <= choice <= len(GENDER_OPTIONS):
+                demographics['gender'] = GENDER_OPTIONS[choice - 1]
+                break
+            print(f"Please enter a number between 1 and {len(GENDER_OPTIONS)}")
+        except ValueError:
+            print("Please enter a valid number.")
+    
+    # Age Group
+    print(f"\n{BOLD}What is your age group?{RESET_COLOR}")
+    for i, option in enumerate(AGE_GROUP_OPTIONS, 1):
+        print(f"  {i}. {option}")
+    
+    while True:
+        try:
+            choice = int(input(f"\nYour answer (1-{len(AGE_GROUP_OPTIONS)}): ").strip())
+            if 1 <= choice <= len(AGE_GROUP_OPTIONS):
+                demographics['age_group'] = AGE_GROUP_OPTIONS[choice - 1]
+                break
+            print(f"Please enter a number between 1 and {len(AGE_GROUP_OPTIONS)}")
+        except ValueError:
+            print("Please enter a valid number.")
+    
+    return demographics
 
 
 def collect_responses():
@@ -361,7 +464,7 @@ def get_severity_from_score(score):
         return 'Extreme depression'
 
 
-def display_results(has_depression, severity, bdi_score):
+def display_results(has_depression, severity, bdi_score, demographics, responses):
     """Display prediction results and suggestions."""
     print("\n" + "=" * 60)
     print(f"{BOLD}ASSESSMENT RESULTS{RESET_COLOR}")
@@ -370,7 +473,22 @@ def display_results(has_depression, severity, bdi_score):
     severity_info = SEVERITY_INFO.get(severity, SEVERITY_INFO['Normal'])
     color = severity_info['color']
     
-    print(f"\n{BOLD}Estimated Depression Score:{RESET_COLOR} {bdi_score:.1f}/63")
+    # Display demographics
+    gender = demographics.get('gender', 'Not specified')
+    age_group = demographics.get('age_group', 'Not specified')
+    print(f"\n{BOLD}Patient Profile:{RESET_COLOR} {gender}, {age_group}")
+    
+    # Apply demographic risk factor adjustment for display
+    gender_insight = DEMOGRAPHIC_INSIGHTS.get(gender, {})
+    age_insight = DEMOGRAPHIC_INSIGHTS.get(age_group, {})
+    risk_factor = gender_insight.get('risk_factor', 1.0) * age_insight.get('risk_factor', 1.0)
+    
+    adjusted_score = bdi_score * risk_factor
+    
+    print(f"\n{BOLD}Base Depression Score:{RESET_COLOR} {bdi_score:.1f}/63")
+    if risk_factor != 1.0:
+        print(f"{BOLD}Risk-Adjusted Score:{RESET_COLOR} {adjusted_score:.1f}/63 (factor: {risk_factor:.2f}x)")
+    
     print(f"\n{BOLD}Depression Status:{RESET_COLOR} {color}{'Detected' if has_depression else 'Not Detected'}{RESET_COLOR}")
     print(f"{BOLD}Severity Level:{RESET_COLOR} {color}{severity}{RESET_COLOR}")
     print(f"\n{severity_info['description']}")
@@ -379,6 +497,21 @@ def display_results(has_depression, severity, bdi_score):
     print("-" * 40)
     for i, suggestion in enumerate(severity_info['suggestions'], 1):
         print(f"  {i}. {suggestion}")
+    
+    # Add demographic-specific suggestions
+    suggestion_num = len(severity_info['suggestions']) + 1
+    
+    if gender_insight.get('additional_suggestions'):
+        print(f"\n{BOLD}Gender-Specific Insights:{RESET_COLOR}")
+        for suggestion in gender_insight['additional_suggestions']:
+            print(f"  {suggestion_num}. {suggestion}")
+            suggestion_num += 1
+    
+    if age_insight.get('additional_suggestions'):
+        print(f"\n{BOLD}Age-Specific Insights:{RESET_COLOR}")
+        for suggestion in age_insight['additional_suggestions']:
+            print(f"  {suggestion_num}. {suggestion}")
+            suggestion_num += 1
     
     # FCRI-related suggestion
     fcri_responses = {k: v for k, v in responses.items() if k in FCRI_QUESTIONS}
@@ -400,8 +533,6 @@ def display_results(has_depression, severity, bdi_score):
 
 def main():
     """Main function to run the prediction tool."""
-    global responses
-    
     print_header()
     
     # Load models
@@ -409,18 +540,29 @@ def main():
     if binary_model is None:
         return
     
-    # Collect responses
+    # Collect demographics first
+    demographics = collect_demographics()
+    
+    # Collect questionnaire responses
     responses = collect_responses()
     
     # Calculate BDI score
     bdi_score = calculate_bdi_score(responses)
     
-    # Determine severity based on score (rule-based as backup)
-    severity = get_severity_from_score(bdi_score)
-    has_depression = bdi_score > 10
+    # Apply demographic risk adjustment to severity determination
+    gender = demographics.get('gender', '')
+    age_group = demographics.get('age_group', '')
+    
+    gender_factor = DEMOGRAPHIC_INSIGHTS.get(gender, {}).get('risk_factor', 1.0)
+    age_factor = DEMOGRAPHIC_INSIGHTS.get(age_group, {}).get('risk_factor', 1.0)
+    adjusted_score = bdi_score * gender_factor * age_factor
+    
+    # Determine severity based on adjusted score
+    severity = get_severity_from_score(adjusted_score)
+    has_depression = adjusted_score > 10
     
     # Display results
-    display_results(has_depression, severity, bdi_score)
+    display_results(has_depression, severity, bdi_score, demographics, responses)
     
     # Ask if user wants to try again
     again = input("Would you like to take the assessment again? (y/n): ").strip().lower()
