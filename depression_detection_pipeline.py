@@ -13,7 +13,6 @@ import numpy as np
 import pandas as pd
 import os
 import joblib
-from datetime import datetime
 
 from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
 from sklearn.preprocessing import LabelEncoder, StandardScaler
@@ -27,104 +26,6 @@ import seaborn as sns
 
 RANDOM_STATE = 42
 np.random.seed(RANDOM_STATE)
-
-# =============================================================================
-# SECTION 0: MOCK DATA GENERATION
-# =============================================================================
-
-def generate_mock_data(n_samples=500, output_path=None):
-    """Generate synthetic mock data for testing the pipeline."""
-    np.random.seed(RANDOM_STATE)
-    
-    genders = ['Male', 'Female']
-    age_groups = ['Under 18', '18-30', '31-45', '46-60', 'Over 60']
-    provinces = ['Punjab', 'Sindh', 'KPK', 'Balochistan', 'Gilgit Baltistan']
-    cancer_types = ['Breast Cancer', 'Lung Cancer', 'Colorectal Cancer', 'Prostate Cancer']
-    treatment_types = ['Chemotherapy', 'Radiotherapy', 'Surgery', 'Combination']
-    cancer_statuses = ['In Treatment', 'Recovered / Survivor', 'In Remission']
-    diagnosis_durations = ['Less than 6 months', '6 months - 1 year', '1 - 2 years', 'More than 2 years']
-    
-    # BDI Response texts (0-3 scoring)
-    bdi_responses = {i: [f'response_{i}_0', f'response_{i}_1', f'response_{i}_2', f'response_{i}_3'] 
-                     for i in range(1, 22)}
-    
-    fcri_frequency = ['Never', 'Rarely', 'Sometimes', 'Most of the time', 'All the time']
-    fcri_intensity = ['Not at all', 'A little', 'Somewhat', 'A lot', 'A great deal']
-    
-    data = {
-        'Timestamp': [datetime.now().strftime('%m/%d/%Y %H:%M:%S') for _ in range(n_samples)],
-        'Name': [f'Patient_{str(i).zfill(5)}' for i in range(1, n_samples + 1)],
-        'Gender': np.random.choice(genders, n_samples),
-        '  Cancer Type  ': np.random.choice(cancer_types, n_samples),
-        'Age Group': np.random.choice(age_groups, n_samples, p=[0.02, 0.15, 0.35, 0.35, 0.13]),
-        'Povince': np.random.choice(provinces, n_samples),
-        '  Duration Since Diagnosis  ': np.random.choice(diagnosis_durations, n_samples),
-        '  Current Cancer Status  ': np.random.choice(cancer_statuses, n_samples),
-        '  Current Treatment Type  ': np.random.choice(treatment_types, n_samples),
-        'Are you currently taking any medication for depression, anxiety, stress, or other emotional/psychological problems?  ': 
-            np.random.choice(['Yes', 'No'], n_samples, p=[0.3, 0.7]),
-        'How long have you been taking this medication?  ': 
-            np.random.choice(['Less than 1 month', '1–6 months', '6–12 months', 'More than 1 year'], n_samples),
-    }
-    
-    # BDI items (generate numeric directly for simplicity in mock)
-    for i in range(1, 22):
-        data[f'{i}.'] = np.random.choice([0, 1, 2, 3], n_samples, p=[0.25, 0.35, 0.25, 0.15])
-    
-    # FCRI items (42 items)
-    fcri_col_names = [
-        '1. Television shows or newspaper articles about cancer or illness',
-        '2. An appointment with my doctor or other health professional',
-        '3. Medical examinations (e.g. annual check-up, blood tests, X-rays)',
-        '4. Conversations about cancer or illness in general',
-        '5. Seeing or hearing about someone who is ill',
-        '6. Going to a funeral or reading the obituary section of the paper',
-        '7. When I feel unwell physically or when I am sick',
-        '8. Generally, I avoid situations or things that make me think about the possibility of cancer recurrence',
-        '9. I am worried or anxious about the possibility of cancer recurrence',
-        '10. I am afraid of cancer recurrence',
-        '11. I believe it is normal to be worried or anxious about the possibility of cancer recurrence',
-        '12. When I think about the possibility of cancer recurrence, this triggers other unpleasant thoughts',
-        '13. I believe that I am cured and that the cancer will not come back',
-        '14. In your opinion, are you at risk of having a cancer recurrence?',
-        '15. How often do you think about the possibility of cancer recurrence?',
-        '16. How much time per day do you spend thinking about the possibility of cancer recurrence?',
-        '17. How long have you been thinking about the possibility of cancer recurrence?',
-        '18. Worry, fear or anxiety', '19. Sadness, discouragement or disappointment',
-        '20. Frustration, anger or outrage', '21. Helplessness or resignation',
-        '22. My social or leisure activities', '23. My work or everyday activities',
-        '24. My relationships with my partner, my family, or those close to me',
-        '25. My ability to make future plans or set life goals',
-        '26. My state of mind or my mood', '27. My quality of life in general',
-        '28. I feel that I worry excessively about the possibility of cancer recurrence',
-        '29. Other people think that I worry excessively about the possibility of cancer recurrence',
-        '30. I think that I worry more about the possibility of cancer recurrence than others',
-        '31. I call my doctor or other health professional',
-        '32. I go to the hospital or clinic for an examination',
-        '33. I examine myself to see if I have any physical signs of cancer',
-        '34. I try to distract myself', '35. I try not to think about it',
-        '36. I pray, meditate or do relaxation', '37. I try to convince myself that everything will be fine',
-        '38. I talk to someone about it', '39. I try to understand what is happening and deal with it',
-        '40. I try to find a solution', '41. I try to replace this thought with a more pleasant one',
-        '42. I tell myself stop it',
-    ]
-    
-    for col in fcri_col_names:
-        data[col] = np.random.choice([0, 1, 2, 3, 4], n_samples)
-    
-    df = pd.DataFrame(data)
-    
-    # Add mechanical responses (all 0s for FCRI) for ~2% of data
-    mechanical_indices = np.random.choice(n_samples, int(n_samples * 0.02), replace=False)
-    for idx in mechanical_indices:
-        for col in fcri_col_names:
-            df.loc[idx, col] = 0
-    
-    if output_path:
-        df.to_csv(output_path, index=False)
-        print(f"Mock data saved to: {output_path}")
-    
-    return df, fcri_col_names
 
 
 # =============================================================================
@@ -511,10 +412,8 @@ class DepressionClassificationPipeline:
         
         models = {}
         
-        # Logistic Regression
-        lr = LogisticRegression(random_state=self.random_state, max_iter=1000)
-        if task == 'multiclass':
-            lr.set_params(multi_class='multinomial')
+        # Logistic Regression (auto-handles multiclass with lbfgs solver)
+        lr = LogisticRegression(random_state=self.random_state, max_iter=1000, solver='lbfgs')
         lr_params = {'C': [0.01, 0.1, 1, 10], 'penalty': ['l2']}
         lr_best, _ = self._tune_model(lr, lr_params, X_train_scaled, y_train, cv, "Logistic Regression")
         models['logistic_regression'] = lr_best
@@ -675,17 +574,16 @@ def main():
     print("HYBRID ML FRAMEWORK FOR DEPRESSION DETECTION IN CANCER PATIENTS")
     print("=" * 70)
     
-    # Check for real data or generate mock data
+    # Load data
     data_path = 'Data/cancer_psychology.csv'
     
-    if os.path.exists(data_path):
-        print(f"\nLoading data from: {data_path}")
-        df = pd.read_csv(data_path)
-        fcri_columns = None  # Will be identified by preprocessor
-    else:
-        print("\nReal data not found. Generating mock data for demonstration...")
-        df, fcri_columns = generate_mock_data(n_samples=500)
+    if not os.path.exists(data_path):
+        print(f"\nERROR: Data file not found at {data_path}")
+        print("Please run 'python Data/generate_mock_data.py' first to generate the dataset.")
+        return None
     
+    print(f"\nLoading data from: {data_path}")
+    df = pd.read_csv(data_path)
     print(f"Dataset shape: {df.shape}")
     
     # 1. DATA PREPROCESSING

@@ -53,5 +53,19 @@ Thumbs.db
 .coverage
 htmlcov/
 
-# 
+# Dev docs
 dev_docs/
+
+# ML Models and Artifacts
+models/
+*.joblib
+
+# Generated Data (keep source CSV, ignore generated)
+Data/cancer_psychology.csv
+Data/dummy_*.csv
+
+# Matplotlib/Seaborn outputs
+*.png
+
+# Feature importance exports
+feature_importance.csv
