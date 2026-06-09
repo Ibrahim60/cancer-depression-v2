@@ -383,10 +383,10 @@ def generate_record(severity: str) -> dict:
         row['Was this medication prescribed by a healthcare professional? '] = rng.choice(['Yes', 'No'], p=[0.85, 0.15])
         row['Do you feel the medication has improved your emotional well-being? '] = rng.choice(MED_EFFECTS)
     else:
-        row['If yes, what type of medication are you taking?  ']       = ''
-        row['How long have you been taking this medication?  ']         = ''
-        row['Was this medication prescribed by a healthcare professional? '] = ''
-        row['Do you feel the medication has improved your emotional well-being? '] = ''
+        row['If yes, what type of medication are you taking?  ']       = 'Not Applicable'
+        row['How long have you been taking this medication?  ']         = 'Not Applicable'
+        row['Was this medication prescribed by a healthcare professional? '] = 'Not Applicable'
+        row['Do you feel the medication has improved your emotional well-being? '] = 'Not Applicable'
 
     return row
 
