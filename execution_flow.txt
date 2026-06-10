@@ -243,18 +243,34 @@ Top BDI  items (mobile): ['5.', '10.', '15.', '18.', '1.']
 Top FCRI items (mobile): ['14. In your opinion, are you at risk of having a cancer recurrence?', '16. How much time per day do you spend thinking about the possibility of cancer recurrence?', '13. I believe that I am cured and that the cancer will not come back', '15. How often do you think about the possibility of cancer recurrence?', '23. My work or everyday activities']
 Artifacts saved to    : models/
 ======================================================================
-(venv) beast@beast-Inspiron-15-3511:~/Desktop/Hina_FYP/V2$ python3 predict_depression.py 
+venv) beast@beast-Inspiron-15-3511:~/Desktop/Hina_FYP/V2$ python3 predict_depression.py 
 
 =================================================================
 CANCER PATIENT PSYCHOLOGICAL SCREENING TOOL
 Beck Depression Inventory + Fear of Cancer Recurrence
 =================================================================
-This assessment takes approximately 10-15 minutes.
 All responses are confidential and used only for screening.
 
 Loading model artefacts… done.
 Feature dimensions : 77
 
+─────────────────────────────────────────────────────────────────
+  SELECT ASSESSMENT MODE
+─────────────────────────────────────────────────────────────────
+  1. Quick Screening  — top-ranked items only  (~7 min, 15 questions)
+     10 BDI items + 5 FCRI items, chosen by ML feature importance
+     Unasked items imputed from training-data means
+
+  2. Full Assessment  — all BDI + key FCRI items  (~15 min, 30 questions)
+     All 21 BDI items + 9 cross-subscale FCRI items
+     Recommended for first-time patients and clinical validation
+─────────────────────────────────────────────────────────────────
+  Enter 1 or 2: 1
+
+  Quick mode — BDI items  : [1, 2, 3, 5, 8, 10, 13, 15, 18, 19]
+  Quick mode — FCRI items : 5 selected
+
+  Estimated time : ~7 min
 ─────────────────────────────────────────────────────────────────
 Press Enter to begin the assessment…
 
@@ -284,7 +300,7 @@ Education Level
   4. Intermediate / FSc
   5. Bachelor's
   6. Master's or higher
-  Enter number: 4
+  Enter number: 3
 
 Cancer Stage
   1. Stage I
@@ -293,7 +309,7 @@ Cancer Stage
   4. Stage IV
   5. Metastatic / Advanced
   6. Not sure / not told
-  Enter number: 3
+  Enter number: 2
 
 Current Cancer Status
   1. Newly Diagnosed
@@ -305,174 +321,90 @@ Current Cancer Status
   Enter number: 2
 
 =================================================================
-SECTION 1 OF 2 — BECK DEPRESSION INVENTORY (BDI-21)
+SECTION 1 OF 2 — BECK DEPRESSION INVENTORY  (10 of 21 items)
+  Remaining 11 items will be estimated from training averages.
 =================================================================
 Choose the statement that best describes how you have been
 feeling DURING THE PAST WEEK, including today.
 
-[BDI 01/21] Sadness
+[BDI 01/10] Sadness
   1. 0 - I do not feel sad.
   2. 1 - I feel sad.
   3. 2 - I am sad all the time and I cannot snap out of it.
   4. 3 - I am so sad and unhappy that I cannot stand it.
   Enter number: 3
 
-[BDI 02/21] Pessimism
+[BDI 02/10] Pessimism
   1. 0 - I am not particularly discouraged about the future.
   2. 1 - I feel discouraged about the future.
   3. 2 - I feel I have nothing to look forward to.
   4. 3 - I feel the future is hopeless and that things cannot improve.
-  Enter number: 2
+  Enter number: 3
 
-[BDI 03/21] Past Failure
+[BDI 03/10] Past Failure
   1. 0 - I do not feel like a failure.
   2. 1 - I feel I have failed more than the average person.
   3. 2 - As I look back on my life, all I can see is a lot of failures.
   4. 3 - I feel I am a complete failure as a person.
-  Enter number: 3
-
-[BDI 04/21] Loss of Pleasure
-  1. 0 - I get as much satisfaction out of things as I used to.
-  2. 1 - I do not enjoy things the way I used to.
-  3. 2 - I do not get real satisfaction out of anything anymore.
-  4. 3 - I am dissatisfied or bored with everything.
   Enter number: 2
 
-[BDI 05/21] Guilty Feelings
+[BDI 04/10] Guilty Feelings
   1. 0 - I do not feel particularly guilty.
   2. 1 - I feel guilty a good part of the time.
   3. 2 - I feel quite guilty most of the time.
   4. 3 - I feel guilty all of the time.
   Enter number: 3
 
-[BDI 06/21] Punishment Feelings
-  1. 0 - I do not feel I am being punished.
-  2. 1 - I feel I may be punished.
-  3. 2 - I expect to be punished.
-  4. 3 - I feel I am being punished.
-  Enter number: 4
-
-[BDI 07/21] Self-Dislike
-  1. 0 - I do not feel disappointed in myself.
-  2. 1 - I am disappointed in myself.
-  3. 2 - I am disgusted with myself.
-  4. 3 - I hate myself.
-  Enter number: 4
-
-[BDI 08/21] Self-Criticalness
+[BDI 05/10] Self-Criticalness
   1. 0 - I do not feel I am any worse than anybody else.
   2. 1 - I am critical of myself for my weaknesses or mistakes.
   3. 2 - I blame myself all the time for my faults.
   4. 3 - I blame myself for everything bad that happens.
-  Enter number: 4
+  Enter number: 2
 
-[BDI 09/21] Suicidal Thoughts
-  1. 0 - I do not have any thoughts of killing myself.
-  2. 1 - I have thoughts of killing myself, but I would not carry them out.
-  3. 2 - I would like to kill myself.
-  4. 3 - I would kill myself if I had the chance.
-  Enter number: 3
-
-[BDI 10/21] Crying
+[BDI 06/10] Crying
   1. 0 - I do not cry any more than usual.
   2. 1 - I cry more now than I used to.
   3. 2 - I cry all the time now.
   4. 3 - I used to be able to cry, but now I cannot cry even though I want to.
-  Enter number: 2
-
-[BDI 11/21] Agitation
-  1. 0 - I am no more irritated by things than I ever was.
-  2. 1 - I am slightly more irritated now than usual.
-  3. 2 - I am quite annoyed or irritated a good deal of the time.
-  4. 3 - I feel irritated all the time.
   Enter number: 3
 
-[BDI 12/21] Loss of Interest
-  1. 0 - I have not lost interest in other people.
-  2. 1 - I am less interested in other people than I used to be.
-  3. 2 - I have lost most of my interest in other people.
-  4. 3 - I have lost all of my interest in other people.
-  Enter number: 2
-
-[BDI 13/21] Indecisiveness
+[BDI 07/10] Indecisiveness
   1. 0 - I make decisions about as well as I ever could.
   2. 1 - I put off making decisions more than I used to.
   3. 2 - I have greater difficulty making decisions than I used to.
   4. 3 - I cannot make decisions at all anymore.
-  Enter number: 3
-
-[BDI 14/21] Body Image
-  1. 0 - I do not feel that I look any worse than I used to.
-  2. 1 - I am worried that I am looking old or unattractive.
-  3. 2 - I feel there are permanent changes in my appearance that make me look unattractive.
-  4. 3 - I believe that I look ugly.
   Enter number: 2
 
-[BDI 15/21] Work Inhibition
+[BDI 08/10] Work Inhibition
   1. 0 - I can work about as well as before.
   2. 1 - It takes an extra effort to get started at doing something.
   3. 2 - I have to push myself very hard to do anything.
   4. 3 - I cannot do any work at all.
-  Enter number: 4
-
-[BDI 16/21] Sleep Disturbance
-  1. 0 - I can sleep as well as usual.
-  2. 1 - I do not sleep as well as I used to.
-  3. 2 - I wake up 1-2 hours earlier than usual and find it hard to get back to sleep.
-  4. 3 - I wake up several hours earlier than I used to and cannot get back to sleep.
-  Enter number: 2
-
-[BDI 17/21] Fatigability
-  1. 0 - I do not get more tired than usual.
-  2. 1 - I get tired more easily than I used to.
-  3. 2 - I get tired from doing almost anything.
-  4. 3 - I am too tired to do anything.
   Enter number: 3
 
-[BDI 18/21] Appetite Changes
+[BDI 09/10] Appetite Changes
   1. 0 - My appetite is no worse than usual.
   2. 1 - My appetite is not as good as it used to be.
   3. 2 - My appetite is much worse now.
   4. 3 - I have no appetite at all anymore.
-  Enter number: 4
+  Enter number: 2
 
-[BDI 19/21] Weight Loss
+[BDI 10/10] Weight Loss
   1. 0 - I have not lost much weight, if any, lately.
   2. 1 - I have lost more than five pounds.
   3. 2 - I have lost more than ten pounds.
   4. 3 - I have lost more than fifteen pounds.
-  Enter number: 2
-
-[BDI 20/21] Somatic Preoccupation
-  1. 0 - I am no more worried about my health than usual.
-  2. 1 - I am worried about physical problems like aches, pains, upset stomach, or constipation.
-  3. 2 - I am very worried about physical problems and it is hard to think of much else.
-  4. 3 - I am so worried about my physical problems that I cannot think of anything else.
-  Enter number: 4
-
-[BDI 21/21] Loss of Interest in Sex
-  1. 0 - I have not noticed any recent change in my interest in sex.
-  2. 1 - I am less interested in sex than I used to be.
-  3. 2 - I have almost no interest in sex.
-  4. 3 - I have lost interest in sex completely.
-  Enter number: 2
+  Enter number: 3
 
 =================================================================
-SECTION 2 OF 2 — FEAR OF CANCER RECURRENCE (FCRI — Key Items)
+SECTION 2 OF 2 — FEAR OF CANCER RECURRENCE  (5 of 42 items)
+  Remaining 37 items will be estimated from training averages.
 =================================================================
 Indicate to what degree each statement applied to you
 DURING THE PAST MONTH.
 
-[FCRI — Severity]
-  FCRI: Worry about recurrence
-  1. 0 - Not at all
-  2. 1 - A little
-  3. 2 - Somewhat
-  4. 3 - A lot
-  5. 4 - A great deal
-  Enter number: 4
-
-[FCRI — Severity]
+[FCRI 01/5 — Severity]
   FCRI: Perceived risk of recurrence
   1. 0 - Not at all at risk
   2. 1 - A little at risk
@@ -481,101 +413,65 @@ DURING THE PAST MONTH.
   5. 4 - A great deal at risk
   Enter number: 2
 
-[FCRI — Severity]
+[FCRI 02/5 — Severity]
+  FCRI: Time spent per day thinking about recurrence
+  1. 0 - I don't think about it
+  2. 1 - A few seconds
+  3. 2 - A few minutes
+  4. 3 - A few hours
+  5. 4 - Several hours
+  Enter number: 3
+
+[FCRI 03/5 — Severity]
+  FCRI: Belief in cure (reverse-scored)
+  1. 0 - Not at all
+  2. 1 - A little
+  3. 2 - Somewhat
+  4. 3 - A lot
+  5. 4 - A great deal
+  Enter number: 2
+
+[FCRI 04/5 — Severity]
   FCRI: Frequency of recurrence thoughts
   1. 0 - Never
   2. 1 - A few times a month
   3. 2 - A few times a week
   4. 3 - A few times a day
   5. 4 - Several times a day
-  Enter number: 5
-
-[FCRI — Psychological Distress]
-  FCRI: Emotional distress — worry or fear
-  1. 0 - Not at all
-  2. 1 - A little
-  3. 2 - Somewhat
-  4. 3 - A lot
-  5. 4 - A great deal
   Enter number: 3
 
-[FCRI — Functioning Impairments]
-  FCRI: Impact on social activities
+[FCRI 05/5 — Functioning Impairments]
+  FCRI: Impact on work or everyday activities
   1. 0 - Not at all
   2. 1 - A little
   3. 2 - Somewhat
   4. 3 - A lot
   5. 4 - A great deal
   Enter number: 2
-
-[FCRI — Functioning Impairments]
-  FCRI: Impact on state of mind
-  1. 0 - Not at all
-  2. 1 - A little
-  3. 2 - Somewhat
-  4. 3 - A lot
-  5. 4 - A great deal
-  Enter number: 3
-
-[FCRI — Insight]
-  FCRI: Awareness of excessive worry
-  1. 0 - Not at all
-  2. 1 - A little
-  3. 2 - Somewhat
-  4. 3 - A lot
-  5. 4 - A great deal
-  Enter number: 2
-
-[FCRI — Reassurance]
-  FCRI: Seeking reassurance from doctor
-  1. 0 - Never
-  2. 1 - Rarely
-  3. 2 - Sometimes
-  4. 3 - Most of the time
-  5. 4 - All the time
-  Enter number: 4
-
-[FCRI — Coping Strategies]
-  FCRI: Use of relaxation or prayer
-  1. 0 - Never
-  2. 1 - Rarely
-  3. 2 - Sometimes
-  4. 3 - Most of the time
-  5. 4 - All the time
-  Enter number: 3
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  IMPORTANT: Your response to the question about suicidal
-  thoughts indicates you may be in distress.
-  Please contact a crisis helpline or healthcare provider now:
-    Umang Helpline (Pakistan): 0317-4288665
-    Rozan Counselling Helpline: 051-2890505
-    Edhi Foundation 24/7 Helpline: 115
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-/home/beast/Desktop/Hina_FYP/V2/venv/lib/python3.12/site-packages/sklearn/utils/validation.py:2827: UserWarning: X does not have valid feature names, but StandardScaler was fitted with feature names
-  warnings.warn(
 
 =================================================================
 ASSESSMENT RESULTS
 =================================================================
 
-  ML Model Severity        : Extreme depression
-  Model Confidence         : 55.7%
+  ML Model Severity        : Moderate depression
+  Model Confidence         : 78.0%
   Depression Probability   : 100.0%
 
   Severity probability breakdown:
-    Normal                                 ░░░░░░░░░░░░░░░░░░░░   2.7%
-    Mild mood disturbance                  █░░░░░░░░░░░░░░░░░░░   6.4%
-    Borderline clinical depression         ░░░░░░░░░░░░░░░░░░░░   0.4%
-    Moderate depression                    ██████░░░░░░░░░░░░░░  34.8%
+    Normal                                 █░░░░░░░░░░░░░░░░░░░   8.0%
+    Mild mood disturbance                  ░░░░░░░░░░░░░░░░░░░░   0.4%
+    Borderline clinical depression         ░░░░░░░░░░░░░░░░░░░░   0.6%
+    Moderate depression                    ███████████████░░░░░  78.0%
     Severe depression                      ░░░░░░░░░░░░░░░░░░░░   0.0%
-    Extreme depression                     ███████████░░░░░░░░░  55.7%
+    Extreme depression                     ██░░░░░░░░░░░░░░░░░░  13.1%
 
-  BDI Rule-based Score     : 40/63 → Severe depression
+  BDI Score (10/21 items asked)  : 16/30  (extrapolated ≈ 34/63 → Severe depression)
+  Note: Quick-mode BDI score is extrapolated from 10 items.
+        Run a Full Assessment for a validated 21-item BDI score.
   (Rule-based score is informational; ML model output drives the assessment.)
 
   Assessment Note:
-    Your responses indicate extreme depression. Please seek immediate professional support.
+    Your responses indicate moderate depression. Please seek professional mental health support promptly.
 
   ⚠  CLINICAL FOLLOW-UP RECOMMENDED
      Please discuss these results with your oncologist or a mental

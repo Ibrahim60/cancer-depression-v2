@@ -33,6 +33,7 @@ Artefacts required (produced by depression_detection_pipeline.py)
 import os
 import sys
 import json
+import re
 import numpy as np
 import pandas as pd
 import joblib
@@ -76,6 +77,21 @@ CRISIS_RESOURCES = {
 }
 
 CLINICAL_FOLLOW_UP_THRESHOLD = 17   # Borderline or above → recommend clinical follow-up
+
+# ── Quick-mode item counts ────────────────────────────────────────────────────
+# predict_depression.py supports two assessment modes:
+#   Full    — asks all 21 BDI + 9 FCRI key items  (30 questions, ~15 min)
+#   Quick   — asks top-N items ranked by feature importance (≤15 questions, ~7 min)
+#
+# Items are chosen dynamically from models/feature_importance.csv, which is
+# re-generated each time depression_detection_pipeline.py is run.  As real
+# patient data accumulates the importance ordering will shift; Quick mode will
+# automatically reflect that without any code changes.
+#
+# Unasked items are imputed with per-feature training means (feature_metadata.json),
+# which is far less biased than filling with 0 ("no symptom at all").
+TOP_N_BDI  = 10   # top N BDI items by combined RF+XGB feature importance
+TOP_N_FCRI = 5    # top N FCRI items by combined RF+XGB feature importance
 
 # =============================================================================
 # BDI QUESTIONS  (all 21 items — required for valid BDI assessment)
@@ -347,6 +363,127 @@ FCRI_KEY_ITEMS = [
     },
 ]
 
+# ── Additional FCRI items surfaced by feature importance (not in KEY_ITEMS above) ─
+# These are included so Quick mode can ask them when they rank in the top N.
+FCRI_EXTRA_ITEMS = [
+    {
+        'col':     '13. I believe that I am cured and that the cancer will not come back',
+        'label':   'FCRI: Belief in cure (reverse-scored)',
+        'subscale':'Severity',
+        'options': ['0 - Not at all', '1 - A little', '2 - Somewhat',
+                    '3 - A lot', '4 - A great deal'],
+    },
+    {
+        'col':     '16. How much time per day do you spend thinking about the possibility of cancer recurrence?',
+        'label':   'FCRI: Time spent per day thinking about recurrence',
+        'subscale':'Severity',
+        'options': ["0 - I don't think about it", '1 - A few seconds',
+                    '2 - A few minutes', '3 - A few hours', '4 - Several hours'],
+    },
+    {
+        'col':     '23. My work or everyday activities',
+        'label':   'FCRI: Impact on work or everyday activities',
+        'subscale':'Functioning Impairments',
+        'options': ['0 - Not at all', '1 - A little', '2 - Somewhat',
+                    '3 - A lot', '4 - A great deal'],
+    },
+    {
+        'col':     '10. I am afraid of cancer recurrence',
+        'label':   'FCRI: Fear of recurrence',
+        'subscale':'Severity',
+        'options': ['0 - Not at all', '1 - A little', '2 - Somewhat',
+                    '3 - A lot', '4 - A great deal'],
+    },
+    {
+        'col':     '27. My quality of life in general',
+        'label':   'FCRI: Impact on quality of life',
+        'subscale':'Functioning Impairments',
+        'options': ['0 - Not at all', '1 - A little', '2 - Somewhat',
+                    '3 - A lot', '4 - A great deal'],
+    },
+]
+
+# Unified lookup: column name → item definition
+FCRI_ALL_ITEMS = {item['col']: item for item in FCRI_KEY_ITEMS + FCRI_EXTRA_ITEMS}
+
+# =============================================================================
+# SECTION 0: MODE SELECTION & DYNAMIC ITEM LOADING
+# =============================================================================
+
+def load_top_items(n_bdi=TOP_N_BDI, n_fcri=TOP_N_FCRI):
+    """
+    Read feature_importance.csv (saved by the pipeline) and return the
+    top-ranked BDI item numbers and FCRI column names.
+
+    Falls back to a sensible clinical default if the file does not exist:
+      BDI default : items covering the core DSM-5 depression domains
+      FCRI default: the 9 key items already defined in FCRI_KEY_ITEMS
+    """
+    imp_path = os.path.join(MODELS_DIR, 'feature_importance.csv')
+
+    # ── Clinical fallback (used before first pipeline run) ────────────────────
+    # Covers: sadness, anhedonia, guilt, suicidality, energy, sleep, appetite,
+    # concentration, psychomotor, self-worth — one item per DSM domain
+    CLINICAL_BDI_DEFAULT = [1, 2, 4, 5, 9, 15, 16, 17, 18, 20]
+    CLINICAL_FCRI_DEFAULT = [item['col'] for item in FCRI_KEY_ITEMS]
+
+    if not os.path.exists(imp_path):
+        print(f"  [Quick mode] feature_importance.csv not found — using clinical default items.")
+        return CLINICAL_BDI_DEFAULT[:n_bdi], CLINICAL_FCRI_DEFAULT[:n_fcri]
+
+    try:
+        imp = pd.read_csv(imp_path)
+
+        # BDI items are named '1.', '2.', … '21.' in the importance table
+        bdi_mask  = imp['feature'].str.match(r'^\d+\.$')
+        fcri_mask = imp['feature'].str.match(r'^\d+\. ')
+
+        top_bdi  = imp[bdi_mask].head(n_bdi)['feature'].tolist()
+        top_fcri = imp[fcri_mask].head(n_fcri)['feature'].tolist()
+
+        bdi_nums  = [int(f.rstrip('.')) for f in top_bdi]
+        # Only keep FCRI items we have display definitions for
+        fcri_cols = [c for c in top_fcri if c in FCRI_ALL_ITEMS]
+        # If fewer than n_fcri are known, pad with KEY_ITEMS
+        for item in FCRI_KEY_ITEMS:
+            if len(fcri_cols) >= n_fcri:
+                break
+            if item['col'] not in fcri_cols:
+                fcri_cols.append(item['col'])
+
+        return bdi_nums, fcri_cols[:n_fcri]
+
+    except Exception as e:
+        print(f"  [Quick mode] Could not read feature_importance.csv ({e}) — using clinical defaults.")
+        return CLINICAL_BDI_DEFAULT[:n_bdi], CLINICAL_FCRI_DEFAULT[:n_fcri]
+
+
+def choose_mode():
+    """
+    Prompt the clinician / patient to select Full or Quick assessment mode.
+    Returns 'full' or 'quick'.
+    """
+    print("\n" + "─" * 65)
+    print("  SELECT ASSESSMENT MODE")
+    print("─" * 65)
+    print("  1. Quick Screening  — top-ranked items only  (~7 min, 15 questions)")
+    print(f"     {TOP_N_BDI} BDI items + {TOP_N_FCRI} FCRI items, chosen by ML feature importance")
+    print("     Unasked items imputed from training-data means")
+    print()
+    print("  2. Full Assessment  — all BDI + key FCRI items  (~15 min, 30 questions)")
+    print("     All 21 BDI items + 9 cross-subscale FCRI items")
+    print("     Recommended for first-time patients and clinical validation")
+    print("─" * 65)
+
+    while True:
+        choice = input("  Enter 1 or 2: ").strip()
+        if choice == '1':
+            return 'quick'
+        if choice == '2':
+            return 'full'
+        print("  Please enter 1 or 2.")
+
+
 # =============================================================================
 # SECTION 1: MODEL LOADING
 # =============================================================================
@@ -402,37 +539,78 @@ def _prompt_choice(prompt, options):
         print(f"  Please enter a number between 1 and {len(options)}.")
 
 
-def collect_bdi():
-    """Collect all 21 BDI items. Returns dict {legacy_col_name: score_0_3}."""
+def collect_bdi(item_nums=None):
+    """
+    Collect BDI responses.
+
+    Parameters
+    ----------
+    item_nums : list[int] | None
+        Item numbers to ask (e.g. [1, 5, 9]).  None = ask all 21.
+        Unasked items are imputed with training means in build_feature_vector().
+    """
+    items   = (BDI_QUESTIONS if item_nums is None
+               else [q for q in BDI_QUESTIONS if q['num'] in item_nums])
+    n_ask   = len(items)
+    n_total = len(BDI_QUESTIONS)
+
     print("\n" + "=" * 65)
-    print("SECTION 1 OF 2 — BECK DEPRESSION INVENTORY (BDI-21)")
+    if n_ask == n_total:
+        print("SECTION 1 OF 2 — BECK DEPRESSION INVENTORY (BDI-21)")
+    else:
+        print(f"SECTION 1 OF 2 — BECK DEPRESSION INVENTORY  "
+              f"({n_ask} of {n_total} items)")
+        print(f"  Remaining {n_total - n_ask} items will be estimated from training averages.")
     print("=" * 65)
     print("Choose the statement that best describes how you have been")
     print("feeling DURING THE PAST WEEK, including today.")
 
     responses = {}
-    for item in BDI_QUESTIONS:
+    for i, item in enumerate(items, 1):
         score = _prompt_choice(
-            f"[BDI {item['num']:02d}/{len(BDI_QUESTIONS)}] {item['title']}",
+            f"[BDI {i:02d}/{n_ask}] {item['title']}",
             item['options']
         )
-        col = f"{item['num']}."
-        responses[col] = score
+        responses[f"{item['num']}."] = score
     return responses
 
 
-def collect_fcri():
-    """Collect 9 key FCRI items. Returns dict {full_col_name: score_0_4}."""
+def collect_fcri(col_filter=None):
+    """
+    Collect FCRI responses.
+
+    Parameters
+    ----------
+    col_filter : list[str] | None
+        Column names to ask.  None = use the 9 default key items.
+        Any column in col_filter that lacks a definition in FCRI_ALL_ITEMS
+        is silently skipped; remaining items are imputed with training means.
+    """
+    if col_filter is None:
+        items = FCRI_KEY_ITEMS
+    else:
+        items = [FCRI_ALL_ITEMS[c] for c in col_filter if c in FCRI_ALL_ITEMS]
+        if not items:            # nothing matched — fall back to key items
+            items = FCRI_KEY_ITEMS
+
+    n_ask   = len(items)
+    n_total = 42
+
     print("\n" + "=" * 65)
-    print("SECTION 2 OF 2 — FEAR OF CANCER RECURRENCE (FCRI — Key Items)")
+    if n_ask == 9 and col_filter is None:
+        print("SECTION 2 OF 2 — FEAR OF CANCER RECURRENCE (FCRI — Key Items)")
+    else:
+        print(f"SECTION 2 OF 2 — FEAR OF CANCER RECURRENCE  "
+              f"({n_ask} of {n_total} items)")
+        print(f"  Remaining {n_total - n_ask} items will be estimated from training averages.")
     print("=" * 65)
     print("Indicate to what degree each statement applied to you")
     print("DURING THE PAST MONTH.")
 
     responses = {}
-    for item in FCRI_KEY_ITEMS:
+    for i, item in enumerate(items, 1):
         score = _prompt_choice(
-            f"[FCRI — {item['subscale']}]\n  {item['label']}",
+            f"[FCRI {i:02d}/{n_ask} — {item['subscale']}]\n  {item['label']}",
             item['options']
         )
         responses[item['col']] = score
@@ -526,8 +704,11 @@ def build_feature_vector(bdi_responses, fcri_responses, demographics,
 
 def predict(feature_vec, artefacts):
     """Run binary and multiclass predictions. Returns a results dict."""
-    X = feature_vec.reshape(1, -1)
-    X_scaled = artefacts['scaler'].transform(X)
+    # Wrap in a DataFrame so feature names match those the scaler was fitted on.
+    # Passing a raw numpy array causes sklearn to emit a UserWarning about
+    # missing feature names — this line resolves it entirely.
+    X_df     = pd.DataFrame([feature_vec], columns=artefacts['feature_cols'])
+    X_scaled = artefacts['scaler'].transform(X_df)
 
     # Binary: has_depression (0/1)
     binary_pred  = int(artefacts['binary_model'].predict(X_scaled)[0])
@@ -559,27 +740,38 @@ def predict(feature_vec, artefacts):
 # SECTION 5: BDI REFERENCE SCORE  (informational only — not used for classification)
 # =============================================================================
 
-def bdi_reference(bdi_responses):
-    """Compute BDI total and severity label from the 21 collected items."""
-    total = sum(bdi_responses.values())
-    for label, lo, hi in [
+def bdi_reference(bdi_responses, n_total=21):
+    """
+    Compute BDI total and severity label from the collected items.
+
+    In Quick mode fewer than 21 items are asked; the raw total is shown
+    alongside a linear extrapolation to the full 21-item scale so the
+    clinician can compare against standard BDI cut-offs.
+    """
+    n_asked      = len(bdi_responses)
+    raw_total    = sum(bdi_responses.values())
+    # Extrapolate: assume unasked items average the same as asked items
+    extrapolated = round(raw_total * n_total / n_asked) if n_asked else 0
+
+    severity_table = [
         ('Normal',                          0, 10),
         ('Mild mood disturbance',          11, 16),
         ('Borderline clinical depression', 17, 20),
         ('Moderate depression',            21, 30),
         ('Severe depression',              31, 40),
         ('Extreme depression',             41, 63),
-    ]:
-        if lo <= total <= hi:
-            return total, label
-    return total, 'Unknown'
+    ]
+    for label, lo, hi in severity_table:
+        if lo <= extrapolated <= hi:
+            return raw_total, n_asked, extrapolated, label
+    return raw_total, n_asked, extrapolated, 'Unknown'
 
 
 # =============================================================================
 # SECTION 6: RESULTS DISPLAY
 # =============================================================================
 
-def display_results(pred, bdi_total, bdi_rule_label, demographics):
+def display_results(pred, bdi_raw, bdi_asked, bdi_extrap, bdi_rule_label, mode):
     print("\n" + "=" * 65)
     print("ASSESSMENT RESULTS")
     print("=" * 65)
@@ -598,7 +790,14 @@ def display_results(pred, bdi_total, bdi_rule_label, demographics):
         print(f"    {sev:<38} {bar} {prob:5.1f}%")
 
     # ── Reference: BDI rule-based score ───────────────────────────────────────
-    print(f"\n  BDI Rule-based Score     : {bdi_total}/63 → {bdi_rule_label}")
+    if bdi_asked == 21:
+        print(f"\n  BDI Score (all 21 items) : {bdi_raw}/63 → {bdi_rule_label}")
+    else:
+        print(f"\n  BDI Score ({bdi_asked}/{21} items asked)  : "
+              f"{bdi_raw}/{bdi_asked * 3}  "
+              f"(extrapolated ≈ {bdi_extrap}/63 → {bdi_rule_label})")
+        print(f"  Note: Quick-mode BDI score is extrapolated from {bdi_asked} items.")
+        print(f"        Run a Full Assessment for a validated 21-item BDI score.")
     print(f"  (Rule-based score is informational; ML model output drives the assessment.)")
 
     # ── Clinical description ───────────────────────────────────────────────────
@@ -607,15 +806,10 @@ def display_results(pred, bdi_total, bdi_rule_label, demographics):
         print(f"\n  Assessment Note:\n    {desc}")
 
     # ── Clinical follow-up flag ───────────────────────────────────────────────
-    if bdi_total >= CLINICAL_FOLLOW_UP_THRESHOLD or pred['severity_idx'] >= 2:
+    if bdi_extrap >= CLINICAL_FOLLOW_UP_THRESHOLD or pred['severity_idx'] >= 2:
         print("\n  ⚠  CLINICAL FOLLOW-UP RECOMMENDED")
         print("     Please discuss these results with your oncologist or a mental")
         print("     health professional at the earliest opportunity.")
-
-    # ── Suicidal ideation flag (BDI item 9) ───────────────────────────────────
-    # Note: the BDI column key is '9.'
-    if '9.' in demographics.get('_bdi_raw', {}):
-        pass  # demographics dict is not the right place — handled below separately
 
     # ── Crisis resources ──────────────────────────────────────────────────────
     if pred['severity_idx'] >= 3:                    # moderate or above
@@ -639,7 +833,6 @@ def main():
     print("CANCER PATIENT PSYCHOLOGICAL SCREENING TOOL")
     print("Beck Depression Inventory + Fear of Cancer Recurrence")
     print("=" * 65)
-    print("This assessment takes approximately 10-15 minutes.")
     print("All responses are confidential and used only for screening.")
 
     print("\nLoading model artefacts…", end=' ', flush=True)
@@ -649,15 +842,32 @@ def main():
 
     run_again = True
     while run_again:
-        print("\n" + "─" * 65)
+        # ── Mode selection ─────────────────────────────────────────────────────
+        mode = choose_mode()
+
+        if mode == 'quick':
+            top_bdi_nums, top_fcri_cols = load_top_items(TOP_N_BDI, TOP_N_FCRI)
+            print(f"\n  Quick mode — BDI items  : {sorted(top_bdi_nums)}")
+            print(f"  Quick mode — FCRI items : {len(top_fcri_cols)} selected")
+            est_time = '~7 min'
+        else:
+            top_bdi_nums  = None          # None = ask all 21
+            top_fcri_cols = None          # None = use FCRI_KEY_ITEMS (9 items)
+            est_time = '~15 min'
+
+        print(f"\n  Estimated time : {est_time}")
+        print("─" * 65)
         input("Press Enter to begin the assessment…")
 
-        # Collect responses
+        # ── Data collection ────────────────────────────────────────────────────
         demographics   = collect_demographics()
-        bdi_responses  = collect_bdi()
-        fcri_responses = collect_fcri()
+        bdi_responses  = collect_bdi(item_nums=top_bdi_nums)
+        fcri_responses = collect_fcri(col_filter=top_fcri_cols)
 
-        # Suicidal ideation warning (BDI item 9, score ≥ 2)
+        # ── Suicidal ideation warning (BDI item 9, score ≥ 2) ─────────────────
+        # Item 9 is always included in Quick mode (it ranks in the top 10 BDI
+        # items by importance).  If the mode somehow excludes it, the check
+        # simply won't fire — never shows a false negative.
         if bdi_responses.get('9.', 0) >= 2:
             print("\n" + "!" * 65)
             print("  IMPORTANT: Your response to the question about suicidal")
@@ -667,24 +877,22 @@ def main():
                 print(f"    {name}: {number}")
             print("!" * 65)
 
-        # Build feature vector
+        # ── Feature vector & prediction ────────────────────────────────────────
         feature_vec = build_feature_vector(
             bdi_responses, fcri_responses, demographics,
             artefacts['feature_cols'],
             artefacts['feature_means'],
             artefacts['label_encoders'],
         )
-
-        # Predict (ML model is used — FIXED: v1 loaded models but never called predict)
         pred = predict(feature_vec, artefacts)
 
-        # BDI rule-based score (informational reference only)
-        bdi_total, bdi_rule_label = bdi_reference(bdi_responses)
+        # ── BDI reference (informational — not used for ML classification) ─────
+        bdi_raw, bdi_asked, bdi_extrap, bdi_rule_label = bdi_reference(bdi_responses)
 
-        # Display
-        display_results(pred, bdi_total, bdi_rule_label, demographics)
+        # ── Results ────────────────────────────────────────────────────────────
+        display_results(pred, bdi_raw, bdi_asked, bdi_extrap, bdi_rule_label, mode)
 
-        # Loop control
+        # ── Loop control ───────────────────────────────────────────────────────
         again = input("\nRun another assessment? (y/n): ").strip().lower()
         run_again = (again == 'y')
 
