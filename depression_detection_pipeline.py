@@ -674,14 +674,17 @@ def main():
     print(f"Dataset : {df.shape[0]:,} rows × {df.shape[1]} columns")
 
     # 1. Preprocessing
+    # Data treansormations
     preprocessor = ClinicalDataPreprocessor()
     df_proc, enc_features = preprocessor.fit_transform(df)
 
-    # 2. Targets
+    # 2. Targets /labels
+    # predactable values
     tve    = TargetVariableEngineer(preprocessor.bdi_columns)
     df_fin = tve.create_targets(df_proc)
 
     # 3. Feature matrix
+    # List comphrisions
     feature_cols = [c for c in
                     preprocessor.bdi_columns + preprocessor.fcri_columns + enc_features
                     if c in df_fin.columns]
