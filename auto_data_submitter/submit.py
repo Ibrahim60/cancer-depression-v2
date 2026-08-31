@@ -13,6 +13,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+from submission_tracker import SubmissionTracker
 
 # Get script directory for correct file paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -293,6 +294,9 @@ def click_submit_button(driver):
 
 
 def main():
+    # Initialize submission tracker
+    tracker = SubmissionTracker()
+    
     with open(CSV_FILE, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         rows = list(reader)
@@ -302,12 +306,40 @@ def main():
         return
 
     print(f"Found {len(rows)} row(s) in CSV.")
+    
+    # Show submission status
+    print(f"\n{tracker.get_summary()}")
+    pending_indices = tracker.get_pending_indices(len(rows))
+    print(f"Pending records: {len(pending_indices)} out of {len(rows)}")
+    
+    if not pending_indices:
+        print("\nAll records have already been submitted!")
+        return
+    
+    # Start a new session
+    session_id = tracker.start_session()
+    session_submitted = 0
 
     chrome_options = Options()
-    chrome_options.add_argument("--start-maximized")
-    chrome_options.add_experimental_option("detach", True)
+    chrome_options.add_argument("--headless=new")  # Run in headless mode
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_experimental_option("detach", False)  # Auto-close browser
 
     for i, row in enumerate(rows, start=1):
+        record_index = i - 1  # 0-based index for tracker
+        
+        # Skip if already submitted
+        if tracker.is_submitted(record_index):
+            print(f"\n  ⊘ Skipping Row {i}/{len(rows)}: {row.get('Name', '').strip()} (already submitted)")
+            continue
+        
+        # Skip if previously failed (can be retried manually)
+        if tracker.is_failed(record_index):
+            print(f"\n  ⊘ Skipping Row {i}/{len(rows)}: {row.get('Name', '').strip()} (previously failed)")
+            continue
+        
         name = row.get("Name", f"Row {i}").strip()
         print(f"\n{'='*55}")
         print(f"  Row {i}/{len(rows)}: {name}")
@@ -315,6 +347,7 @@ def main():
 
         driver = webdriver.Chrome(options=chrome_options)
         filled_fields = set()
+        submission_success = False
 
         try:
             driver.get(FORM_URL)
@@ -338,17 +371,38 @@ def main():
             # Submit the form
             if click_submit_button(driver):
                 print(f"\n  ✓ Submitted! Filled {len(filled_fields)} total fields.")
+                tracker.mark_submitted(record_index, name, len(filled_fields))
+                submission_success = True
+                session_submitted += 1
             else:
                 print(f"\n  ⚠ Filled {len(filled_fields)} fields but could not auto-submit. Please submit manually.")
+                # Don't mark as failed - user can manually submit
 
         except Exception as e:
             print(f"  ✗ Error: {e}")
+            tracker.mark_failed(record_index, name, str(e))
 
-        if i < len(rows):
-            input(f"\n  Press Enter to process Row {i+1} ({rows[i].get('Name','').strip()})…")
+        finally:
+            # Close browser to clean up (especially important in headless mode)
+            try:
+                driver.quit()
+            except:
+                pass
 
+        # Auto-continue to next record (no manual input)
+        time.sleep(2)  # Brief pause between records
+
+    # End session
+    tracker.end_session(session_id, session_submitted)
+    
     print(f"\n{'='*55}")
-    print("  All forms processed.")
+    print("  Session Complete")
+    print(f"{'='*55}")
+    print(f"\nSession Statistics:")
+    print(f"  Records submitted this session: {session_submitted}")
+    print(f"\n{tracker.get_summary()}")
+    print(f"\n{'='*55}")
+    print("  Use 'python submission_tracker.py report' for detailed report")
     print(f"{'='*55}\n")
 
 

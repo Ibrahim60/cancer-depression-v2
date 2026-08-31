@@ -17,6 +17,7 @@ Schema
 """
 
 import os
+import itertools
 import random
 import numpy as np
 import pandas as pd
@@ -29,7 +30,7 @@ random.seed(RANDOM_STATE)
 # ─── I/O paths ────────────────────────────────────────────────────────────────
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_FILE = os.path.join(SCRIPT_DIR, "cancer_psychology.csv")
-NUM_RECORDS = 20
+NUM_RECORDS = 1500
 
 # =============================================================================
 # 1. RESPONSE TEXT LOOKUPS
@@ -143,14 +144,80 @@ FCRI_COLS = [f'FCRI_{i}' for i in range(1, 43)] + ['FCRI_Reassured']
 # 2. DEMOGRAPHIC & CLINICAL OPTION LISTS
 # =============================================================================
 # ── Name generation ─────────────────────────────────────────────────────────
-FIRST_NAMES_MALE = ['Ahmed', 'Ali', 'Hassan', 'Hussain', 'Omar', 'Usman', 'Bilal', 'Kashif', 'Imran', 'Junaid', 'Saad', 'Farhan', 'Rizwan', 'Tariq', 'Nasir', 'Kamran', 'Arif', 'Sajid', 'Shahid', 'Yasir']
-FIRST_NAMES_FEMALE = ['Fatima', 'Ayesha', 'Zara', 'Hira', 'Sana', 'Maryam', 'Khadija', 'Aisha', 'Zainab', 'Hafsa', 'Saima', 'Nadia', 'Sadia', 'Rubina', 'Shazia', 'Farah', 'Kiran', 'Iqra', 'Anum', 'Mehwish']
-LAST_NAMES = ['Khan', 'Ahmed', 'Ali', 'Hussain', 'Malik', 'Siddiqui', 'Shaikh', 'Butt', 'Raza', 'Ahmad', 'Farooq', 'Hassan', 'Mirza', 'Qureshi', 'Chaudhry', 'Iqbal', 'Aslam', 'Akbar', 'Rehman', 'Saeed']
+FIRST_NAMES_MALE = [
+    'Ahmed', 'Ali', 'Hassan', 'Hussain', 'Omar', 'Usman', 'Bilal', 'Kashif', 'Imran', 'Junaid',
+    'Saad', 'Farhan', 'Rizwan', 'Tariq', 'Nasir', 'Kamran', 'Arif', 'Sajid', 'Shahid', 'Yasir',
+    'Waqas', 'Adeel', 'Faisal', 'Zeeshan', 'Asad', 'Shoaib', 'Naveed', 'Salman', 'Fahad', 'Danish',
+    'Haris', 'Zaid', 'Umair', 'Abdullah', 'Talha', 'Mohsin', 'Waleed', 'Sohail', 'Aamir', 'Noman',
+    'Ayaan', 'Hamza', 'Ibrahim', 'Yousaf', 'Shahzad', 'Amjad', 'Asim', 'Khalid', 'Majid', 'Adnan',
+    'Gohar', 'Sarfaraz', 'Zubair', 'Naeem', 'Rashid', 'Jamil', 'Ehsan', 'Faraz', 'Qasim', 'Owais',
+    'Sikandar', 'Zafar', 'Iftikhar', 'Mudassar', 'Shakeel', 'Adil', 'Basit', 'Daniyal', 'Ehtisham', 'Fawad',
+    'Ghazanfar', 'Haseeb', 'Ismail', 'Jawad', 'Karam', 'Luqman', 'Moiz', 'Noor-ul-Amin', 'Osama', 'Parvez',
+    'Qaiser', 'Raheel', 'Sameer', 'Taimoor', 'Uzair', 'Vaqar', 'Wahaj', 'Yahya', 'Zohaib', 'Abrar',
+    'Bashir', 'Dawood', 'Ghulam', 'Habib', 'Israr', 'Jahangir', 'Kaleem', 'Laraib', 'Muzammil', 'Nauman',
+]
+FIRST_NAMES_FEMALE = [
+    'Fatima', 'Ayesha', 'Zara', 'Hira', 'Sana', 'Maryam', 'Khadija', 'Aisha', 'Zainab', 'Hafsa',
+    'Saima', 'Nadia', 'Sadia', 'Rubina', 'Shazia', 'Farah', 'Kiran', 'Iqra', 'Anum', 'Mehwish',
+    'Amina', 'Areeba', 'Bushra', 'Sobia', 'Rabia', 'Uzma', 'Samina', 'Nida', 'Rida', 'Mahnoor',
+    'Alishba', 'Laiba', 'Noor', 'Sundas', 'Tayyaba', 'Wajiha', 'Yusra', 'Zoya', 'Mariam', 'Asma',
+    'Shabana', 'Yasmin', 'Naila', 'Farzana', 'Ghazala', 'Huma', 'Javeria', 'Kinza', 'Mahjabeen', 'Neelam',
+    'Palwasha', 'Quratulain', 'Rukhsana', 'Sidra', 'Tehmina', 'Umaira', 'Warda', 'Amber', 'Beenish', 'Dua',
+    'Erum', 'Fariha', 'Gulnaz', 'Hina', 'Ifra', 'Jaweria', 'Kausar', 'Lubna', 'Mavra', 'Nazia',
+    'Ozma', 'Parveen', 'Qandeel', 'Rimsha', 'Sabahat', 'Tuba', 'Ushna', 'Wardah', 'Xoya', 'Yumna',
+    'Zubaida', 'Amara', 'Bisma', 'Ceeza', 'Duaa', 'Esha', 'Fajar', 'Gulalai', 'Hoorain', 'Ifrah',
+]
+LAST_NAMES = [
+    'Khan', 'Ahmed', 'Ali', 'Hussain', 'Malik', 'Siddiqui', 'Shaikh', 'Butt', 'Raza', 'Ahmad',
+    'Farooq', 'Hassan', 'Mirza', 'Qureshi', 'Chaudhry', 'Iqbal', 'Aslam', 'Akbar', 'Rehman', 'Saeed',
+    'Bhatti', 'Awan', 'Gill', 'Warraich', 'Cheema', 'Dar', 'Bhutto', 'Zardari', 'Leghari', 'Bugti',
+    'Marwat', 'Yousafzai', 'Afridi', 'Wazir', 'Baloch', 'Soomro', 'Abbasi', 'Durrani', 'Ghaznavi',
+    'Rana', 'Sheikh', 'Javed', 'Anwar', 'Sultan', 'Hashmi', 'Naqvi', 'Zaidi', 'Kayani', 'Suri',
+    'Tahir', 'Bajwa', 'Randhawa', 'Sandhu', 'Virk', 'Joyia', 'Khokhar', 'Langah', 'Niazi', 'Orakzai',
+    'Peracha', 'Qazi', 'Rajput', 'Satti', 'Tanoli', 'Utmanzai', 'Vardag', 'Watto', 'Yusufzai', 'Zaman',
+    'Abro', 'Bughio', 'Channa', 'Dahri', 'Junejo', 'Khaskheli', 'Lund', 'Memon', 'Nizamani', 'Panhwar',
+]
 
-def generate_name(gender: str) -> str:
-    """Generate a random name based on gender."""
-    first_names = FIRST_NAMES_FEMALE if gender == 'Female' else FIRST_NAMES_MALE
-    return f"{rng.choice(first_names)} {rng.choice(LAST_NAMES)}"
+
+class NameProvider:
+    """
+    Hands out full names with NO repeats until every combo in the pool has
+    been used, then reshuffles and starts over. Avoids the birthday-paradox
+    collision rate you get from independently sampling first/last name each call
+    (e.g. ~15% duplicate rate at 1,000 draws from a 3,185-combo space).
+
+    Uses the module-level `rng` (np.random.default_rng) so output stays
+    reproducible under RANDOM_STATE.
+    """
+    def __init__(self, rng: np.random.Generator):
+        self._rng = rng
+        self._pools = {
+            'Male':   self._build_pool(FIRST_NAMES_MALE),
+            'Female': self._build_pool(FIRST_NAMES_FEMALE),
+        }
+        self._cursors = {'Male': 0, 'Female': 0}
+
+    def _build_pool(self, first_names: list) -> list:
+        combos = [f"{f} {l}" for f, l in itertools.product(first_names, LAST_NAMES)]
+        self._rng.shuffle(combos)  # in-place shuffle, works on python lists too
+        return combos
+
+    def next(self, gender: str) -> str:
+        key = 'Female' if gender == 'Female' else 'Male'
+        pool = self._pools[key]
+        idx = self._cursors[key]
+        if idx >= len(pool):
+            # Exhausted the full name space — reshuffle and recycle.
+            self._rng.shuffle(pool)
+            idx = 0
+        name = pool[idx]
+        self._cursors[key] = idx + 1
+        return name
+
+
+# Single provider shared across the whole generation run so uniqueness holds
+# across all records, not just within one call.
+NAME_PROVIDER = NameProvider(rng)
 
 GENDERS          = ['Male', 'Female']
 GENDER_PROBS     = [0.35, 0.65]            # breast cancer skews female
@@ -188,6 +255,79 @@ SEVERITY_RANGES  = {'normal': (0, 10), 'mild': (11, 16), 'borderline': (17, 20),
 # Medication likelihood per severity (higher severity → more likely on medication)
 MED_PROB_BY_SEV  = {'normal': 0.10, 'mild': 0.20, 'borderline': 0.28,
                     'moderate': 0.40, 'severe': 0.55, 'extreme': 0.65}
+
+# =============================================================================
+# 2b. CROSS-FIELD REALISM WEIGHTS
+#     These tie clinically/logically related fields together so records read
+#     as coherent cases instead of independently-shuffled attributes.
+# =============================================================================
+
+# Psychological severity → likely clinical status. Higher distress skews
+# toward "Newly Diagnosed"/"Recurrence"; low distress skews toward
+# "Recovered / Survivor". Order matches STATUSES; each row sums to 1.0.
+STATUS_WEIGHTS_BY_SEVERITY = {
+    'normal':     [0.10, 0.15, 0.65, 0.10],
+    'mild':       [0.15, 0.20, 0.50, 0.15],
+    'borderline': [0.20, 0.25, 0.35, 0.20],
+    'moderate':   [0.28, 0.30, 0.22, 0.20],
+    'severe':     [0.32, 0.30, 0.12, 0.26],
+    'extreme':    [0.35, 0.22, 0.05, 0.38],
+}
+
+# Clinical status → duration since diagnosis. "Newly Diagnosed" can't have a
+# 2-year-old duration; "Recovered / Survivor" is unlikely to be 3 months out.
+# Order matches DURATIONS; each row sums to 1.0.
+DURATION_WEIGHTS_BY_STATUS = {
+    'Newly Diagnosed':      [0.55, 0.30, 0.10, 0.04, 0.01],
+    'Under Treatment':      [0.10, 0.25, 0.30, 0.25, 0.10],
+    'Recovered / Survivor': [0.02, 0.03, 0.10, 0.35, 0.50],
+    'Recurrence':           [0.02, 0.05, 0.13, 0.35, 0.45],
+}
+
+# Clinical status → current treatment. Survivors are overwhelmingly "Not
+# currently in treatment"; active/newly-diagnosed/recurrence cases skew
+# toward active modalities. Order matches TREATMENTS; each row sums to 1.0.
+TREATMENT_WEIGHTS_BY_STATUS = {
+    'Newly Diagnosed':      [0.28, 0.15, 0.30, 0.12, 0.05, 0.10],
+    'Under Treatment':      [0.32, 0.20, 0.10, 0.18, 0.12, 0.08],
+    'Recovered / Survivor': [0.03, 0.02, 0.03, 0.02, 0.02, 0.88],
+    'Recurrence':           [0.30, 0.20, 0.08, 0.20, 0.15, 0.07],
+}
+
+# Duration since diagnosis → max plausible medication duration index, so a
+# patient diagnosed 3 months ago can't be shown on meds for "More than 1 year".
+_DURATION_INDEX = {name: i for i, name in enumerate(DURATIONS)}
+MED_DURATION_CAP_BY_DIAGNOSIS_IDX = {0: 0, 1: 1, 2: 2, 3: 3, 4: 3}
+
+# Cancer type incidence weight by age group (relative, not literal
+# epidemiology — just enough shape that a 20-year-old isn't routinely drawn
+# for prostate/lung cancer and a child isn't drawn for cervical cancer).
+CANCER_AGE_WEIGHTS = {
+    'Breast Cancer':                       {'Below 18': 0.5, '18-30': 3,   '31-45': 10, '46-60': 12, 'Above 60': 8},
+    'Lung Cancer':                         {'Below 18': 0.1, '18-30': 0.5, '31-45': 2,  '46-60': 8,  'Above 60': 14},
+    'Colorectal Cancer':                   {'Below 18': 0.2, '18-30': 1,   '31-45': 4,  '46-60': 9,  'Above 60': 12},
+    'Blood Cancer (Leukemia / Lymphoma)':  {'Below 18': 10,  '18-30': 6,   '31-45': 5,  '46-60': 6,  'Above 60': 9},
+    'Ovarian Cancer':                      {'Below 18': 0.3, '18-30': 3,   '31-45': 8,  '46-60': 9,  'Above 60': 6},
+    'Cervical Cancer':                     {'Below 18': 0.2, '18-30': 4,   '31-45': 9,  '46-60': 7,  'Above 60': 4},
+    'Prostate Cancer':                     {'Below 18': 0.05,'18-30': 0.3, '31-45': 2,  '46-60': 9,  'Above 60': 15},
+    'Stomach Cancer':                      {'Below 18': 0.3, '18-30': 1,   '31-45': 4,  '46-60': 8,  'Above 60': 10},
+}
+
+
+def _weighted_cancer_type(cancer_pool: list, age_group: str) -> str:
+    weights = np.array([CANCER_AGE_WEIGHTS[c][age_group] for c in cancer_pool], dtype=float)
+    weights = weights / weights.sum()
+    return rng.choice(cancer_pool, p=weights)
+
+
+def _weighted_med_duration(diagnosis_duration: str) -> str:
+    cap_idx = MED_DURATION_CAP_BY_DIAGNOSIS_IDX[_DURATION_INDEX[diagnosis_duration]]
+    options = MED_DURATIONS[:cap_idx + 1]
+    # Weight toward the longer end of the allowed range — a patient rarely
+    # starts and stops medication within days of a long-standing diagnosis.
+    weights = np.arange(1, len(options) + 1, dtype=float)
+    weights = weights / weights.sum()
+    return rng.choice(options, p=weights)
 
 # =============================================================================
 # 3. CORE SAMPLING FUNCTIONS
@@ -284,23 +424,36 @@ def generate_record(severity: str) -> dict:
 
     # ── Demographics ──────────────────────────────────────────────────────────
     gender = rng.choice(GENDERS, p=GENDER_PROBS)
-    row['Name'] = generate_name(gender)
-    row['Gender']     = gender
-    row['Age Group']  = rng.choice(AGE_GROUPS, p=AGE_PROBS)
-    row['Povince']    = rng.choice(PROVINCES,  p=PROV_PROBS)
+    age_group = rng.choice(AGE_GROUPS, p=AGE_PROBS)
+    row['Name']        = NAME_PROVIDER.next(gender)
+    row['Gender']      = gender
+    row['Age Group']   = age_group
+    row['Povince']     = rng.choice(PROVINCES,  p=PROV_PROBS)
 
+    # Cancer type is weighted by age group (e.g. blood cancer skews younger,
+    # prostate/lung skew older) rather than uniform across the gender pool.
     cancer_pool = FEMALE_CANCERS if gender == 'Female' else MALE_CANCERS
-    row['Cancer Type']               = rng.choice(cancer_pool)
-    row['Duration Since Diagnosis']  = rng.choice(DURATIONS)
-    row['Current Cancer Status']     = rng.choice(STATUSES)
-    row['Current Treatment Type']    = rng.choice(TREATMENTS)
+    row['Cancer Type'] = _weighted_cancer_type(cancer_pool, age_group)
+
+    # Clinical status is informed by psychological severity (higher distress
+    # skews toward newly-diagnosed/recurrence, lower toward survivorship),
+    # then duration and treatment are each conditioned on that status so the
+    # three fields tell one coherent clinical story instead of clashing.
+    status = rng.choice(STATUSES, p=STATUS_WEIGHTS_BY_SEVERITY[severity])
+    duration = rng.choice(DURATIONS, p=DURATION_WEIGHTS_BY_STATUS[status])
+    treatment = rng.choice(TREATMENTS, p=TREATMENT_WEIGHTS_BY_STATUS[status])
+    row['Current Cancer Status']     = status
+    row['Duration Since Diagnosis']  = duration
+    row['Current Treatment Type']    = treatment
 
     # ── Medication (probability correlated with severity) ─────────────────────
     on_meds = rng.random() < MED_PROB_BY_SEV[severity]
     row['Taking Medication'] = 'Yes' if on_meds else 'No'
     if on_meds:
         row['Medication Type'] = rng.choice(MED_TYPES)
-        row['Medication Duration'] = rng.choice(MED_DURATIONS)
+        # Capped so a patient diagnosed 3 months ago can't show "More than 1
+        # year" on medication.
+        row['Medication Duration'] = _weighted_med_duration(duration)
         row['Prescribed by Professional'] = rng.choice(['Yes', 'No'], p=[0.85, 0.15])
         row['Improved Well-being'] = rng.choice(MED_EFFECTS)
     else:
@@ -343,6 +496,10 @@ def main():
     column_order += [f'FCRI_{i}' for i in range(1, 43)]
     column_order.append('FCRI_Reassured')
     df = df[column_order]
+
+    # ── Uniqueness check ───────────────────────────────────────────────────────
+    dupes = len(df) - df['Name'].nunique()
+    print(f"\nName uniqueness: {df['Name'].nunique():,}/{len(df):,} unique ({dupes} duplicate{'s' if dupes != 1 else ''})")
 
     # ── Severity distribution check ────────────────────────────────────────────
     print("\nSeverity distribution:")
