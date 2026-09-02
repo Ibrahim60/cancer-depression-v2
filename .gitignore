@@ -63,6 +63,11 @@ models/
 # Generated Data (keep source CSV, ignore generated)
 Data/cancer_psychology.csv
 Data/dummy_*.csv
+auto_data_submitter/submission_log.json
+auto_data_submitter/submission_report.txt
+auto_data_submitter/submission_state.json
+auto_data_submitter/submission_state.json.bak
+auto_data_submitter/submit.lock
 
 # Matplotlib/Seaborn outputs
 *.png

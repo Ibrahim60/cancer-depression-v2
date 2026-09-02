@@ -1,231 +1,361 @@
 """
-Submission Tracker
-==================
-Tracks which records have been submitted to avoid duplicates.
-Creates and manages a submission log file.
+Crash-safe, fingerprint-keyed submission state.
+
+State is written atomically (temp file + fsync + os.replace) and guarded by
+an exclusive file lock so two submit.py processes cannot run at once.
 """
+
+from __future__ import annotations
 
 import json
 import os
-from datetime import datetime
-from typing import Set, Dict, List, Optional
+import shutil
+import sys
+import tempfile
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - Windows
+    fcntl = None  # type: ignore
+
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-TRACKER_FILE = os.path.join(SCRIPT_DIR, "submission_log.json")
+DEFAULT_STATE_FILE = os.path.join(SCRIPT_DIR, "submission_state.json")
+DEFAULT_LOCK_FILE = os.path.join(SCRIPT_DIR, "submit.lock")
+STATE_VERSION = 2
+
+VALID_STATUSES = ("pending", "success", "failed", "skipped", "unknown")
 
 
-class SubmissionTracker:
-    """Manages tracking of submitted records to prevent duplicates."""
-    
-    def __init__(self, tracker_file: str = TRACKER_FILE):
-        self.tracker_file = tracker_file
-        self.data = self._load_tracker()
-    
-    def _load_tracker(self) -> Dict:
-        """Load existing tracker data or create new structure."""
-        if os.path.exists(self.tracker_file):
+class StateError(Exception):
+    """Unrecoverable state-file problem."""
+
+
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _empty_state() -> Dict[str, Any]:
+    return {
+        "version": STATE_VERSION,
+        "created": _utc_now(),
+        "last_updated": _utc_now(),
+        "records": {},
+        "sessions": [],
+        "legacy_index_state": None,
+    }
+
+
+def _is_legacy_format(data: Any) -> bool:
+    return (
+        isinstance(data, dict)
+        and "submitted_records" in data
+        and "records" not in data
+    )
+
+
+class SubmissionState:
+    """Persistent per-record submission ledger."""
+
+    def __init__(
+        self,
+        state_file: str = DEFAULT_STATE_FILE,
+        lock_file: str = DEFAULT_LOCK_FILE,
+    ):
+        self.state_file = state_file
+        self.bak_file = state_file + ".bak"
+        self.lock_file = lock_file
+        self._lock_fh = None
+        self.data: Dict[str, Any] = _empty_state()
+
+    def __enter__(self) -> "SubmissionState":
+        self.acquire_lock()
+        self.load()
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        try:
+            self.save()
+        finally:
+            self.release_lock()
+
+    # ── locking ──────────────────────────────────────────────────────────────
+
+    def acquire_lock(self) -> None:
+        os.makedirs(os.path.dirname(os.path.abspath(self.lock_file)) or ".", exist_ok=True)
+        self._lock_fh = open(self.lock_file, "a+", encoding="utf-8")
+        if fcntl is None:
+            raise StateError(
+                "fcntl is unavailable; refusing to run without an exclusive lock."
+            )
+        try:
+            fcntl.flock(self._lock_fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            self._lock_fh.close()
+            self._lock_fh = None
+            raise StateError(
+                f"Another submit.py instance holds {self.lock_file}. "
+                "Only one process may run at a time."
+            ) from exc
+        self._lock_fh.seek(0)
+        self._lock_fh.truncate()
+        self._lock_fh.write(str(os.getpid()))
+        self._lock_fh.flush()
+
+    def release_lock(self) -> None:
+        if self._lock_fh is None:
+            return
+        try:
+            if fcntl is not None:
+                fcntl.flock(self._lock_fh.fileno(), fcntl.LOCK_UN)
+        finally:
+            self._lock_fh.close()
+            self._lock_fh = None
+
+    # ── load / save ──────────────────────────────────────────────────────────
+
+    def load(self) -> None:
+        if not os.path.exists(self.state_file):
+            if os.path.exists(self.bak_file):
+                print(
+                    f"STATE primary missing; recovering from backup {self.bak_file}",
+                    file=sys.stderr,
+                )
+                self.data = self._read_json_file(self.bak_file)
+                self.save()
+                return
+            self.data = _empty_state()
+            self.save()
+            return
+
+        try:
+            self.data = self._read_json_file(self.state_file)
+        except StateError:
+            corrupt_path = (
+                f"{self.state_file}.corrupt.{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+            )
             try:
-                with open(self.tracker_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-            except (json.JSONDecodeError, IOError):
-                pass
-        
-        # Initialize new tracker structure
-        return {
-            "created": datetime.now().isoformat(),
-            "last_updated": datetime.now().isoformat(),
-            "total_submitted": 0,
-            "submitted_records": {},  # {record_index: {name, timestamp, status}}
-            "failed_records": {},     # {record_index: {name, timestamp, error}}
-            "session_history": []     # List of past sessions
-        }
-    
-    def _save_tracker(self):
-        """Save tracker data to file."""
-        self.data["last_updated"] = datetime.now().isoformat()
-        with open(self.tracker_file, 'w', encoding='utf-8') as f:
-            json.dump(self.data, f, indent=2, ensure_ascii=False)
-    
-    def is_submitted(self, record_index: int) -> bool:
-        """Check if a record has already been submitted."""
-        return str(record_index) in self.data["submitted_records"]
-    
-    def is_failed(self, record_index: int) -> bool:
-        """Check if a record previously failed."""
-        return str(record_index) in self.data["failed_records"]
-    
-    def mark_submitted(self, record_index: int, name: str, fields_filled: int = 0):
-        """Mark a record as successfully submitted."""
-        record_data = {
-            "name": name,
-            "timestamp": datetime.now().isoformat(),
-            "fields_filled": fields_filled,
-            "status": "submitted"
-        }
-        self.data["submitted_records"][str(record_index)] = record_data
-        self.data["total_submitted"] = len(self.data["submitted_records"])
-        self._save_tracker()
-    
-    def mark_failed(self, record_index: int, name: str, error: str):
-        """Mark a record as failed."""
-        record_data = {
-            "name": name,
-            "timestamp": datetime.now().isoformat(),
-            "error": error,
-            "status": "failed"
-        }
-        self.data["failed_records"][str(record_index)] = record_data
-        self._save_tracker()
-    
-    def mark_retry(self, record_index: int):
-        """Remove a failed record so it can be retried."""
-        if str(record_index) in self.data["failed_records"]:
-            del self.data["failed_records"][str(record_index)]
-            self._save_tracker()
-    
-    def get_pending_indices(self, total_records: int) -> List[int]:
-        """Get list of record indices that haven't been submitted yet."""
-        submitted = set(int(idx) for idx in self.data["submitted_records"].keys())
-        failed = set(int(idx) for idx in self.data["failed_records"].keys())
-        done = submitted | failed
-        return [i for i in range(total_records) if i not in done]
-    
-    def get_submitted_count(self) -> int:
-        """Get total number of successfully submitted records."""
-        return len(self.data["submitted_records"])
-    
-    def get_failed_count(self) -> int:
-        """Get total number of failed records."""
-        return len(self.data["failed_records"])
-    
-    def get_summary(self) -> str:
-        """Get a summary of submission status."""
-        return (
-            f"Submission Summary:\n"
-            f"  Total Submitted: {self.get_submitted_count()}\n"
-            f"  Failed: {self.get_failed_count()}\n"
-            f"  Last Updated: {self.data['last_updated']}"
+                shutil.copy2(self.state_file, corrupt_path)
+                print(f"STATE preserved damaged file as {corrupt_path}", file=sys.stderr)
+            except OSError as copy_exc:
+                print(f"STATE could not preserve damaged file: {copy_exc}", file=sys.stderr)
+
+            if os.path.exists(self.bak_file):
+                print(f"STATE recovering from backup {self.bak_file}", file=sys.stderr)
+                self.data = self._read_json_file(self.bak_file)
+                self.save()
+                return
+
+            raise StateError(
+                f"State file is unreadable and no backup exists: {self.state_file}. "
+                "Refusing to start with an empty ledger (would risk duplicate submissions). "
+                f"Damaged file kept at {corrupt_path}."
+            )
+
+        if _is_legacy_format(self.data):
+            self._adopt_unmapped_legacy()
+
+        self.data.setdefault("version", STATE_VERSION)
+        self.data.setdefault("records", {})
+        self.data.setdefault("sessions", [])
+        self.data.setdefault("created", _utc_now())
+
+    def _read_json_file(self, path: str) -> Dict[str, Any]:
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+        except (OSError, json.JSONDecodeError) as exc:
+            raise StateError(f"Cannot parse state file {path}: {exc}") from exc
+        if not isinstance(data, dict):
+            raise StateError(f"State file {path} is not a JSON object.")
+        return data
+
+    def _adopt_unmapped_legacy(self) -> None:
+        """Keep old index-based history; do not treat it as fingerprint success."""
+        legacy_path = self.state_file + ".legacy"
+        try:
+            shutil.copy2(self.state_file, legacy_path)
+        except OSError:
+            pass
+        print(
+            "STATE detected legacy index-based tracker. "
+            f"Copied to {legacy_path}. "
+            "Index identities cannot be mapped to fingerprints safely, so those "
+            "rows are NOT assumed successful. Pass --adopt-legacy-by-index when "
+            "launching submit.py only if the CSV order is unchanged.",
+            file=sys.stderr,
         )
-    
-    def start_session(self, session_name: str = ""):
-        """Start a new submission session."""
-        session_data = {
-            "name": session_name or f"Session {len(self.data['session_history']) + 1}",
-            "start_time": datetime.now().isoformat(),
+        preserved = self.data
+        self.data = _empty_state()
+        self.data["legacy_index_state"] = preserved
+
+    def adopt_legacy_by_index(self, fingerprints_in_order: List[str], names: List[str]) -> int:
+        """Map legacy submitted_records[i] → fingerprints[i]. Unsafe if CSV reordered."""
+        legacy = self.data.get("legacy_index_state") or {}
+        submitted = legacy.get("submitted_records") or {}
+        mapped = 0
+        for idx_str, rec in submitted.items():
+            try:
+                idx = int(idx_str)
+            except (TypeError, ValueError):
+                continue
+            if 0 <= idx < len(fingerprints_in_order):
+                rid = fingerprints_in_order[idx]
+                name = names[idx] if idx < len(names) else (rec.get("name") or "")
+                entry = self.ensure_record(rid, name=name, source_row=idx)
+                if entry.get("status") != "success":
+                    self.update_record(
+                        rid,
+                        status="success",
+                        name=name,
+                        source_row=idx,
+                        success_at=rec.get("timestamp") or _utc_now(),
+                        fields_filled=rec.get("fields_filled") or 0,
+                        error_type=None,
+                        error_message="adopted from legacy index-based tracker",
+                    )
+                    mapped += 1
+        self.data["legacy_index_state"] = None
+        self.save()
+        return mapped
+
+    def save(self) -> None:
+        self.data["last_updated"] = _utc_now()
+        self.data["version"] = STATE_VERSION
+        directory = os.path.dirname(os.path.abspath(self.state_file)) or "."
+        os.makedirs(directory, exist_ok=True)
+
+        fd, tmp_path = tempfile.mkstemp(prefix=".state_", suffix=".tmp", dir=directory)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                json.dump(self.data, fh, indent=2, ensure_ascii=False)
+                fh.flush()
+                os.fsync(fh.fileno())
+            if os.path.exists(self.state_file):
+                shutil.copy2(self.state_file, self.bak_file)
+            os.replace(tmp_path, self.state_file)
+        except Exception:
+            try:
+                if os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
+
+    # ── record API ───────────────────────────────────────────────────────────
+
+    def get(self, record_id: str) -> Optional[Dict[str, Any]]:
+        rec = self.data["records"].get(record_id)
+        return rec
+
+    def ensure_record(self, record_id: str, **fields: Any) -> Dict[str, Any]:
+        records = self.data["records"]
+        if record_id not in records:
+            records[record_id] = {
+                "record_id": record_id,
+                "status": "pending",
+                "name": fields.get("name") or "",
+                "attempt_count": 0,
+                "first_attempt_at": None,
+                "last_attempt_at": None,
+                "success_at": None,
+                "error_type": None,
+                "error_message": None,
+                "failure_class": None,
+                "fields_filled": 0,
+                "confirmation": None,
+                "source_row": fields.get("source_row"),
+                "skip_reason": None,
+            }
+            self.save()
+        return records[record_id]
+
+    def update_record(self, record_id: str, **fields: Any) -> Dict[str, Any]:
+        rec = self.ensure_record(record_id)
+        for key, value in fields.items():
+            rec[key] = value
+        rec["record_id"] = record_id
+        if rec.get("status") not in VALID_STATUSES:
+            raise StateError(f"Invalid status {rec.get('status')!r} for {record_id}")
+        self.save()
+        return rec
+
+    def counts(self) -> Dict[str, int]:
+        tallies = {s: 0 for s in VALID_STATUSES}
+        for rec in self.data["records"].values():
+            status = rec.get("status", "pending")
+            tallies[status] = tallies.get(status, 0) + 1
+        return tallies
+
+    def start_session(self) -> int:
+        session = {
+            "start_time": _utc_now(),
             "end_time": None,
-            "records_submitted": 0
+            "pid": os.getpid(),
         }
-        self.data["session_history"].append(session_data)
-        self._save_tracker()
-        return len(self.data["session_history"]) - 1
-    
-    def end_session(self, session_index: int, records_submitted: int):
-        """End a submission session."""
-        if 0 <= session_index < len(self.data["session_history"]):
-            self.data["session_history"][session_index]["end_time"] = datetime.now().isoformat()
-            self.data["session_history"][session_index]["records_submitted"] = records_submitted
-            self._save_tracker()
-    
-    def reset_tracker(self):
-        """Reset the tracker (use with caution)."""
-        self.data = self._load_tracker()
-        self.data["submitted_records"] = {}
-        self.data["failed_records"] = {}
-        self.data["total_submitted"] = 0
-        self.data["last_updated"] = datetime.now().isoformat()
-        self._save_tracker()
-    
-    def export_report(self, output_file: Optional[str] = None):
-        """Export a detailed report of submissions."""
+        self.data["sessions"].append(session)
+        self.save()
+        return len(self.data["sessions"]) - 1
+
+    def end_session(self, index: int, extra: Optional[Dict[str, Any]] = None) -> None:
+        if 0 <= index < len(self.data["sessions"]):
+            self.data["sessions"][index]["end_time"] = _utc_now()
+            if extra:
+                self.data["sessions"][index].update(extra)
+            self.save()
+
+    def reset(self) -> None:
+        created = self.data.get("created") or _utc_now()
+        self.data = _empty_state()
+        self.data["created"] = created
+        self.save()
+
+    def export_report(self, output_file: Optional[str] = None) -> str:
         if output_file is None:
-            output_file = os.path.join(SCRIPT_DIR, "submission_report.txt")
-        
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write("=" * 60 + "\n")
-            f.write("SUBMISSION REPORT\n")
-            f.write("=" * 60 + "\n\n")
-            f.write(f"Created: {self.data['created']}\n")
-            f.write(f"Last Updated: {self.data['last_updated']}\n\n")
-            f.write(f"Total Submitted: {self.get_submitted_count()}\n")
-            f.write(f"Total Failed: {self.get_failed_count()}\n\n")
-            
-            f.write("-" * 60 + "\n")
-            f.write("SUBMITTED RECORDS\n")
-            f.write("-" * 60 + "\n")
-            for idx, record in sorted(self.data["submitted_records"].items(), key=lambda x: int(x[0])):
-                f.write(f"Record {idx}: {record['name']} - {record['timestamp']}\n")
-                f.write(f"  Fields filled: {record.get('fields_filled', 'N/A')}\n")
-            
-            if self.data["failed_records"]:
-                f.write("\n" + "-" * 60 + "\n")
-                f.write("FAILED RECORDS\n")
-                f.write("-" * 60 + "\n")
-                for idx, record in sorted(self.data["failed_records"].items(), key=lambda x: int(x[0])):
-                    f.write(f"Record {idx}: {record['name']} - {record['timestamp']}\n")
-                    f.write(f"  Error: {record['error']}\n")
-            
-            f.write("\n" + "-" * 60 + "\n")
-            f.write("SESSION HISTORY\n")
-            f.write("-" * 60 + "\n")
-            for i, session in enumerate(self.data["session_history"], 1):
-                f.write(f"Session {i}: {session['name']}\n")
-                f.write(f"  Start: {session['start_time']}\n")
-                f.write(f"  End: {session.get('end_time', 'In progress')}\n")
-                f.write(f"  Records submitted: {session['records_submitted']}\n")
-        
+            output_file = os.path.join(
+                os.path.dirname(os.path.abspath(self.state_file)),
+                "submission_report.txt",
+            )
+        counts = self.counts()
+        with open(output_file, "w", encoding="utf-8") as fh:
+            fh.write("SUBMISSION REPORT\n")
+            fh.write(f"Created: {self.data.get('created')}\n")
+            fh.write(f"Last Updated: {self.data.get('last_updated')}\n")
+            fh.write(f"Counts: {counts}\n\n")
+            for rid, rec in sorted(self.data["records"].items()):
+                fh.write(
+                    f"{rid[:12]}…  {rec.get('status'):<9}  "
+                    f"{rec.get('name', '')}  attempts={rec.get('attempt_count', 0)}\n"
+                )
+                if rec.get("error_message"):
+                    fh.write(f"    error: {rec['error_message']}\n")
         return output_file
 
 
-# Command-line interface for tracker management
-def main():
-    import sys
-    
-    tracker = SubmissionTracker()
-    
-    if len(sys.argv) < 2:
-        print("Usage: python submission_tracker.py <command>")
-        print("Commands:")
-        print("  status  - Show submission status")
-        print("  summary - Show summary")
-        print("  report  - Export detailed report")
-        print("  reset   - Reset tracker (WARNING: deletes all records)")
-        print("  pending <total> - Show pending record indices")
+def main() -> None:
+    args = sys.argv[1:]
+    if not args:
+        print("Usage: python submission_tracker.py <status|report|reset --confirm>")
         return
-    
-    command = sys.argv[1].lower()
-    
-    if command == "status":
-        print(tracker.get_summary())
-        print(f"\nSubmitted Records: {tracker.get_submitted_count()}")
-        print(f"Failed Records: {tracker.get_failed_count()}")
-        
-    elif command == "summary":
-        print(tracker.get_summary())
-        
-    elif command == "report":
-        report_file = tracker.export_report()
-        print(f"Report exported to: {report_file}")
-        
-    elif command == "reset":
-        confirm = input("Are you sure you want to reset the tracker? This will delete all submission records. (yes/no): ")
-        if confirm.lower() == "yes":
-            tracker.reset_tracker()
+
+    command = args[0].lower()
+    with SubmissionState() as state:
+        if command == "status":
+            print(json.dumps({"counts": state.counts(), "updated": state.data.get("last_updated")}, indent=2))
+        elif command == "report":
+            path = state.export_report()
+            print(f"Report exported to: {path}")
+        elif command == "reset":
+            if "--confirm" not in args:
+                print("Refusing to reset without --confirm (non-interactive).")
+                sys.exit(2)
+            state.reset()
             print("Tracker reset successfully.")
         else:
-            print("Reset cancelled.")
-            
-    elif command == "pending":
-        if len(sys.argv) < 3:
-            print("Usage: python submission_tracker.py pending <total_records>")
-            return
-        total = int(sys.argv[2])
-        pending = tracker.get_pending_indices(total)
-        print(f"Pending records: {len(pending)} out of {total}")
-        if pending:
-            print(f"Pending indices: {pending[:20]}{'...' if len(pending) > 20 else ''}")
-    
-    else:
-        print(f"Unknown command: {command}")
+            print(f"Unknown command: {command}")
+            sys.exit(2)
 
 
 if __name__ == "__main__":
