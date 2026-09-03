@@ -30,7 +30,7 @@ random.seed(RANDOM_STATE)
 # ─── I/O paths ────────────────────────────────────────────────────────────────
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_FILE = os.path.join(SCRIPT_DIR, "cancer_psychology.csv")
-NUM_RECORDS = 1500
+NUM_RECORDS = 3000
 
 # =============================================================================
 # 1. RESPONSE TEXT LOOKUPS
