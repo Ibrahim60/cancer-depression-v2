@@ -3,6 +3,8 @@ Crash-safe, fingerprint-keyed submission state.
 
 State is written atomically (temp file + fsync + os.replace) and guarded by
 an exclusive file lock so two submit.py processes cannot run at once.
+
+Cross-platform locking: uses fcntl on Unix and msvcrt.locking on Windows.
 """
 
 from __future__ import annotations
@@ -19,6 +21,11 @@ try:
     import fcntl
 except ImportError:  # pragma: no cover - Windows
     fcntl = None  # type: ignore
+
+try:
+    import msvcrt
+except ImportError:  # pragma: no cover - Unix
+    msvcrt = None  # type: ignore
 
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -86,19 +93,38 @@ class SubmissionState:
     def acquire_lock(self) -> None:
         os.makedirs(os.path.dirname(os.path.abspath(self.lock_file)) or ".", exist_ok=True)
         self._lock_fh = open(self.lock_file, "a+", encoding="utf-8")
-        if fcntl is None:
+        
+        if fcntl is not None:
+            # Unix: use fcntl
+            try:
+                fcntl.flock(self._lock_fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError as exc:
+                self._lock_fh.close()
+                self._lock_fh = None
+                raise StateError(
+                    f"Another submit.py instance holds {self.lock_file}. "
+                    "Only one process may run at a time."
+                ) from exc
+        elif msvcrt is not None:
+            # Windows: use msvcrt.locking
+            try:
+                # For Windows, we need to lock a specific region of the file
+                # Lock the first 100 bytes of the file
+                self._lock_fh.seek(0)
+                msvcrt.locking(self._lock_fh.fileno(), msvcrt.LK_NBLCK, 100)
+            except OSError as exc:
+                self._lock_fh.close()
+                self._lock_fh = None
+                raise StateError(
+                    f"Another submit.py instance holds {self.lock_file}. "
+                    "Only one process may run at a time."
+                ) from exc
+        else:
             raise StateError(
-                "fcntl is unavailable; refusing to run without an exclusive lock."
+                "Neither fcntl nor msvcrt is available; refusing to run without an exclusive lock."
             )
-        try:
-            fcntl.flock(self._lock_fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError as exc:
-            self._lock_fh.close()
-            self._lock_fh = None
-            raise StateError(
-                f"Another submit.py instance holds {self.lock_file}. "
-                "Only one process may run at a time."
-            ) from exc
+        
+        # Write PID after acquiring lock (common for both platforms)
         self._lock_fh.seek(0)
         self._lock_fh.truncate()
         self._lock_fh.write(str(os.getpid()))
@@ -110,6 +136,10 @@ class SubmissionState:
         try:
             if fcntl is not None:
                 fcntl.flock(self._lock_fh.fileno(), fcntl.LOCK_UN)
+            elif msvcrt is not None:
+                # Windows: unlock the file
+                self._lock_fh.seek(0)
+                msvcrt.locking(self._lock_fh.fileno(), msvcrt.LK_UNLCK, 100)
         finally:
             self._lock_fh.close()
             self._lock_fh = None
