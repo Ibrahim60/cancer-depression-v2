@@ -8,7 +8,7 @@ Example: python split_csv.py 25
 import pandas as pd
 import sys
 import os
-SPLIT_SIZE = 250
+SPLIT_SIZE = 265
 
 def main():
     # File path

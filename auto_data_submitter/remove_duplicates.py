@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Script to remove duplicate records from test.csv that are present in Form_responses.csv
+Matches only on the "Name" column.
 """
 
 import pandas as pd
@@ -28,29 +29,19 @@ def main():
     print(f"\ntest.csv: {len(test_df)} records")
     print(f"Form_responses.csv: {len(form_df)} records")
     
-    # Define key columns to match on (normalized column names)
-    # test.csv columns: Name, Gender, Age Group, Povince, Cancer Type, etc.
-    # Form_responses.csv columns: Timestamp, Name, Gender, Age Group, Povince, Cancer Type, etc.
-    
     # Standardize column names for comparison
     test_df.columns = test_df.columns.str.strip()
     form_df.columns = form_df.columns.str.strip()
     
-    # Key columns to match on
-    key_columns = ['Name', 'Gender', 'Age Group', 'Povince', 'Cancer Type']
+    # Key column to match on
+    key_column = 'Name'
     
-    # Check if key columns exist in both dataframes
-    test_cols = set(test_df.columns)
-    form_cols = set(form_df.columns)
-    
-    # Normalize Form_responses columns - remove extra spaces and fix column names
-    form_df = form_df.rename(columns={
-        'Povince': 'Povince',  # Already matches
-        '  Cancer Type  ': 'Cancer Type',
-        '  Duration Since Diagnosis  ': 'Duration Since Diagnosis',
-        '  Current Cancer Status  ': 'Current Cancer Status',
-        '  Current Treatment Type  ': 'Current Treatment Type'
-    })
+    if key_column not in test_df.columns:
+        print(f"Error: '{key_column}' column not found in {test_file}")
+        sys.exit(1)
+    if key_column not in form_df.columns:
+        print(f"Error: '{key_column}' column not found in {form_responses_file}")
+        sys.exit(1)
     
     # Strip whitespace from string columns in both dataframes
     for col in test_df.select_dtypes(include=['object', 'string']).columns:
@@ -58,40 +49,45 @@ def main():
     
     for col in form_df.select_dtypes(include=['object', 'string']).columns:
         form_df[col] = form_df[col].astype(str).str.strip()
+
+    # Normalize the Name column itself for matching (case-insensitive, trimmed)
+    test_df['_name_key'] = test_df[key_column].str.strip().str.lower()
+    form_df['_name_key'] = form_df[key_column].str.strip().str.lower()
     
-    # Create a composite key for matching
-    test_df['match_key'] = test_df[key_columns].apply(lambda row: '|'.join(row.values.astype(str)), axis=1)
-    form_df['match_key'] = form_df[key_columns].apply(lambda row: '|'.join(row.values.astype(str)), axis=1)
+    # Find names in test.csv that are already present in Form_responses.csv
+    test_names = set(test_df['_name_key'])
+    form_names = set(form_df['_name_key'])
     
-    # Find records in test.csv that are NOT in Form_responses.csv
-    test_keys = set(test_df['match_key'])
-    form_keys = set(form_df['match_key'])
+    duplicate_names = test_names & form_names
     
-    duplicates = test_keys & form_keys
-    unique_keys = test_keys - form_keys
+    print(f"\nDuplicate names found (present in Form_responses.csv): {len(duplicate_names)}")
     
-    print(f"\nDuplicate records found: {len(duplicates)}")
-    print(f"Unique records to keep: {len(unique_keys)}")
+    # Filter test_df to keep only records whose Name isn't in Form_responses.csv
+    test_df_cleaned = test_df[~test_df['_name_key'].isin(duplicate_names)].copy()
     
-    # Filter test_df to keep only unique records
-    test_df_cleaned = test_df[~test_df['match_key'].isin(duplicates)].copy()
+    # Also drop duplicate names WITHIN test.csv itself, keeping the first occurrence
+    before_internal = len(test_df_cleaned)
+    test_df_cleaned = test_df_cleaned.drop_duplicates(subset='_name_key', keep='first')
+    internal_dupes_removed = before_internal - len(test_df_cleaned)
     
-    # Remove the temporary match_key column
-    test_df_cleaned = test_df_cleaned.drop('match_key', axis=1)
+    # Remove the temporary key column
+    test_df_cleaned = test_df_cleaned.drop('_name_key', axis=1)
     
     print(f"\nOriginal test.csv: {len(test_df)} records")
     print(f"Cleaned test.csv: {len(test_df_cleaned)} records")
-    print(f"Removed: {len(test_df) - len(test_df_cleaned)} duplicate records")
+    print(f"Removed (matched Form_responses.csv): {len(test_df) - before_internal}")
+    print(f"Removed (internal duplicates within test.csv): {internal_dupes_removed}")
+    print(f"Total removed: {len(test_df) - len(test_df_cleaned)} records")
     
     # Write the cleaned data back to test.csv
     test_df_cleaned.to_csv(test_file, index=False)
     print(f"\nSuccessfully updated {test_file}")
     
     # Show some examples of removed duplicates if any
-    if len(duplicates) > 0:
-        print("\nSample of removed duplicate records:")
-        sample_duplicates = test_df[test_df['match_key'].isin(duplicates)][key_columns].head(5)
-        print(sample_duplicates.to_string(index=False))
+    if len(duplicate_names) > 0:
+        print("\nSample of names removed (matched against Form_responses.csv):")
+        sample = test_df[test_df['_name_key'].isin(duplicate_names)][[key_column]].drop_duplicates().head(10)
+        print(sample.to_string(index=False))
 
 if __name__ == '__main__':
     main()
