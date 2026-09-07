@@ -663,11 +663,10 @@ def main():
     print("HYBRID ML FRAMEWORK FOR DEPRESSION DETECTION IN CANCER PATIENTS v2")
     print("=" * 70)
 
+    # Ensure the output directory exists before any artifacts are saved.
+    os.makedirs('models', exist_ok=True)
+
     data_path = os.path.join('Data', 'cancer_psychology.csv')
-    if not os.path.exists(data_path):
-        print(f"\nERROR: {data_path} not found.")
-        print("Run 'python Data/generate_mock_data.py' first.")
-        return None
 
     print(f"\nLoading: {data_path}")
     df = pd.read_csv(data_path)
