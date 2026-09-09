@@ -8,6 +8,9 @@ A hybrid machine learning framework for detecting depression and its severity in
 - **Binary Classification**: Detects presence/absence of depression
 - **Multi-class Classification**: Identifies severity levels (Normal, Mild, Borderline, Moderate, Severe, Extreme)
 - **Interactive Screening Tool**: CLI-based assessment with personalized suggestions
+- **Web Interface**: Streamlit-based web application with modern UI
+- **Export Functionality**: CSV and PDF export for assessment results and history
+- **Session History**: Track and review past assessments
 - **Demographic-aware**: Adjusts predictions based on age and gender risk factors
 - **Feature Importance Analysis**: Identifies top predictive BDI and FCRI items
 
@@ -16,7 +19,12 @@ A hybrid machine learning framework for detecting depression and its severity in
 ```
 V2/
 ├── depression_detection_pipeline.py   # Main ML training pipeline
-├── predict_depression.py              # Interactive prediction tool
+├── predict_depression.py              # Interactive prediction tool (CLI)
+├── streamlit_app.py                   # Streamlit web application entry point
+├── pages/                             # Streamlit multi-page structure
+│   ├── 1_Assessment.py                # Assessment questionnaire page
+│   ├── 2_Results.py                   # Results display and export page
+│   └── 3_History.py                   # Session history management page
 ├── requirements.txt                   # Python dependencies
 ├── .gitignore                         # Git ignore rules
 ├── Data/
@@ -84,6 +92,14 @@ python depression_detection_pipeline.py
 python predict_depression.py
 ```
 
+#### 8. Run the Streamlit Web Application (Optional)
+
+```bash
+streamlit run streamlit_app.py
+```
+
+The web application will open in your browser at `http://localhost:8501`
+
 #### Deactivate Virtual Environment (when done)
 
 ```bash
@@ -148,11 +164,68 @@ python depression_detection_pipeline.py
 python predict_depression.py
 ```
 
+#### 8. Run the Streamlit Web Application (Optional)
+
+```cmd
+streamlit run streamlit_app.py
+```
+
+The web application will open in your browser at `http://localhost:8501`
+
 #### Deactivate Virtual Environment (when done)
 
 ```cmd
 deactivate
 ```
+
+---
+
+## Streamlit Web Application
+
+The Streamlit web application provides a modern, user-friendly interface for depression screening with the following features:
+
+### Multi-Page Structure
+
+- **Home Page**: Overview and navigation
+- **Assessment Page**: Interactive questionnaire interface
+- **Results Page**: Detailed results display with export options
+- **History Page**: Session history management
+
+### Assessment Modes
+
+- **Quick Screening**: Top-ranked items only (~7 minutes, 15 questions)
+- **Full Assessment**: All BDI + key FCRI items (~15 minutes, 30 questions)
+
+### Features
+
+- **Interactive Forms**: Radio buttons and select boxes for easy input
+- **Real-time Validation**: Immediate feedback on form inputs
+- **Visual Results**: Color-coded severity indicators and progress bars
+- **Export Options**: Download results as CSV or PDF reports
+- **Session History**: Track and review past assessments
+- **Crisis Resources**: Automatic display of helpline information for severe cases
+- **Responsive Design**: Works on desktop and tablet devices
+
+### Running the Web App
+
+```bash
+streamlit run streamlit_app.py
+```
+
+The application will open in your browser at `http://localhost:8501`
+
+### Web App Navigation
+
+1. **Home**: Overview of the tool and getting started instructions
+2. **Assessment**: Complete the BDI and FCRI questionnaires
+3. **Results**: View your assessment results with clinical recommendations
+4. **History**: Review past assessments and export session data
+
+### Export Functionality
+
+- **CSV Export**: Machine-readable format for data analysis
+- **PDF Export**: Professional clinical report format
+- **History Export**: Complete session data in CSV format
 
 ---
 
@@ -312,6 +385,8 @@ The system adjusts scores based on demographic risk factors:
 | matplotlib | ≥3.4.0 | Plotting |
 | seaborn | ≥0.11.0 | Statistical visualization |
 | joblib | ≥1.0.0 | Model serialization |
+| streamlit | ≥1.28.0 | Web application framework |
+| reportlab | ≥3.6.0 | PDF generation |
 
 ---
 
@@ -348,6 +423,24 @@ python depression_detection_pipeline.py
 Generate the mock data first:
 ```bash
 python Data/generate_mock_data.py
+```
+
+### Streamlit app won't start
+Ensure all dependencies are installed:
+```bash
+pip install streamlit reportlab
+```
+
+### Streamlit port already in use
+Use a different port:
+```bash
+streamlit run streamlit_app.py --server.port 8502
+```
+
+### PDF export not working
+Ensure reportlab is installed:
+```bash
+pip install reportlab
 ```
 
 ---
