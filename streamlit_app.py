@@ -729,6 +729,47 @@ def main():
         initial_sidebar_state="expanded"
     )
 
+    # Custom CSS for better styling
+    st.markdown("""
+    <style>
+    .main {
+        background-color: #f8f9fa;
+    }
+    .stButton>button {
+        background-color: #4a90e2;
+        color: white;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+    }
+    .stButton>button:hover {
+        background-color: #357abd;
+    }
+    .stSelectbox>div>div>select {
+        border-radius: 8px;
+    }
+    .metric-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin: 1rem 0;
+        border: none;
+    }
+    /* Fix sidebar colors in dark mode */
+    [data-testid="stSidebar"] {
+        background-color: #0e1117;
+    }
+    [data-testid="stSidebar"] * {
+        color: #ffffff;
+    }
+    /* Consistent card spacing */
+    div[data-testid="stVerticalBlock"] > div {
+        gap: 1rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     try:
         init_session_state()
     except Exception as e:
@@ -736,51 +777,152 @@ def main():
         st.error("Please ensure all model artefacts are available in the models/ directory.")
         st.stop()
 
-    st.title("🏥 Depression Screening for Cancer Patients")
+    # Hero section with gradient background
     st.markdown("""
-    **Beck Depression Inventory + Fear of Cancer Recurrence Inventory**
+    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem; border-radius: 12px; margin-bottom: 2rem; color: white;'>
+    <h1 style='margin: 0; font-size: 2.5rem;'>🏥 Depression Screening for Cancer Patients</h1>
+    <p style='margin: 0.5rem 0 0 0; font-size: 1.2rem; opacity: 0.9;'>
+    Beck Depression Inventory + Fear of Cancer Recurrence Inventory
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
 
-    This web application provides an interactive screening tool for detecting depression
-    and its severity in cancer patients using validated psychological assessments.
-
-    ---
-    """)
-
-    # Sidebar navigation info
+    # Sidebar with enhanced styling
     with st.sidebar:
-        st.markdown("### 📋 Navigation")
         st.markdown("""
-        Use the pages in the sidebar to navigate:
-        - **🏠 Home**: Overview and getting started
-        - **📋 Assessment**: Complete the questionnaires
-        - **📊 Results**: View your assessment results
-        - **📜 History**: Review past assessments
+        <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; color: white; text-align: center;'>
+        <h3 style='margin: 0;'>📋 Navigation</h3>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
+        **Quick Navigation:**
+        - 🏠 **Home** - Overview & getting started
+        - 📋 **Assessment** - Complete questionnaires
+        - 📊 **Results** - View assessment results
+        - 📜 **History** - Review past assessments
         """)
+
         st.markdown("---")
-        st.markdown("### ℹ️ App Info")
-        st.markdown(f"**Feature Dimensions:** {len(st.session_state.artefacts['feature_cols'])}")
-        st.markdown(f"**History Items:** {len(st.session_state.history)}")
 
-    st.markdown("### Quick Start")
-    st.info("Click on **📋 Assessment** in the sidebar to begin the screening process.")
+        st.markdown("""
+        <div style='background: rgba(102, 126, 234, 0.1); padding: 1rem; border-radius: 12px; border: none;'>
+        <h4 style='margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.1rem;'>📊 App Status</h4>
+        <p style='margin: 0.25rem 0; color: #667eea;'><strong>Feature Dimensions:</strong> {}</p>
+        <p style='margin: 0.25rem 0; color: #667eea;'><strong>History Items:</strong> {}</p>
+        </div>
+        """.format(len(st.session_state.artefacts['feature_cols']), len(st.session_state.history)),
+        unsafe_allow_html=True)
+
+    # Quick start card
+    col1, col2 = st.columns([2, 1])
+
+    with col1:
+        st.markdown("""
+        <div class='metric-card'>
+        <h3 style='margin: 0 0 1rem 0; color: #667eea; font-size: 1.2rem;'>🚀 Quick Start</h3>
+        <p style='margin: 0 0 1rem 0; color: #495057;'>
+        Ready to begin your assessment? Click the button below to start the screening process.
+        </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if st.button("📋 Start Assessment", width='stretch', type="primary"):
+            st.switch_page("pages/1_Assessment.py")
+
+    with col2:
+        st.markdown("""
+        <div class='metric-card' style='text-align: center; border: none;'>
+        <h3 style='margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.2rem;'>⏱️ Time Estimate</h3>
+        <p style='margin: 0; font-size: 2rem; font-weight: bold; color: #764ba2;'>7-15 min</p>
+        <p style='margin: 0.5rem 0 0 0; color: #6c757d; font-size: 0.9rem;'>Depending on mode</p>
+        </div>
+        """, unsafe_allow_html=True)
 
     st.markdown("---")
-    st.markdown("### About This Tool")
+
+    # About section with cards
+    st.markdown("## 🎯 About This Tool")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown("""
+        <div class='metric-card'>
+        <h4 style='margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.1rem;'>🧠 ML Framework</h4>
+        <p style='margin: 0; color: #495057; font-size: 0.95rem;'>
+        Hybrid ensemble combining Logistic Regression, Random Forest, and XGBoost
+        </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown("""
+        <div class='metric-card'>
+        <h4 style='margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.1rem;'>📊 Assessments</h4>
+        <p style='margin: 0; color: #495057; font-size: 0.95rem;'>
+        BDI-II (21 items) + FCRI (42 items) for comprehensive screening
+        </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col3:
+        st.markdown("""
+        <div class='metric-card'>
+        <h4 style='margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.1rem;'>🎯 Classification</h4>
+        <p style='margin: 0; color: #495057; font-size: 0.95rem;'>
+        Binary + Multi-class with 6 severity levels (Normal to Extreme)
+        </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # Assessment modes
+    st.markdown("## 📋 Assessment Modes")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("""
+        <div class='metric-card' style='border: none;'>
+        <h4 style='margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.1rem;'>⚡ Quick Screening</h4>
+        <ul style='margin: 0.5rem 0; padding-left: 1.5rem; color: #495057;'>
+        <li>Top-ranked items only</li>
+        <li>~7 minutes, 15 questions</li>
+        <li>ML-optimized selection</li>
+        <li>Best for initial screening</li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown("""
+        <div class='metric-card' style='border: none;'>
+        <h4 style='margin: 0 0 0.5rem 0; color: #764ba2; font-size: 1.1rem;'>📋 Full Assessment</h4>
+        <ul style='margin: 0.5rem 0; padding-left: 1.5rem; color: #495057;'>
+        <li>All BDI + key FCRI items</li>
+        <li>~15 minutes, 30 questions</li>
+        <li>Comprehensive clinical coverage</li>
+        <li>Best for detailed analysis</li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # Disclaimer with better styling
     st.markdown("""
-    This screening tool uses a hybrid machine learning framework that combines:
-    - **Beck Depression Inventory (BDI-II)**: 21-item assessment of depression symptoms
-    - **Fear of Cancer Recurrence Inventory (FCRI)**: 42-item assessment of cancer-related fears
-    - **Multi-model Ensemble**: Logistic Regression, Random Forest, and XGBoost
-    - **Binary Classification**: Detects presence/absence of depression
-    - **Multi-class Classification**: Identifies severity levels (Normal to Extreme)
-
-    **Assessment Modes:**
-    - **Quick Screening**: Top-ranked items only (~7 minutes, 15 questions)
-    - **Full Assessment**: All BDI + key FCRI items (~15 minutes, 30 questions)
-    """)
-
-    st.markdown("---")
-    st.warning("⚠️ **DISCLAIMER**: This tool is for screening purposes only and is NOT a clinical diagnosis. Please consult a qualified healthcare professional for proper evaluation and treatment recommendations.")
+    <div style='background: #fff3cd; border: 1px solid #ffc107; border-radius: 12px; padding: 1.5rem;'>
+    <h4 style='margin: 0 0 0.5rem 0; color: #856404;'>⚠️ Important Disclaimer</h4>
+    <p style='margin: 0; color: #856404;'>
+    This tool is for <strong>screening purposes only</strong> and is <strong>NOT a clinical diagnosis</strong>.
+    Please consult a qualified healthcare professional for proper evaluation and treatment recommendations.
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
 
 if __name__ == '__main__':
     main()

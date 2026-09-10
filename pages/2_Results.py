@@ -27,10 +27,49 @@ def results_page():
         layout="wide"
     )
 
+    # Custom CSS for better styling
+    st.markdown("""
+    <style>
+    .main {
+        background-color: #f8f9fa;
+    }
+    .stButton>button {
+        background-color: #4a90e2;
+        color: white;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+    }
+    .stButton>button:hover {
+        background-color: #357abd;
+    }
+    /* Fix sidebar colors in dark mode */
+    [data-testid="stSidebar"] {
+        background-color: #0e1117;
+    }
+    [data-testid="stSidebar"] * {
+        color: #ffffff;
+    }
+    /* Consistent card spacing */
+    div[data-testid="stVerticalBlock"] > div {
+        gap: 1rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     # Initialize session state
     init_session_state()
 
-    st.title("📊 Assessment Results")
+    # Header with gradient
+    st.markdown("""
+    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem; border-radius: 12px; margin-bottom: 2rem; color: white;'>
+    <h1 style='margin: 0; font-size: 2rem;'>📊 Assessment Results</h1>
+    <p style='margin: 0.5rem 0 0 0; opacity: 0.9;'>
+    View your detailed assessment results and export reports
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
 
     # Check if there's a current assessment
     if 'current_assessment' not in st.session_state or st.session_state.current_assessment is None:
@@ -163,7 +202,7 @@ def results_page():
             data=csv_data,
             file_name=f"depression_assessment_{assessment['timestamp'].replace(' ', '_').replace(':', '-')}.csv",
             mime="text/csv",
-            use_container_width=True
+            width='stretch'
         )
 
     with col2:
@@ -180,7 +219,7 @@ def results_page():
             data=pdf_data,
             file_name=f"depression_assessment_{assessment['timestamp'].replace(' ', '_').replace(':', '-')}.pdf",
             mime="application/pdf",
-            use_container_width=True
+            width='stretch'
         )
 
     st.markdown("---")
@@ -202,7 +241,7 @@ def results_page():
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        if st.button("🔄 New Assessment", use_container_width=True):
+        if st.button("🔄 New Assessment", width='stretch'):
             # Reset assessment state
             st.session_state.assessment_step = 'mode_selection'
             st.session_state.demographics = {}
@@ -213,11 +252,11 @@ def results_page():
             st.switch_page("pages/1_Assessment.py")
 
     with col2:
-        if st.button("📜 View History", use_container_width=True):
+        if st.button("📜 View History", width='stretch'):
             st.switch_page("pages/3_History.py")
 
     with col3:
-        if st.button("🏠 Back to Home", use_container_width=True):
+        if st.button("🏠 Back to Home", width='stretch'):
             st.switch_page("streamlit_app.py")
 
 if __name__ == '__main__':

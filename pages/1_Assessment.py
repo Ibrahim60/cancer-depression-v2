@@ -30,39 +30,63 @@ def display_assessment_results(assessment):
     demographics = assessment['demographics']
     mode = assessment['mode']
 
-    st.markdown("---")
-    st.markdown("## 📊 Assessment Results")
-
-    # Display assessment info
-    st.markdown(f"**Assessment completed:** {assessment['timestamp']}")
-    st.markdown(f"**Mode:** {mode.capitalize()} Assessment")
+    # Success banner
+    st.markdown("""
+    <div style='background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; color: white; text-align: center;'>
+    <h2 style='margin: 0; font-size: 1.8rem;'>✅ Assessment Completed Successfully</h2>
+    <p style='margin: 0.5rem 0 0 0; opacity: 0.9;'>
+    {timestamp} • {mode} Assessment
+    </p>
+    </div>
+    """.format(timestamp=assessment['timestamp'], mode=mode.capitalize()),
+    unsafe_allow_html=True)
 
     # Display demographics summary
-    with st.expander("👤 Demographics Information"):
+    with st.expander("👤 View Demographics Information"):
         st.json(demographics)
 
     st.markdown("---")
 
-    # Primary Results
-    st.markdown("## Primary Results")
-
-    # Severity classification with color coding
+    # Primary Results Card
     severity_idx = pred['severity_idx']
     severity_label = pred['severity_label']
 
     # Color coding based on severity
     if severity_idx <= 1:  # Normal or Mild
-        severity_color = "🟢"
+        bg_color = "#d4edda"
+        border_color = "#28a745"
+        text_color = "#155724"
+        emoji = "🟢"
     elif severity_idx == 2:  # Borderline
-        severity_color = "🟡"
+        bg_color = "#fff3cd"
+        border_color = "#ffc107"
+        text_color = "#856404"
+        emoji = "🟡"
     elif severity_idx == 3:  # Moderate
-        severity_color = "🟠"
+        bg_color = "#ffeeba"
+        border_color = "#fd7e14"
+        text_color = "#856404"
+        emoji = "🟠"
     else:  # Severe or Extreme
-        severity_color = "🔴"
+        bg_color = "#f8d7da"
+        border_color = "#dc3545"
+        text_color = "#721c24"
+        emoji = "🔴"
 
-    st.markdown(f"### {severity_color} ML Model Severity: {severity_label}")
-    st.markdown(f"**Model Confidence:** {pred['confidence']:.1f}%")
-    st.markdown(f"**Depression Probability:** {pred['depression_prob']:.1f}%")
+    st.markdown(f"""
+    <div style='background: {bg_color}; border: 2px solid {border_color}; padding: 2rem; border-radius: 12px; margin-bottom: 2rem;'>
+    <h2 style='margin: 0 0 1rem 0; color: {text_color};'>{emoji} ML Model Severity: {severity_label}</h2>
+    <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;'>
+    <div>
+    <p style='margin: 0; color: {text_color};'><strong>Model Confidence:</strong> {pred['confidence']:.1f}%</p>
+    </div>
+    <div>
+    <p style='margin: 0; color: {text_color};'><strong>Depression Probability:</strong> {pred['depression_prob']:.1f}%</p>
+    </div>
+    </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     # Progress bar for confidence
     st.progress(pred['confidence'] / 100, text=f"Model Confidence: {pred['confidence']:.1f}%")
@@ -70,7 +94,7 @@ def display_assessment_results(assessment):
     st.markdown("---")
 
     # Severity probability breakdown
-    st.markdown("## Severity Probability Breakdown")
+    st.markdown("## 📊 Severity Probability Breakdown")
 
     prob_data = []
     for i, sev in enumerate(SEVERITY_LABELS):
@@ -80,23 +104,46 @@ def display_assessment_results(assessment):
             'Probability': prob
         })
 
-    # Display as table
+    # Display as table with styling
     prob_df = pd.DataFrame(prob_data)
     prob_df = prob_df.sort_values('Probability', ascending=False)
-    st.table(prob_df.style.format({'Probability': '{:.1f}%'}))
+
+    st.dataframe(
+        prob_df.style.format({'Probability': '{:.1f}%'})
+        .background_gradient(cmap='RdYlGn_r', subset=['Probability'])
+        .set_properties(**{'text-align': 'center'}),
+        width='stretch',
+        hide_index=True
+    )
 
     st.markdown("---")
 
     # BDI Reference Score
-    st.markdown("## BDI Reference Score")
+    st.markdown("## 📈 BDI Reference Score")
 
     bdi_raw, bdi_asked, bdi_extrap, bdi_rule_label = bdi_ref
 
-    if bdi_asked == 21:
-        st.markdown(f"**BDI Score (all 21 items):** {bdi_raw}/63 → {bdi_rule_label}")
-    else:
-        st.markdown(f"**BDI Score ({bdi_asked}/{21} items asked):** {bdi_raw}/{bdi_asked * 3}")
-        st.markdown(f"**Extrapolated BDI Score:** {bdi_extrap}/63 → {bdi_rule_label}")
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown(f"""
+        <div style='background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: none;'>
+        <h4 style='margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.1rem;'>Raw BDI Score</h4>
+        <p style='margin: 0; font-size: 2rem; font-weight: bold; color: #764ba2;'>{bdi_raw}/{bdi_asked * 3}</p>
+        <p style='margin: 0.5rem 0 0 0; color: #6c757d; font-size: 0.9rem;'>Based on {bdi_asked} items answered</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown(f"""
+        <div style='background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: none;'>
+        <h4 style='margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.1rem;'>Extrapolated Score</h4>
+        <p style='margin: 0; font-size: 2rem; font-weight: bold; color: #764ba2;'>{bdi_extrap}/63</p>
+        <p style='margin: 0.5rem 0 0 0; color: #6c757d; font-size: 0.9rem;'>Severity: {bdi_rule_label}</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    if bdi_asked != 21:
         st.info("💡 **Note**: Quick-mode BDI score is extrapolated from fewer items. Run a Full Assessment for a validated 21-item BDI score.")
 
     st.markdown("*Rule-based score is informational; ML model output drives the assessment.*")
@@ -104,15 +151,25 @@ def display_assessment_results(assessment):
     st.markdown("---")
 
     # Clinical description
-    st.markdown("## Clinical Assessment")
+    st.markdown("## 🏥 Clinical Assessment")
     desc = SEVERITY_DESCRIPTIONS.get(severity_label, '')
     if desc:
-        st.info(desc)
+        st.markdown(f"""
+        <div style='background: #e7f3ff; border-left: 4px solid #667eea; padding: 1.5rem; border-radius: 8px;'>
+        <p style='margin: 0; color: #004085;'><strong>Clinical Assessment:</strong> {desc}</p>
+        </div>
+        """, unsafe_allow_html=True)
 
     # Clinical follow-up flag
     if bdi_extrap >= CLINICAL_FOLLOW_UP_THRESHOLD or severity_idx >= 2:
-        st.warning("⚠️ **CLINICAL FOLLOW-UP RECOMMENDED**")
-        st.warning("Please discuss these results with your oncologist or a mental health professional at the earliest opportunity.")
+        st.markdown(f"""
+        <div style='background: #fff3cd; border: 2px solid #ffc107; padding: 1.5rem; border-radius: 12px; margin: 1rem 0;'>
+        <h4 style='margin: 0 0 0.5rem 0; color: #856404;'>⚠️ CLINICAL FOLLOW-UP RECOMMENDED</h4>
+        <p style='margin: 0; color: #856404;'>
+        Please discuss these results with your oncologist or a mental health professional at the earliest opportunity.
+        </p>
+        </div>
+        """, unsafe_allow_html=True)
 
     # Crisis resources for severe cases
     if severity_idx >= 3:  # moderate or above
@@ -123,13 +180,17 @@ def display_assessment_results(assessment):
         crisis_cols = st.columns(2)
         for i, (name, number) in enumerate(CRISIS_RESOURCES.items()):
             with crisis_cols[i % 2]:
-                st.error(f"**{name}**")
-                st.error(f"📞 {number}")
+                st.markdown(f"""
+                <div style='background: #f8d7da; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;'>
+                <p style='margin: 0; color: #721c24;'><strong>{name}</strong></p>
+                <p style='margin: 0.25rem 0 0 0; color: #721c24; font-size: 1.2rem;'>📞 {number}</p>
+                </div>
+                """, unsafe_allow_html=True)
 
     st.markdown("---")
 
     # Export functionality
-    st.markdown("## Export Results")
+    st.markdown("## 📥 Export Results")
 
     col1, col2 = st.columns(2)
 
@@ -143,11 +204,11 @@ def display_assessment_results(assessment):
             assessment['timestamp']
         )
         st.download_button(
-            label="📥 Download CSV Report",
+            label="� Download CSV Report",
             data=csv_data,
             file_name=f"depression_assessment_{assessment['timestamp'].replace(' ', '_').replace(':', '-')}.csv",
             mime="text/csv",
-            use_container_width=True
+            width='stretch'
         )
 
     with col2:
@@ -160,25 +221,25 @@ def display_assessment_results(assessment):
             assessment['timestamp']
         )
         st.download_button(
-            label="📥 Download PDF Report",
+            label="� Download PDF Report",
             data=pdf_data,
             file_name=f"depression_assessment_{assessment['timestamp'].replace(' ', '_').replace(':', '-')}.pdf",
             mime="application/pdf",
-            use_container_width=True
+            width='stretch'
         )
 
     st.markdown("---")
 
-    # Disclaimer
-    st.markdown("## Disclaimer")
-    st.warning("""
-    ⚠️ **DISCLAIMER**: This tool supports clinical screening only.
-    It is **NOT** a diagnostic instrument. Always consult a qualified
-    healthcare professional for diagnosis and treatment.
-
-    If you are experiencing thoughts of self-harm, please contact emergency
-    services or a crisis helpline immediately.
-    """)
+    # Disclaimer with better styling
+    st.markdown("""
+    <div style='background: #fff3cd; border: 2px solid #ffc107; border-radius: 12px; padding: 1.5rem;'>
+    <h4 style='margin: 0 0 0.5rem 0; color: #856404;'>⚠️ Important Disclaimer</h4>
+    <p style='margin: 0; color: #856404;'>
+    This tool is for <strong>screening purposes only</strong> and is <strong>NOT a clinical diagnosis</strong>.
+    Please consult a qualified healthcare professional for proper evaluation and treatment recommendations.
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
 
 def assessment_page():
     st.set_page_config(
@@ -187,11 +248,88 @@ def assessment_page():
         layout="wide"
     )
 
+    # Custom CSS for better styling
+    st.markdown("""
+    <style>
+    .main {
+        background-color: #f8f9fa;
+    }
+    .stButton>button {
+        background-color: #4a90e2;
+        color: white;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+    }
+    .stButton>button:hover {
+        background-color: #357abd;
+    }
+    .stButton>button[type="secondary"] {
+        background-color: #6c757d;
+    }
+    .stButton>button[type="secondary"]:hover {
+        background-color: #5a6268;
+    }
+    .stProgress>div>div>div>div {
+        background-color: #667eea;
+    }
+    .question-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin: 1rem 0;
+        border: none;
+    }
+    /* Better radio button styling */
+    .stRadio > div {
+        background: transparent;
+        padding: 0.5rem 0;
+    }
+    .stRadio > div > label {
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin: 0.25rem 0;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        transition: all 0.2s;
+    }
+    .stRadio > div > label:hover {
+        background: #e9ecef;
+        border-color: #dee2e6;
+    }
+    .stRadio > div > label[data-testid="stMarkdown"] {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+    /* Fix sidebar colors in dark mode */
+    [data-testid="stSidebar"] {
+        background-color: #0e1117;
+    }
+    [data-testid="stSidebar"] * {
+        color: #ffffff;
+    }
+    /* Consistent card spacing */
+    div[data-testid="stVerticalBlock"] > div {
+        gap: 1rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     # Initialize session state
     init_session_state()
 
-    st.title("📋 Depression Assessment")
-    st.markdown("Complete the questionnaire below to assess depression levels.")
+    # Header with gradient
+    st.markdown("""
+    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem; border-radius: 12px; margin-bottom: 2rem; color: white;'>
+    <h1 style='margin: 0; font-size: 2rem;'>📋 Depression Assessment</h1>
+    <p style='margin: 0.5rem 0 0 0; opacity: 0.9;'>
+    Complete the questionnaire below to assess depression levels
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
 
     # Initialize session state for assessment (if not already done in init_session_state)
     if 'assessment_step' not in st.session_state:
@@ -206,17 +344,23 @@ def assessment_page():
     # Mode Selection
     if st.session_state.assessment_step == 'mode_selection':
         st.markdown("### Select Assessment Mode")
-        st.markdown("""
-        Choose the assessment mode that best fits your needs:
-
-        - **Quick Screening**: Top-ranked items only (~7 minutes, 15 questions)
-        - **Full Assessment**: All BDI + key FCRI items (~15 minutes, 30 questions)
-        """)
+        st.markdown("Choose the assessment mode that best fits your needs:")
 
         col1, col2 = st.columns(2)
 
         with col1:
-            if st.button("🚀 Quick Screening", use_container_width=True):
+            st.markdown("""
+            <div class='question-card' style='border: none;'>
+            <h3 style='margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.2rem;'>⚡ Quick Screening</h3>
+            <ul style='margin: 0.5rem 0; padding-left: 1.5rem; color: #495057;'>
+            <li>Top-ranked items only</li>
+            <li>~7 minutes, 15 questions</li>
+            <li>ML-optimized selection</li>
+            <li>Best for initial screening</li>
+            </ul>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button("🚀 Start Quick Screening", width='stretch', type="primary"):
                 st.session_state.mode = 'quick'
                 top_bdi_nums, top_fcri_cols = load_top_items(TOP_N_BDI, TOP_N_FCRI)
                 st.session_state.top_bdi_nums = top_bdi_nums
@@ -225,7 +369,18 @@ def assessment_page():
                 st.rerun()
 
         with col2:
-            if st.button("📋 Full Assessment", use_container_width=True):
+            st.markdown("""
+            <div class='question-card' style='border: none;'>
+            <h3 style='margin: 0 0 0.5rem 0; color: #764ba2; font-size: 1.2rem;'>📋 Full Assessment</h3>
+            <ul style='margin: 0.5rem 0; padding-left: 1.5rem; color: #495057;'>
+            <li>All BDI + key FCRI items</li>
+            <li>~15 minutes, 30 questions</li>
+            <li>Comprehensive clinical coverage</li>
+            <li>Best for detailed analysis</li>
+            </ul>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button("📋 Start Full Assessment", width='stretch', type="primary"):
                 st.session_state.mode = 'full'
                 st.session_state.top_bdi_nums = None
                 st.session_state.top_fcri_cols = None
@@ -236,53 +391,69 @@ def assessment_page():
 
     # Demographics Collection
     elif st.session_state.assessment_step == 'demographics':
-        st.markdown("### Demographics")
-        st.markdown("Please provide some basic demographic information. This helps improve prediction accuracy.")
+        st.markdown("""
+        <div class='question-card' style='border: none;'>
+        <h3 style='margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.2rem;'>👤 Demographics</h3>
+        <p style='margin: 0; color: #495057;'>
+        Please provide some basic demographic information. This helps improve prediction accuracy.
+        </p>
+        </div>
+        """, unsafe_allow_html=True)
 
         with st.form("demographics_form"):
             col1, col2, col3 = st.columns(3)
 
             with col1:
+                st.markdown("**Gender**")
                 gender = st.selectbox(
-                    "Gender",
+                    "Select your gender",
                     ['Male', 'Female', 'Other', 'Prefer not to say'],
-                    index=0
+                    index=0,
+                    label_visibility="collapsed"
                 )
 
             with col2:
+                st.markdown("**Age Group**")
                 age_group = st.selectbox(
-                    "Age Group",
+                    "Select your age group",
                     ['Under 18', '18-30', '31-45', '46-60', 'Over 60'],
-                    index=2
+                    index=2,
+                    label_visibility="collapsed"
                 )
 
             with col3:
+                st.markdown("**Education Level**")
                 education_level = st.selectbox(
-                    "Education Level",
+                    "Select your education level",
                     ['No formal education', 'Primary', 'Secondary / Matric',
                      'Intermediate / FSc', "Bachelor's", "Master's or higher"],
-                    index=2
+                    index=2,
+                    label_visibility="collapsed"
                 )
 
             col4, col5 = st.columns(2)
 
             with col4:
+                st.markdown("**Cancer Stage**")
                 cancer_stage = st.selectbox(
-                    "Cancer Stage",
+                    "Select your cancer stage",
                     ['Stage I', 'Stage II', 'Stage III', 'Stage IV',
                      'Metastatic / Advanced', 'Not sure / not told'],
-                    index=0
+                    index=0,
+                    label_visibility="collapsed"
                 )
 
             with col5:
+                st.markdown("**Current Cancer Status**")
                 cancer_status = st.selectbox(
-                    "Current Cancer Status",
+                    "Select your current status",
                     ['Newly Diagnosed', 'Under Active Treatment', 'In Remission',
                      'Cancer Recurrence', 'Metastatic Disease', 'Palliative Care'],
-                    index=0
+                    index=0,
+                    label_visibility="collapsed"
                 )
 
-            submitted = st.form_submit_button("Continue to BDI Assessment")
+            submitted = st.form_submit_button("Continue to BDI Assessment →", width='stretch', type="primary")
             if submitted:
                 st.session_state.demographics = {
                     'gender': gender,
@@ -301,34 +472,68 @@ def assessment_page():
             items_to_show = [q for q in BDI_QUESTIONS if q['num'] in st.session_state.top_bdi_nums]
             n_total = len(BDI_QUESTIONS)
             n_asked = len(items_to_show)
-            st.markdown(f"### Beck Depression Inventory (BDI) — Quick Mode")
-            st.info(f"Showing {n_asked} of {n_total} BDI items based on feature importance. Remaining items will be estimated from training averages.")
+            st.markdown(f"""
+            <div class='question-card' style='border: none;'>
+            <h3 style='margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.2rem;'>🧠 Beck Depression Inventory (BDI) — Quick Mode</h3>
+            <p style='margin: 0; color: #495057;'>
+            Showing {n_asked} of {n_total} BDI items based on feature importance. Remaining items will be estimated from training averages.
+            </p>
+            </div>
+            """, unsafe_allow_html=True)
         else:
             items_to_show = BDI_QUESTIONS
             n_total = len(BDI_QUESTIONS)
             n_asked = len(items_to_show)
-            st.markdown(f"### Beck Depression Inventory (BDI) — Full Assessment")
-            st.info(f"Showing all {n_total} BDI items.")
+            st.markdown(f"""
+            <div class='question-card' style='border: none;'>
+            <h3 style='margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.2rem;'>🧠 Beck Depression Inventory (BDI) — Full Assessment</h3>
+            <p style='margin: 0; color: #495057;'>
+            Showing all {n_total} BDI items.
+            </p>
+            </div>
+            """, unsafe_allow_html=True)
 
-        st.markdown("Choose the statement that best describes how you have been feeling **DURING THE PAST WEEK**, including today.")
+        st.markdown("""
+        <div style='background: #e7f3ff; border-left: 4px solid #667eea; padding: 1rem; border-radius: 8px; margin: 1rem 0;'>
+        <p style='margin: 0; color: #004085;'>
+        <strong>Instructions:</strong> Choose the statement that best describes how you have been feeling <strong>DURING THE PAST WEEK</strong>, including today.
+        </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Progress bar
+        progress = 0
+        if 'current_question' not in st.session_state:
+            st.session_state.current_question = 0
+
+        st.progress(progress / len(items_to_show), text=f"Progress: {progress}/{len(items_to_show)} questions")
 
         with st.form("bdi_form"):
             bdi_responses = {}
 
             for i, item in enumerate(items_to_show, 1):
-                st.markdown(f"**{i}. {item['title']}**")
+                st.markdown(f"""
+                <div class='question-card' style='border: none;'>
+                <h4 style='margin: 0 0 1rem 0; color: #667eea; font-size: 1.1rem;'>{i}. {item['title']}</h4>
+                </div>
+                """, unsafe_allow_html=True)
+
+                # Create user-friendly options without numbers
+                user_friendly_options = [opt.split(' - ', 1)[1] if ' - ' in opt else opt for opt in item['options']]
+
                 response = st.radio(
                     f"Select your response for {item['title']}",
-                    item['options'],
+                    user_friendly_options,
                     key=f"bdi_{item['num']}",
                     label_visibility="collapsed"
                 )
-                # Extract the numeric score (first character of the option)
-                score = int(response.split(' - ')[0]) if ' - ' in response else int(response[0])
-                bdi_responses[f"{item['num']}."] = score
-                st.markdown("---")
 
-            submitted = st.form_submit_button("Continue to FCRI Assessment")
+                # Map back to original option to get score
+                original_index = user_friendly_options.index(response)
+                score = original_index  # 0-based index matches the score
+                bdi_responses[f"{item['num']}."] = score
+
+            submitted = st.form_submit_button("Continue to FCRI Assessment →", width='stretch', type="primary")
             if submitted:
                 st.session_state.bdi_responses = bdi_responses
 
@@ -354,38 +559,66 @@ def assessment_page():
             items_to_show = [FCRI_ALL_ITEMS[c] for c in st.session_state.top_fcri_cols if c in FCRI_ALL_ITEMS]
             n_total = 42
             n_asked = len(items_to_show)
-            st.markdown(f"### Fear of Cancer Recurrence Inventory (FCRI) — Quick Mode")
-            st.info(f"Showing {n_asked} of {n_total} FCRI items based on feature importance. Remaining items will be estimated from training averages.")
+            st.markdown(f"""
+            <div class='question-card' style='border: none;'>
+            <h3 style='margin: 0 0 0.5rem 0; color: #764ba2; font-size: 1.2rem;'>😰 Fear of Cancer Recurrence Inventory (FCRI) — Quick Mode</h3>
+            <p style='margin: 0; color: #495057;'>
+            Showing {n_asked} of {n_total} FCRI items based on feature importance. Remaining items will be estimated from training averages.
+            </p>
+            </div>
+            """, unsafe_allow_html=True)
         else:
             items_to_show = FCRI_KEY_ITEMS
             n_total = 42
             n_asked = len(items_to_show)
-            st.markdown(f"### Fear of Cancer Recurrence Inventory (FCRI) — Full Assessment")
-            st.info(f"Showing {n_asked} key FCRI items covering all subscales.")
+            st.markdown(f"""
+            <div class='question-card' style='border: none;'>
+            <h3 style='margin: 0 0 0.5rem 0; color: #764ba2; font-size: 1.2rem;'>😰 Fear of Cancer Recurrence Inventory (FCRI) — Full Assessment</h3>
+            <p style='margin: 0; color: #495057;'>
+            Showing {n_asked} key FCRI items covering all subscales.
+            </p>
+            </div>
+            """, unsafe_allow_html=True)
 
-        st.markdown("Indicate to what degree each statement applied to you **DURING THE PAST MONTH**.")
+        st.markdown("""
+        <div style='background: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; border-radius: 8px; margin: 1rem 0;'>
+        <p style='margin: 0; color: #856404;'>
+        <strong>Instructions:</strong> Indicate to what degree each statement applied to you <strong>DURING THE PAST MONTH</strong>.
+        </p>
+        </div>
+        """, unsafe_allow_html=True)
 
         with st.form("fcri_form"):
             fcri_responses = {}
 
             for i, item in enumerate(items_to_show, 1):
-                st.markdown(f"**{i}. {item['label']}** ({item['subscale']})")
+                st.markdown(f"""
+                <div class='question-card' style='border: none; background: white;'>
+                <h4 style='margin: 0 0 0.5rem 0; color: #764ba2; font-size: 1.1rem;'>{i}. {item['label']}</h4>
+                <p style='margin: 0 0 1rem 0; color: #6c757d; font-size: 0.9rem;'>Subscale: {item['subscale']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+
+                # Create user-friendly options without numbers
+                user_friendly_options = [opt.split(' - ', 1)[1] if ' - ' in opt else opt for opt in item['options']]
+
                 response = st.radio(
                     f"Select your response for {item['label']}",
-                    item['options'],
+                    user_friendly_options,
                     key=f"fcri_{i}",
                     label_visibility="collapsed"
                 )
-                # Extract the numeric score (first character of the option)
-                score = int(response.split(' - ')[0]) if ' - ' in response else int(response[0])
+
+                # Map back to original option to get score
+                original_index = user_friendly_options.index(response)
+                score = original_index  # 0-based index matches the score
                 fcri_responses[item['col']] = score
-                st.markdown("---")
 
             col1, col2 = st.columns(2)
             with col1:
-                submitted = st.form_submit_button("Submit Assessment")
+                submitted = st.form_submit_button("📊 Submit Assessment", width='stretch', type="primary")
             with col2:
-                back = st.form_submit_button("Back to BDI")
+                back = st.form_submit_button("← Back to BDI", width='stretch', type="secondary")
 
             if submitted:
                 st.session_state.fcri_responses = fcri_responses
@@ -434,7 +667,7 @@ def assessment_page():
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            if st.button("🔄 New Assessment", use_container_width=True):
+            if st.button("🔄 New Assessment", width='stretch'):
                 # Reset assessment state
                 st.session_state.assessment_step = 'mode_selection'
                 st.session_state.demographics = {}
@@ -445,11 +678,11 @@ def assessment_page():
                 st.rerun()
 
         with col2:
-            if st.button("📜 View History", use_container_width=True):
+            if st.button("📜 View History", width='stretch'):
                 st.switch_page("pages/3_History.py")
 
         with col3:
-            if st.button("🏠 Back to Home", use_container_width=True):
+            if st.button("🏠 Back to Home", width='stretch'):
                 st.switch_page("streamlit_app.py")
 
 if __name__ == '__main__':

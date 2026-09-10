@@ -26,10 +26,49 @@ def history_page():
         layout="wide"
     )
 
+    # Custom CSS for better styling
+    st.markdown("""
+    <style>
+    .main {
+        background-color: #f8f9fa;
+    }
+    .stButton>button {
+        background-color: #4a90e2;
+        color: white;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+    }
+    .stButton>button:hover {
+        background-color: #357abd;
+    }
+    /* Fix sidebar colors in dark mode */
+    [data-testid="stSidebar"] {
+        background-color: #0e1117;
+    }
+    [data-testid="stSidebar"] * {
+        color: #ffffff;
+    }
+    /* Consistent card spacing */
+    div[data-testid="stVerticalBlock"] > div {
+        gap: 1rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     # Initialize session state
     init_session_state()
 
-    st.title("📜 Assessment History")
+    # Header with gradient
+    st.markdown("""
+    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem; border-radius: 12px; margin-bottom: 2rem; color: white;'>
+    <h1 style='margin: 0; font-size: 2rem;'>📜 Assessment History</h1>
+    <p style='margin: 0.5rem 0 0 0; opacity: 0.9;'>
+    Review your past assessments and export session data
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
 
     # Check if there's any history
     if not st.session_state.history:
@@ -49,7 +88,7 @@ def history_page():
             data=csv_data,
             file_name=f"assessment_history_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
             mime="text/csv",
-            use_container_width=True
+            width='stretch'
         )
 
     st.markdown("---")
@@ -104,7 +143,7 @@ def history_page():
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        if st.button("📋 New Assessment", use_container_width=True):
+        if st.button("📋 New Assessment", width='stretch'):
             st.session_state.assessment_step = 'mode_selection'
             st.session_state.demographics = {}
             st.session_state.bdi_responses = {}
@@ -114,14 +153,14 @@ def history_page():
             st.switch_page("pages/1_Assessment.py")
 
     with col2:
-        if st.button("📊 View Latest Results", use_container_width=True):
+        if st.button("📊 View Latest Results", width='stretch'):
             if st.session_state.current_assessment:
                 st.switch_page("pages/2_Results.py")
             else:
                 st.warning("No current assessment available.")
 
     with col3:
-        if st.button("🏠 Back to Home", use_container_width=True):
+        if st.button("🏠 Back to Home", width='stretch'):
             st.switch_page("streamlit_app.py")
 
 if __name__ == '__main__':
