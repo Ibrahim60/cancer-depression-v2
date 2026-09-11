@@ -23,6 +23,22 @@ from streamlit_app import (
     SEVERITY_LABELS, SEVERITY_DESCRIPTIONS, export_results_to_csv, export_results_to_pdf
 )
 
+# Severity index -> semantic tier used for theme-aware styling.
+# Each tier maps to an .alert-card.alert-<tier> class defined in the CSS below,
+# so colors are resolved by the browser per active theme instead of being
+# baked in as fixed hex values from Python.
+SEVERITY_TIERS = {
+    0: ("success", "🟢"),
+    1: ("success", "🟢"),
+    2: ("warning", "🟡"),
+    3: ("elevated", "🟠"),
+}
+
+
+def severity_tier(severity_idx: int):
+    return SEVERITY_TIERS.get(severity_idx, ("danger", "🔴"))
+
+
 def display_assessment_results(assessment):
     """Display assessment results directly in the current page."""
     pred = assessment['prediction']
@@ -32,12 +48,9 @@ def display_assessment_results(assessment):
 
     # Success banner
     st.markdown("""
-    <div style='background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; color: white; text-align: center;'>
-    <h2 style='margin: 0; font-size: 1.8rem;'>✅ Assessment Completed Successfully</h2>
-    <p style='margin: 0.5rem 0 0 0; opacity: 0.9;'>
-    {timestamp} • {mode} Assessment
-    </p>
+    <div class="banner-hero">
+    <h2>✅ Assessment Completed Successfully</h2>
+    <p>{timestamp} • {mode} Assessment</p>
     </div>
     """.format(timestamp=assessment['timestamp'], mode=mode.capitalize()),
     unsafe_allow_html=True)
@@ -51,40 +64,22 @@ def display_assessment_results(assessment):
     # Primary Results Card
     severity_idx = pred['severity_idx']
     severity_label = pred['severity_label']
-
-    # Color coding based on severity
-    if severity_idx <= 1:  # Normal or Mild
-        bg_color = "#d4edda"
-        border_color = "#28a745"
-        text_color = "#155724"
-        emoji = "🟢"
-    elif severity_idx == 2:  # Borderline
-        bg_color = "#fff3cd"
-        border_color = "#ffc107"
-        text_color = "#856404"
-        emoji = "🟡"
-    elif severity_idx == 3:  # Moderate
-        bg_color = "#ffeeba"
-        border_color = "#fd7e14"
-        text_color = "#856404"
-        emoji = "🟠"
-    else:  # Severe or Extreme
-        bg_color = "#f8d7da"
-        border_color = "#dc3545"
-        text_color = "#721c24"
-        emoji = "🔴"
+    tier, emoji = severity_tier(severity_idx)
 
     st.markdown(f"""
-    <div style='background: {bg_color}; border: 2px solid {border_color}; padding: 2rem; border-radius: 12px; margin-bottom: 2rem;'>
-    <h2 style='margin: 0 0 1rem 0; color: {text_color};'>{emoji} ML Model Severity: {severity_label}</h2>
-    <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;'>
-    <div>
-    <p style='margin: 0; color: {text_color};'><strong>Model Confidence:</strong> {pred['confidence']:.1f}%</p>
-    </div>
-    <div>
-    <p style='margin: 0; color: {text_color};'><strong>Depression Probability:</strong> {pred['depression_prob']:.1f}%</p>
-    </div>
-    </div>
+    <div class="result-hero alert-card alert-{tier}">
+        <div class="result-hero-eyebrow">ML screening result</div>
+        <h2>{emoji} {severity_label}</h2>
+        <div class="result-grid">
+            <div class="result-stat">
+                <div class="result-stat-label">Model confidence</div>
+                <div class="result-stat-value">{pred['confidence']:.1f}%</div>
+            </div>
+            <div class="result-stat">
+                <div class="result-stat-label">Depression probability</div>
+                <div class="result-stat-value">{pred['depression_prob']:.1f}%</div>
+            </div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -127,26 +122,26 @@ def display_assessment_results(assessment):
 
     with col1:
         st.markdown(f"""
-        <div style='background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: none;'>
-        <h4 style='margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.1rem;'>Raw BDI Score</h4>
-        <p style='margin: 0; font-size: 2rem; font-weight: bold; color: #764ba2;'>{bdi_raw}/{bdi_asked * 3}</p>
-        <p style='margin: 0.5rem 0 0 0; color: #6c757d; font-size: 0.9rem;'>Based on {bdi_asked} items answered</p>
+        <div class="metric-card">
+            <div class="metric-label">Raw BDI score</div>
+            <div class="metric-value">{bdi_raw}/{bdi_asked * 3}</div>
+            <div class="metric-footnote">Based on {bdi_asked} items answered</div>
         </div>
         """, unsafe_allow_html=True)
 
     with col2:
         st.markdown(f"""
-        <div style='background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: none;'>
-        <h4 style='margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.1rem;'>Extrapolated Score</h4>
-        <p style='margin: 0; font-size: 2rem; font-weight: bold; color: #764ba2;'>{bdi_extrap}/63</p>
-        <p style='margin: 0.5rem 0 0 0; color: #6c757d; font-size: 0.9rem;'>Severity: {bdi_rule_label}</p>
+        <div class="metric-card">
+            <div class="metric-label">Extrapolated score</div>
+            <div class="metric-value">{bdi_extrap}/63</div>
+            <div class="metric-footnote">Severity: {bdi_rule_label}</div>
         </div>
         """, unsafe_allow_html=True)
 
     if bdi_asked != 21:
         st.info("💡 **Note**: Quick-mode BDI score is extrapolated from fewer items. Run a Full Assessment for a validated 21-item BDI score.")
 
-    st.markdown("*Rule-based score is informational; ML model output drives the assessment.*")
+    st.caption("Rule-based score is informational; ML model output drives the assessment.")
 
     st.markdown("---")
 
@@ -155,19 +150,17 @@ def display_assessment_results(assessment):
     desc = SEVERITY_DESCRIPTIONS.get(severity_label, '')
     if desc:
         st.markdown(f"""
-        <div style='background: #e7f3ff; border-left: 4px solid #667eea; padding: 1.5rem; border-radius: 8px;'>
-        <p style='margin: 0; color: #004085;'><strong>Clinical Assessment:</strong> {desc}</p>
+        <div class="alert-card alert-info">
+        <p><strong>Clinical Assessment:</strong> {desc}</p>
         </div>
         """, unsafe_allow_html=True)
 
     # Clinical follow-up flag
     if bdi_extrap >= CLINICAL_FOLLOW_UP_THRESHOLD or severity_idx >= 2:
-        st.markdown(f"""
-        <div style='background: #fff3cd; border: 2px solid #ffc107; padding: 1.5rem; border-radius: 12px; margin: 1rem 0;'>
-        <h4 style='margin: 0 0 0.5rem 0; color: #856404;'>⚠️ CLINICAL FOLLOW-UP RECOMMENDED</h4>
-        <p style='margin: 0; color: #856404;'>
-        Please discuss these results with your oncologist or a mental health professional at the earliest opportunity.
-        </p>
+        st.markdown("""
+        <div class="alert-card alert-warning alert-card--emphasis">
+        <h4>⚠️ Clinical follow-up recommended</h4>
+        <p>Please discuss these results with your oncologist or a mental health professional at the earliest opportunity.</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -181,9 +174,9 @@ def display_assessment_results(assessment):
         for i, (name, number) in enumerate(CRISIS_RESOURCES.items()):
             with crisis_cols[i % 2]:
                 st.markdown(f"""
-                <div style='background: #f8d7da; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;'>
-                <p style='margin: 0; color: #721c24;'><strong>{name}</strong></p>
-                <p style='margin: 0.25rem 0 0 0; color: #721c24; font-size: 1.2rem;'>📞 {number}</p>
+                <div class="alert-card alert-danger crisis-card">
+                <p class="crisis-name">{name}</p>
+                <p class="crisis-number">📞 {number}</p>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -204,7 +197,7 @@ def display_assessment_results(assessment):
             assessment['timestamp']
         )
         st.download_button(
-            label="� Download CSV Report",
+            label="⬇️ Download CSV Report",
             data=csv_data,
             file_name=f"depression_assessment_{assessment['timestamp'].replace(' ', '_').replace(':', '-')}.csv",
             mime="text/csv",
@@ -221,7 +214,7 @@ def display_assessment_results(assessment):
             assessment['timestamp']
         )
         st.download_button(
-            label="� Download PDF Report",
+            label="⬇️ Download PDF Report",
             data=pdf_data,
             file_name=f"depression_assessment_{assessment['timestamp'].replace(' ', '_').replace(':', '-')}.pdf",
             mime="application/pdf",
@@ -230,11 +223,11 @@ def display_assessment_results(assessment):
 
     st.markdown("---")
 
-    # Disclaimer with better styling
+    # Disclaimer
     st.markdown("""
-    <div style='background: #fff3cd; border: 2px solid #ffc107; border-radius: 12px; padding: 1.5rem;'>
-    <h4 style='margin: 0 0 0.5rem 0; color: #856404;'>⚠️ Important Disclaimer</h4>
-    <p style='margin: 0; color: #856404;'>
+    <div class="alert-card alert-warning alert-card--emphasis">
+    <h4>⚠️ Important disclaimer</h4>
+    <p>
     This tool is for <strong>screening purposes only</strong> and is <strong>NOT a clinical diagnosis</strong>.
     Please consult a qualified healthcare professional for proper evaluation and treatment recommendations.
     </p>
@@ -248,71 +241,560 @@ def assessment_page():
         layout="wide"
     )
 
-    # Custom CSS for better styling
+    # Modern clinical dashboard styling — theme tokens are defined once and
+    # every colored surface (alerts, results hero, crisis cards, metrics)
+    # reads from these variables. The app is locked to a single light
+    # theme regardless of the visitor's OS/browser preference or Streamlit's
+    # own dark-mode toggle, so the design is never seen half-dark/half-light.
     st.markdown("""
     <style>
-    .main {
-        background-color: #f8f9fa;
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+
+    :root, html, html[data-theme="dark"], html[data-theme="light"] {
+        color-scheme: light;
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --indigo: #4f46e5;
+        --text: #172033;
+        --muted: #64748b;
+        --surface: #ffffff;
+        --surface-soft: #f8fafc;
+        --surface-hover: #f1f5f9;
+        --border: #e2e8f0;
+        --input-bg: #ffffff;
+        --radio-bg: #f8fafc;
+        --sidebar-bg: #ffffff;
+        --sidebar-text: #334155;
+        --shadow: rgba(15, 23, 42, .06);
+
+        /* Semantic alert tiers: bg / border / text */
+        --success-bg: #ecfdf5;   --success-border: #22c55e;  --success-text: #166534;
+        --info-bg:    #eff6ff;   --info-border:    #3b82f6;  --info-text:    #1e3a8a;
+        --warning-bg: #fffbeb;   --warning-border: #f59e0b;  --warning-text: #92400e;
+        --elevated-bg:#fff7ed;   --elevated-border:#f97316;  --elevated-text:#9a3412;
+        --danger-bg:  #fef2f2;   --danger-border:  #ef4444;  --danger-text:  #991b1b;
+        --stat-chip-bg: rgba(255,255,255,.6);
     }
-    .stButton>button {
-        background-color: #4a90e2;
+
+    html, body, [class*="css"] {
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .stApp {
+        background:
+            radial-gradient(circle at 8% 0%, rgba(37, 99, 235, 0.07), transparent 28%),
+            radial-gradient(circle at 92% 10%, rgba(79, 70, 229, 0.06), transparent 25%),
+            var(--surface-soft);
+    }
+
+    [data-testid="stHeader"] {
+        background: transparent;
+    }
+
+    [data-testid="stMainBlockContainer"] {
+        max-width: 1180px;
+        padding-top: 2rem;
+        padding-bottom: 4rem;
+    }
+
+    [data-testid="stSidebar"] {
+        background: var(--sidebar-bg);
+    }
+
+    [data-testid="stSidebar"] * {
+        color: var(--sidebar-text);
+    }
+
+    .hero {
+        position: relative;
+        overflow: hidden;
+        padding: 2.4rem 2.5rem;
+        border-radius: 24px;
+        margin-bottom: 1.5rem;
         color: white;
-        border-radius: 8px;
-        padding: 0.5rem 1rem;
-        font-weight: 500;
+        background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 52%, #4f46e5 100%);
+        box-shadow: 0 18px 45px rgba(37, 99, 235, .18);
     }
-    .stButton>button:hover {
-        background-color: #357abd;
+
+    .hero:after {
+        content: "";
+        position: absolute;
+        width: 260px;
+        height: 260px;
+        right: -80px;
+        top: -120px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.10);
     }
-    .stButton>button[type="secondary"] {
-        background-color: #6c757d;
+
+    .hero h1 {
+        margin: 0;
+        font-size: 2.25rem;
+        line-height: 1.15;
+        letter-spacing: -.03em;
     }
-    .stButton>button[type="secondary"]:hover {
-        background-color: #5a6268;
+
+    .hero p {
+        margin: .7rem 0 0;
+        max-width: 680px;
+        color: rgba(255,255,255,.84);
+        font-size: 1rem;
     }
-    .stProgress>div>div>div>div {
-        background-color: #667eea;
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        padding: .35rem .7rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,.13);
+        color: #dbeafe;
+        font-size: .78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        margin-bottom: .8rem;
     }
-    .question-card {
-        background: white;
+
+    .section-card, .question-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 1.35rem 1.5rem;
+        margin: .85rem 0;
+        box-shadow: 0 8px 25px var(--shadow);
+    }
+
+    .section-card .section-eyebrow {
+        font-size: .78rem;
+        color: var(--primary);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+    }
+
+    .section-card h3 {
+        margin: .3rem 0 .45rem;
+        color: var(--text);
+    }
+
+    .section-card p {
+        margin: 0;
+        color: var(--muted);
+    }
+
+    .mode-card {
+        min-height: 245px;
+        padding: 1.6rem;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: var(--surface);
+        box-shadow: 0 10px 30px var(--shadow);
+        transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+        margin-bottom: 20px;
+    }
+
+    .mode-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 16px 36px var(--shadow);
+        border-color: var(--primary);
+    }
+
+    .mode-icon {
+        width: 46px;
+        height: 46px;
+        display: grid;
+        place-items: center;
+        border-radius: 14px;
+        background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+        font-size: 1.35rem;
+        margin-bottom: 1rem;
+    }
+
+    .mode-card h3 {
+        margin: 0 0 .55rem;
+        color: var(--text);
+        font-size: 1.25rem;
+    }
+
+    .mode-card p {
+        color: var(--muted);
+        margin: 0 0 1rem;
+        font-size: .92rem;
+        line-height: 1.6;
+    }
+
+    .mode-card ul {
+        color: var(--text);
+        margin: 0;
+        padding-left: 1.2rem;
+        line-height: 1.8;
+        font-size: .9rem;
+    }
+
+    .stepper {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        margin: 0 0 1.35rem;
+        padding: .75rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: color-mix(in srgb, var(--surface) 88%, transparent);
+        backdrop-filter: blur(8px);
+    }
+
+    .step {
+        display: flex;
+        align-items: center;
+        gap: .45rem;
+        color: var(--muted);
+        font-size: .82rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .step.active {
+        color: var(--primary);
+    }
+
+    .step.done {
+        color: var(--success-border);
+    }
+
+    .step-dot {
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: var(--border);
+        color: var(--text);
+        font-size: .72rem;
+        font-weight: 700;
+    }
+
+    .step.active .step-dot {
+        color: white;
+        background: var(--primary);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 25%, transparent);
+    }
+
+    .step.done .step-dot {
+        color: white;
+        background: var(--success-border);
+    }
+
+    .step-line {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    /* ---- Unified alert-card system used across notices, results hero
+       and crisis cards. Each tier only sets the three color variables;
+       structural styling stays shared so every notice looks consistent. */
+    .alert-card {
+        padding: 1.1rem 1.25rem;
+        border-radius: 14px;
+        border: 1px solid var(--card-border);
+        background: var(--card-bg);
+        color: var(--card-text);
+        margin: 1rem 0;
+    }
+
+    .alert-card p, .alert-card h4 {
+        color: var(--card-text);
+        margin: 0;
+    }
+
+    .alert-card h4 {
+        margin-bottom: .4rem;
+        font-size: 1rem;
+    }
+
+    .alert-card--emphasis {
+        border-width: 2px;
+    }
+
+    .alert-success { --card-bg: var(--success-bg); --card-border: var(--success-border); --card-text: var(--success-text); }
+    .alert-info    { --card-bg: var(--info-bg);    --card-border: var(--info-border);    --card-text: var(--info-text); }
+    .alert-warning { --card-bg: var(--warning-bg); --card-border: var(--warning-border); --card-text: var(--warning-text); }
+    .alert-elevated{ --card-bg: var(--elevated-bg);--card-border: var(--elevated-border);--card-text: var(--elevated-text); }
+    .alert-danger  { --card-bg: var(--danger-bg);  --card-border: var(--danger-border);  --card-text: var(--danger-text); }
+
+    .instruction {
+        padding: 1rem 1.15rem;
+        border: 1px solid var(--info-border);
+        border-left: 4px solid var(--primary);
+        border-radius: 12px;
+        background: var(--info-bg);
+        color: var(--text);
+        margin: 1rem 0 1.35rem;
+    }
+
+    .instruction.warning {
+        border-color: var(--warning-border);
+        border-left-color: var(--warning-border);
+        background: var(--warning-bg);
+        color: var(--text);
+    }
+
+    .question-heading {
+        margin: 0 0 .9rem;
+        color: var(--text);
+        font-size: 1.02rem;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+
+    .question-meta {
+        color: var(--muted);
+        font-size: .78rem;
+        margin-top: -.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .metric-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 1.3rem;
+        box-shadow: 0 8px 25px var(--shadow);
+    }
+
+    .metric-label {
+        color: var(--muted);
+        font-size: .78rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    .metric-value {
+        color: var(--text);
+        font-size: 2rem;
+        font-weight: 700;
+        margin-top: .25rem;
+    }
+
+    .metric-footnote {
+        color: var(--muted);
+        font-size: .85rem;
+        margin-top: .3rem;
+    }
+
+    .banner-hero {
+        background: linear-gradient(135deg, var(--success-border) 0%, #20c997 100%);
         padding: 1.5rem;
         border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        margin: 1rem 0;
-        border: none;
-    }
-    /* Better radio button styling */
-    .stRadio > div {
-        background: transparent;
-        padding: 0.5rem 0;
-    }
-    .stRadio > div > label {
-        padding: 0.75rem 1rem;
-        border-radius: 8px;
-        margin: 0.25rem 0;
-        background: #f8f9fa;
-        border: 1px solid #e9ecef;
-        transition: all 0.2s;
-    }
-    .stRadio > div > label:hover {
-        background: #e9ecef;
-        border-color: #dee2e6;
-    }
-    .stRadio > div > label[data-testid="stMarkdown"] {
-        background: #667eea;
+        margin-bottom: 2rem;
         color: white;
-        border-color: #667eea;
+        text-align: center;
     }
-    /* Fix sidebar colors in dark mode */
-    [data-testid="stSidebar"] {
-        background-color: #0e1117;
+
+    .banner-hero h2 { margin: 0; font-size: 1.8rem; }
+    .banner-hero p { margin: .5rem 0 0 0; opacity: .92; }
+
+    .result-hero {
+        border-radius: 22px;
+        padding: 1.6rem;
     }
-    [data-testid="stSidebar"] * {
-        color: #ffffff;
+
+    .result-hero h2 {
+        margin: 0 0 .8rem;
+        font-size: 1.65rem;
     }
-    /* Consistent card spacing */
-    div[data-testid="stVerticalBlock"] > div {
+
+    .result-hero-eyebrow {
+        font-size: .78rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        opacity: .75;
+    }
+
+    .result-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
+    }
+
+    .result-stat {
+        padding: 1rem;
+        border-radius: 14px;
+        background: var(--stat-chip-bg);
+    }
+
+    .result-stat-label {
+        font-size: .78rem;
+        opacity: .8;
+        margin-bottom: .2rem;
+    }
+
+    .result-stat-value {
+        font-size: 1.15rem;
+        font-weight: 700;
+    }
+
+    .crisis-card {
+        margin: .5rem 0;
+    }
+
+    .crisis-name {
+        font-weight: 700;
+    }
+
+    .crisis-number {
+        margin-top: .25rem !important;
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+
+    .stButton > button, .stDownloadButton > button {
+        border-radius: 11px !important;
+        min-height: 2.8rem;
+        font-weight: 600 !important;
+        border: 1px solid var(--border) !important;
+        transition: all .18s ease !important;
+    }
+
+    .stButton > button[kind="primary"], .stDownloadButton > button {
+        border: none !important;
+        background: linear-gradient(135deg, var(--primary), var(--indigo)) !important;
+        color: white !important;
+        box-shadow: 0 7px 18px rgba(37,99,235,.18);
+    }
+
+    .stButton > button[kind="primary"]:hover, .stDownloadButton > button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 22px rgba(37,99,235,.25);
+    }
+
+    .stButton > button[kind="secondary"] {
+        background: var(--surface) !important;
+        color: var(--text) !important;
+    }
+
+    .stProgress > div > div > div > div {
+        background: linear-gradient(90deg, var(--primary), var(--indigo));
+    }
+
+    .stProgress {
+        margin: .7rem 0 1.2rem;
+    }
+
+    div[data-testid="stRadio"] > div {
+        gap: .5rem;
+    }
+
+    div[data-testid="stRadio"] label {
+        padding: .75rem .9rem !important;
+        border: 1px solid var(--border);
+        border-radius: 11px;
+        background: var(--radio-bg);
+        transition: all .15s ease;
+    }
+
+    div[data-testid="stRadio"] label:hover {
+        border-color: var(--primary);
+        background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+    }
+
+    /* Theme-safe Streamlit form controls */
+    [data-testid="stTextInput"] input,
+    [data-testid="stNumberInput"] input,
+    [data-testid="stDateInput"] input,
+    [data-testid="stSelectbox"] [data-baseweb="select"] > div,
+    [data-testid="stMultiSelect"] [data-baseweb="select"] > div {
+        background: var(--input-bg) !important;
+        color: var(--text) !important;
+        border-color: var(--border) !important;
+    }
+
+    [data-baseweb="popover"],
+    [data-baseweb="menu"],
+    [role="listbox"] {
+        background: var(--surface) !important;
+        color: var(--text) !important;
+        border-color: var(--border) !important;
+    }
+
+    [role="option"] {
+        color: var(--text) !important;
+        background: var(--surface) !important;
+    }
+
+    [role="option"]:hover {
+        background: var(--surface-hover) !important;
+    }
+
+    [data-testid="stExpander"] {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: var(--surface);
+    }
+
+    [data-testid="stDataFrame"] {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .stAlert {
+        color: var(--text);
+        border-radius: 12px;
+    }
+
+    /* Force every native Streamlit surface to light, even if the visitor's
+       OS/browser prefers dark or they flip Streamlit's own theme toggle.
+       Nothing else styles these app-chrome elements, so !important here
+       can't clash with anything. */
+    html, body,
+    [data-testid="stAppViewContainer"],
+    [data-testid="stMain"],
+    [data-testid="stHeader"],
+    [data-testid="stToolbar"],
+    [data-testid="stDecoration"],
+    [data-testid="stBottomBlockContainer"] {
+        background-color: var(--surface-soft) !important;
+        color: var(--text) !important;
+    }
+
+    /* Low-specificity base text color for plain markdown/captions/labels
+       that aren't inside one of our styled cards. Deliberately bare tag
+       selectors (no class/important) so every card rule above already
+       wins the cascade and keeps its own color (e.g. white hero text,
+       tinted alert-card text) without a specificity fight. */
+    p, li, h2, h3, h4, label {
+        color: var(--text);
+    }
+
+    @media (max-width: 768px) {
+        [data-testid="stMainBlockContainer"] {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .hero {
+            padding: 1.6rem;
+            border-radius: 18px;
+        }
+
+        .hero h1 {
+            font-size: 1.75rem;
+        }
+
+        .stepper {
+            overflow-x: auto;
+        }
+
+        .step-line {
+            min-width: 22px;
+        }
+
+        .result-grid {
+            grid-template-columns: 1fr;
+        }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -320,14 +802,12 @@ def assessment_page():
     # Initialize session state
     init_session_state()
 
-    # Header with gradient
+    # Modern page header
     st.markdown("""
-    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 2rem; border-radius: 12px; margin-bottom: 2rem; color: white;'>
-    <h1 style='margin: 0; font-size: 2rem;'>📋 Depression Assessment</h1>
-    <p style='margin: 0.5rem 0 0 0; opacity: 0.9;'>
-    Complete the questionnaire below to assess depression levels
-    </p>
+    <div class="hero">
+        <div class="eyebrow">Clinical screening tool</div>
+        <h1>Depression Assessment</h1>
+        <p>Answer a short set of questions to generate an ML-assisted depression screening result for cancer patients.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -341,23 +821,47 @@ def assessment_page():
     if 'fcri_responses' not in st.session_state:
         st.session_state.fcri_responses = {}
 
+    # Assessment progress
+    step_names = {
+        'mode_selection': ('1', 'Mode'),
+        'demographics': ('2', 'Profile'),
+        'bdi_assessment': ('3', 'BDI'),
+        'fcri_assessment': ('4', 'FCRI'),
+        'results': ('5', 'Results')
+    }
+    current_step = st.session_state.get('assessment_step', 'mode_selection')
+    current_num = int(step_names.get(current_step, ('1', 'Mode'))[0])
+
+    step_html = '<div class="stepper">'
+    labels = [('1', 'Mode'), ('2', 'Profile'), ('3', 'BDI'), ('4', 'FCRI'), ('5', 'Results')]
+    for num, label in labels:
+        n = int(num)
+        cls = 'done' if n < current_num else ('active' if n == current_num else '')
+        icon = '✓' if n < current_num else num
+        step_html += f'<div class="step {cls}"><span class="step-dot">{icon}</span><span>{label}</span></div>'
+        if n < 5:
+            step_html += '<div class="step-line"></div>'
+    step_html += '</div>'
+    st.markdown(step_html, unsafe_allow_html=True)
+
     # Mode Selection
     if st.session_state.assessment_step == 'mode_selection':
-        st.markdown("### Select Assessment Mode")
-        st.markdown("Choose the assessment mode that best fits your needs:")
+        st.markdown("## Choose your assessment")
+        st.markdown("Select the screening depth that fits your situation. You can start with a quick screening or complete the full assessment.")
 
         col1, col2 = st.columns(2)
 
         with col1:
             st.markdown("""
-            <div class='question-card' style='border: none;'>
-            <h3 style='margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.2rem;'>⚡ Quick Screening</h3>
-            <ul style='margin: 0.5rem 0; padding-left: 1.5rem; color: #495057;'>
-            <li>Top-ranked items only</li>
-            <li>~7 minutes, 15 questions</li>
-            <li>ML-optimized selection</li>
-            <li>Best for initial screening</li>
-            </ul>
+            <div class="mode-card">
+                <div class="mode-icon">⚡</div>
+                <h3>Quick Screening</h3>
+                <p>A focused assessment using the questions identified as most predictive by the ML model.</p>
+                <ul>
+                    <li>About 7 minutes</li>
+                    <li>Top-ranked BDI & FCRI items</li>
+                    <li>Optimized for initial screening</li>
+                </ul>
             </div>
             """, unsafe_allow_html=True)
             if st.button("🚀 Start Quick Screening", width='stretch', type="primary"):
@@ -370,14 +874,15 @@ def assessment_page():
 
         with col2:
             st.markdown("""
-            <div class='question-card' style='border: none;'>
-            <h3 style='margin: 0 0 0.5rem 0; color: #764ba2; font-size: 1.2rem;'>📋 Full Assessment</h3>
-            <ul style='margin: 0.5rem 0; padding-left: 1.5rem; color: #495057;'>
-            <li>All BDI + key FCRI items</li>
-            <li>~15 minutes, 30 questions</li>
-            <li>Comprehensive clinical coverage</li>
-            <li>Best for detailed analysis</li>
-            </ul>
+            <div class="mode-card">
+                <div class="mode-icon">📋</div>
+                <h3>Full Assessment</h3>
+                <p>A more comprehensive assessment covering all BDI questions and key FCRI items.</p>
+                <ul>
+                    <li>About 15 minutes</li>
+                    <li>Comprehensive clinical coverage</li>
+                    <li>Best for detailed analysis</li>
+                </ul>
             </div>
             """, unsafe_allow_html=True)
             if st.button("📋 Start Full Assessment", width='stretch', type="primary"):
@@ -392,11 +897,10 @@ def assessment_page():
     # Demographics Collection
     elif st.session_state.assessment_step == 'demographics':
         st.markdown("""
-        <div class='question-card' style='border: none;'>
-        <h3 style='margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.2rem;'>👤 Demographics</h3>
-        <p style='margin: 0; color: #495057;'>
-        Please provide some basic demographic information. This helps improve prediction accuracy.
-        </p>
+        <div class="section-card">
+            <div class="section-eyebrow">Step 2 · Profile</div>
+            <h3>👤 About you</h3>
+            <p>Please provide the basic information below. These details are used as model features to improve screening accuracy.</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -473,11 +977,10 @@ def assessment_page():
             n_total = len(BDI_QUESTIONS)
             n_asked = len(items_to_show)
             st.markdown(f"""
-            <div class='question-card' style='border: none;'>
-            <h3 style='margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.2rem;'>🧠 Beck Depression Inventory (BDI) — Quick Mode</h3>
-            <p style='margin: 0; color: #495057;'>
-            Showing {n_asked} of {n_total} BDI items based on feature importance. Remaining items will be estimated from training averages.
-            </p>
+            <div class='section-card'>
+            <div class="section-eyebrow">Step 3 · BDI</div>
+            <h3>🧠 Beck Depression Inventory — Quick Mode</h3>
+            <p>Showing {n_asked} of {n_total} BDI items based on feature importance. Remaining items will be estimated from training averages.</p>
             </div>
             """, unsafe_allow_html=True)
         else:
@@ -485,36 +988,29 @@ def assessment_page():
             n_total = len(BDI_QUESTIONS)
             n_asked = len(items_to_show)
             st.markdown(f"""
-            <div class='question-card' style='border: none;'>
-            <h3 style='margin: 0 0 0.5rem 0; color: #667eea; font-size: 1.2rem;'>🧠 Beck Depression Inventory (BDI) — Full Assessment</h3>
-            <p style='margin: 0; color: #495057;'>
-            Showing all {n_total} BDI items.
-            </p>
+            <div class='section-card'>
+            <div class="section-eyebrow">Step 3 · BDI</div>
+            <h3>🧠 Beck Depression Inventory — Full Assessment</h3>
+            <p>Showing all {n_total} BDI items.</p>
             </div>
             """, unsafe_allow_html=True)
 
         st.markdown("""
-        <div style='background: #e7f3ff; border-left: 4px solid #667eea; padding: 1rem; border-radius: 8px; margin: 1rem 0;'>
-        <p style='margin: 0; color: #004085;'>
-        <strong>Instructions:</strong> Choose the statement that best describes how you have been feeling <strong>DURING THE PAST WEEK</strong>, including today.
-        </p>
+        <div class="instruction">
+            <strong>How to answer</strong><br>
+            Choose the statement that best describes how you have been feeling <strong>during the past week, including today</strong>.
         </div>
         """, unsafe_allow_html=True)
 
-        # Progress bar
-        progress = 0
-        if 'current_question' not in st.session_state:
-            st.session_state.current_question = 0
-
-        st.progress(progress / len(items_to_show), text=f"Progress: {progress}/{len(items_to_show)} questions")
+        st.caption(f"📝 {len(items_to_show)} questions in this section — all answers are required before continuing.")
 
         with st.form("bdi_form"):
             bdi_responses = {}
 
             for i, item in enumerate(items_to_show, 1):
                 st.markdown(f"""
-                <div class='question-card' style='border: none;'>
-                <h4 style='margin: 0 0 1rem 0; color: #667eea; font-size: 1.1rem;'>{i}. {item['title']}</h4>
+                <div class="question-card">
+                    <div class="question-heading">{i}. {item['title']}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -560,11 +1056,10 @@ def assessment_page():
             n_total = 42
             n_asked = len(items_to_show)
             st.markdown(f"""
-            <div class='question-card' style='border: none;'>
-            <h3 style='margin: 0 0 0.5rem 0; color: #764ba2; font-size: 1.2rem;'>😰 Fear of Cancer Recurrence Inventory (FCRI) — Quick Mode</h3>
-            <p style='margin: 0; color: #495057;'>
-            Showing {n_asked} of {n_total} FCRI items based on feature importance. Remaining items will be estimated from training averages.
-            </p>
+            <div class='section-card'>
+            <div class="section-eyebrow">Step 4 · FCRI</div>
+            <h3>😰 Fear of Cancer Recurrence Inventory — Quick Mode</h3>
+            <p>Showing {n_asked} of {n_total} FCRI items based on feature importance. Remaining items will be estimated from training averages.</p>
             </div>
             """, unsafe_allow_html=True)
         else:
@@ -572,30 +1067,30 @@ def assessment_page():
             n_total = 42
             n_asked = len(items_to_show)
             st.markdown(f"""
-            <div class='question-card' style='border: none;'>
-            <h3 style='margin: 0 0 0.5rem 0; color: #764ba2; font-size: 1.2rem;'>😰 Fear of Cancer Recurrence Inventory (FCRI) — Full Assessment</h3>
-            <p style='margin: 0; color: #495057;'>
-            Showing {n_asked} key FCRI items covering all subscales.
-            </p>
+            <div class='section-card'>
+            <div class="section-eyebrow">Step 4 · FCRI</div>
+            <h3>😰 Fear of Cancer Recurrence Inventory — Full Assessment</h3>
+            <p>Showing {n_asked} key FCRI items covering all subscales.</p>
             </div>
             """, unsafe_allow_html=True)
 
         st.markdown("""
-        <div style='background: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; border-radius: 8px; margin: 1rem 0;'>
-        <p style='margin: 0; color: #856404;'>
-        <strong>Instructions:</strong> Indicate to what degree each statement applied to you <strong>DURING THE PAST MONTH</strong>.
-        </p>
+        <div class="instruction warning">
+            <strong>How to answer</strong><br>
+            Indicate to what degree each statement applied to you <strong>during the past month</strong>.
         </div>
         """, unsafe_allow_html=True)
+
+        st.caption(f"📝 {len(items_to_show)} questions in this section — all answers are required before submitting.")
 
         with st.form("fcri_form"):
             fcri_responses = {}
 
             for i, item in enumerate(items_to_show, 1):
                 st.markdown(f"""
-                <div class='question-card' style='border: none; background: white;'>
-                <h4 style='margin: 0 0 0.5rem 0; color: #764ba2; font-size: 1.1rem;'>{i}. {item['label']}</h4>
-                <p style='margin: 0 0 1rem 0; color: #6c757d; font-size: 0.9rem;'>Subscale: {item['subscale']}</p>
+                <div class="question-card">
+                    <div class="question-heading">{i}. {item['label']}</div>
+                    <div class="question-meta">Subscale: {item['subscale']}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -659,7 +1154,6 @@ def assessment_page():
 
     # Results Display (show directly in current page)
     elif st.session_state.assessment_step == 'results':
-        st.success("✅ Assessment completed successfully!")
         display_assessment_results(st.session_state.current_assessment)
 
         # Navigation buttons

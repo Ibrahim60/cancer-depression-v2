@@ -1,0 +1,11 @@
+# Locks Streamlit's own theme to light, so the app doesn't flip to Streamlit's
+# native dark palette based on the visitor's OS/browser preference or the
+# theme toggle in Settings. Place this file at <project_root>/.streamlit/config.toml
+# (same level as streamlit_app.py).
+[theme]
+base = "light"
+primaryColor = "#2563eb"
+backgroundColor = "#f8fafc"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#172033"
+font = "sans serif"
