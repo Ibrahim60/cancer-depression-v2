@@ -16,7 +16,7 @@ from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from streamlit_app import (
-    BDI_QUESTIONS, FCRI_KEY_ITEMS, FCRI_ALL_ITEMS,
+    BDI_QUESTIONS, FCRI_QUESTIONS, FCRI_ALL_ITEMS,
     load_top_items, build_feature_vector, predict, bdi_reference,
     TOP_N_BDI, TOP_N_FCRI, CLINICAL_FOLLOW_UP_THRESHOLD,
     CRISIS_RESOURCES, init_session_state,
@@ -877,9 +877,9 @@ def assessment_page():
             <div class="mode-card">
                 <div class="mode-icon">📋</div>
                 <h3>Full Assessment</h3>
-                <p>A more comprehensive assessment covering all BDI questions and key FCRI items.</p>
+                <p>A comprehensive assessment covering all 21 BDI questions and all 42 FCRI items — no answers are estimated.</p>
                 <ul>
-                    <li>About 15 minutes</li>
+                    <li>About 25-30 minutes</li>
                     <li>Comprehensive clinical coverage</li>
                     <li>Best for detailed analysis</li>
                 </ul>
@@ -1063,14 +1063,14 @@ def assessment_page():
             </div>
             """, unsafe_allow_html=True)
         else:
-            items_to_show = FCRI_KEY_ITEMS
+            items_to_show = FCRI_QUESTIONS
             n_total = 42
             n_asked = len(items_to_show)
             st.markdown(f"""
             <div class='section-card'>
             <div class="section-eyebrow">Step 4 · FCRI</div>
             <h3>😰 Fear of Cancer Recurrence Inventory — Full Assessment</h3>
-            <p>Showing {n_asked} key FCRI items covering all subscales.</p>
+            <p>Showing all {n_asked} FCRI items across all subscales.</p>
             </div>
             """, unsafe_allow_html=True)
 

@@ -194,7 +194,7 @@ The Streamlit web application provides a modern, user-friendly interface for dep
 ### Assessment Modes
 
 - **Quick Screening**: Top-ranked items only (~7 minutes, 15 questions)
-- **Full Assessment**: All BDI + key FCRI items (~15 minutes, 30 questions)
+- **Full Assessment**: All BDI + all FCRI items (~25-30 minutes, 63 questions)
 
 ### Features
 

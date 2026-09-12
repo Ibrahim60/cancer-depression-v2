@@ -278,111 +278,121 @@ BDI_QUESTIONS = [
 # FCRI KEY ITEMS
 # =============================================================================
 
-FCRI_KEY_ITEMS = [
-    {
-        'col':     '9. I am worried or anxious about the possibility of cancer recurrence',
-        'label':   'FCRI: Worry about recurrence',
-        'subscale':'Severity',
-        'options': ['0 - Not at all', '1 - A little', '2 - Somewhat',
-                    '3 - A lot', '4 - A great deal'],
-    },
-    {
-        'col':     '14. In your opinion, are you at risk of having a cancer recurrence?',
-        'label':   'FCRI: Perceived risk of recurrence',
-        'subscale':'Severity',
-        'options': ['0 - Not at all at risk', '1 - A little at risk', '2 - Somewhat at risk',
-                    '3 - A lot at risk', '4 - A great deal at risk'],
-    },
-    {
-        'col':     '15. How often do you think about the possibility of cancer recurrence?',
-        'label':   'FCRI: Frequency of recurrence thoughts',
-        'subscale':'Severity',
-        'options': ['0 - Never', '1 - A few times a month', '2 - A few times a week',
-                    '3 - A few times a day', '4 - Several times a day'],
-    },
-    {
-        'col':     '18. Worry, fear or anxiety',
-        'label':   'FCRI: Emotional distress — worry or fear',
-        'subscale':'Psychological Distress',
-        'options': ['0 - Not at all', '1 - A little', '2 - Somewhat',
-                    '3 - A lot', '4 - A great deal'],
-    },
-    {
-        'col':     '22. My social or leisure activities (e.g. outings, sports, travel)',
-        'label':   'FCRI: Impact on social activities',
-        'subscale':'Functioning Impairments',
-        'options': ['0 - Not at all', '1 - A little', '2 - Somewhat',
-                    '3 - A lot', '4 - A great deal'],
-    },
-    {
-        'col':     '26. My state of mind or my mood',
-        'label':   'FCRI: Impact on state of mind',
-        'subscale':'Functioning Impairments',
-        'options': ['0 - Not at all', '1 - A little', '2 - Somewhat',
-                    '3 - A lot', '4 - A great deal'],
-    },
-    {
-        'col':     '28. I feel that I worry excessively about the possibility of cancer recurrence',
-        'label':   'FCRI: Awareness of excessive worry',
-        'subscale':'Insight',
-        'options': ['0 - Not at all', '1 - A little', '2 - Somewhat',
-                    '3 - A lot', '4 - A great deal'],
-    },
-    {
-        'col':     '31. I call my doctor or other health professional',
-        'label':   'FCRI: Seeking reassurance from doctor',
-        'subscale':'Reassurance',
-        'options': ['0 - Never', '1 - Rarely', '2 - Sometimes',
-                    '3 - Most of the time', '4 - All the time'],
-    },
-    {
-        'col':     '36. I pray, meditate or do relaxation',
-        'label':   'FCRI: Use of relaxation or prayer',
-        'subscale':'Coping Strategies',
-        'options': ['0 - Never', '1 - Rarely', '2 - Sometimes',
-                    '3 - Most of the time', '4 - All the time'],
-    },
+# Response scales. Verified against the real survey data (Data/cancer_psychology.csv)
+# rather than assumed — Triggers (1-8) turned out to use the frequency scale, not
+# the intensity scale used by Severity/Distress/Functioning/Insight.
+_FREQ      = ['0 - Never', '1 - Rarely', '2 - Sometimes', '3 - Most of the time', '4 - All the time']
+_INTENSITY = ['0 - Not at all', '1 - A little', '2 - Somewhat', '3 - A lot', '4 - A great deal']
+
+# All 42 FCRI items, in questionnaire order, grouped by subscale
+# (FCRI_SUBSCALES item ranges in depression_detection_pipeline.py):
+#   Triggers 1-8 (freq) · Severity 9-17 (mixed, item 13 reverse-scored) ·
+#   Psychological Distress 18-21 (intensity) · Functioning Impairments 22-27 (intensity) ·
+#   Insight 28-30 (intensity) · Reassurance 31-33 (freq) · Coping Strategies 34-42 (freq)
+FCRI_QUESTIONS = [
+    {'num': 1, 'col': '1. Television shows or newspaper articles about cancer or illness',
+     'label': 'Triggered by: TV/news about cancer or illness', 'subscale': 'Triggers', 'options': _FREQ},
+    {'num': 2, 'col': '2. An appointment with my doctor or other health professional',
+     'label': 'Triggered by: a doctor appointment', 'subscale': 'Triggers', 'options': _FREQ},
+    {'num': 3, 'col': '3. Medical examinations (e.g. annual check-up, blood tests, X-rays)',
+     'label': 'Triggered by: medical examinations', 'subscale': 'Triggers', 'options': _FREQ},
+    {'num': 4, 'col': '4. Conversations about cancer or illness in general',
+     'label': 'Triggered by: conversations about cancer/illness', 'subscale': 'Triggers', 'options': _FREQ},
+    {'num': 5, 'col': '5. Seeing or hearing about someone who is ill',
+     'label': 'Triggered by: seeing/hearing about someone ill', 'subscale': 'Triggers', 'options': _FREQ},
+    {'num': 6, 'col': '6. Going to a funeral or reading the obituary section of the paper',
+     'label': 'Triggered by: funerals or obituaries', 'subscale': 'Triggers', 'options': _FREQ},
+    {'num': 7, 'col': '7. When I feel unwell physically or when I am sick',
+     'label': 'Triggered by: feeling physically unwell', 'subscale': 'Triggers', 'options': _FREQ},
+    {'num': 8, 'col': '8. Generally, I avoid situations or things that make me think about the possibility of cancer\nrecurrence',
+     'label': 'I avoid situations that make me think about recurrence', 'subscale': 'Triggers', 'options': _FREQ},
+    {'num': 9, 'col': '9. I am worried or anxious about the possibility of cancer recurrence',
+     'label': 'FCRI: Worry about recurrence', 'subscale': 'Severity', 'options': _INTENSITY},
+    {'num': 10, 'col': '10. I am afraid of cancer recurrence',
+     'label': 'FCRI: Fear of recurrence', 'subscale': 'Severity', 'options': _INTENSITY},
+    {'num': 11, 'col': '11. I believe it is normal to be worried or anxious about the possibility of cancer recurrence',
+     'label': 'I believe it is normal to worry about recurrence', 'subscale': 'Severity', 'options': _INTENSITY},
+    {'num': 12, 'col': '12. When I think about the possibility of cancer recurrence, this triggers other unpleasant\nthoughts or images (such as death, suffering, the consequences for my family)',
+     'label': 'Recurrence thoughts trigger other unpleasant thoughts/images', 'subscale': 'Severity', 'options': _INTENSITY},
+    {'num': 13, 'col': '13. I believe that I am cured and that the cancer will not come back',
+     'label': 'FCRI: Belief in cure (reverse-scored)', 'subscale': 'Severity', 'options': _INTENSITY},
+    {'num': 14, 'col': '14. In your opinion, are you at risk of having a cancer recurrence?',
+     'label': 'FCRI: Perceived risk of recurrence', 'subscale': 'Severity',
+     'options': ['0 - Not at all at risk', '1 - A little at risk', '2 - Somewhat at risk',
+                 '3 - A lot at risk', '4 - A great deal at risk']},
+    {'num': 15, 'col': '15. How often do you think about the possibility of cancer recurrence?',
+     'label': 'FCRI: Frequency of recurrence thoughts', 'subscale': 'Severity',
+     'options': ['0 - Never', '1 - A few times a month', '2 - A few times a week',
+                 '3 - A few times a day', '4 - Several times a day']},
+    {'num': 16, 'col': '16. How much time per day do you spend thinking about the possibility of cancer recurrence?',
+     'label': 'FCRI: Time spent per day thinking about recurrence', 'subscale': 'Severity',
+     'options': ["0 - I don't think about it", '1 - A few seconds',
+                 '2 - A few minutes', '3 - A few hours', '4 - Several hours']},
+    {'num': 17, 'col': '17. How long have you been thinking about the possibility of cancer recurrence?',
+     'label': 'FCRI: How long recurrence thoughts have persisted', 'subscale': 'Severity',
+     'options': ["0 - I don't think about it", '1 - A few weeks',
+                 '2 - A few months', '3 - A few years', '4 - Several years']},
+    {'num': 18, 'col': '18. Worry, fear or anxiety',
+     'label': 'FCRI: Emotional distress — worry or fear', 'subscale': 'Psychological Distress', 'options': _INTENSITY},
+    {'num': 19, 'col': '19. Sadness, discouragement or disappointment',
+     'label': 'FCRI: Emotional distress — sadness/disappointment', 'subscale': 'Psychological Distress', 'options': _INTENSITY},
+    {'num': 20, 'col': '20. Frustration, anger or outrage',
+     'label': 'FCRI: Emotional distress — frustration/anger', 'subscale': 'Psychological Distress', 'options': _INTENSITY},
+    {'num': 21, 'col': '21. Helplessness or resignation',
+     'label': 'FCRI: Emotional distress — helplessness/resignation', 'subscale': 'Psychological Distress', 'options': _INTENSITY},
+    {'num': 22, 'col': '22. My social or leisure activities (e.g. outings, sports, travel)',
+     'label': 'FCRI: Impact on social activities', 'subscale': 'Functioning Impairments', 'options': _INTENSITY},
+    {'num': 23, 'col': '23. My work or everyday activities',
+     'label': 'FCRI: Impact on work or everyday activities', 'subscale': 'Functioning Impairments', 'options': _INTENSITY},
+    {'num': 24, 'col': '24. My relationships with my partner, my family, or those close to me',
+     'label': 'FCRI: Impact on relationships', 'subscale': 'Functioning Impairments', 'options': _INTENSITY},
+    {'num': 25, 'col': '25. My ability to make future plans or set life goals',
+     'label': 'FCRI: Impact on future plans/life goals', 'subscale': 'Functioning Impairments', 'options': _INTENSITY},
+    {'num': 26, 'col': '26. My state of mind or my mood',
+     'label': 'FCRI: Impact on state of mind', 'subscale': 'Functioning Impairments', 'options': _INTENSITY},
+    {'num': 27, 'col': '27. My quality of life in general',
+     'label': 'FCRI: Impact on quality of life', 'subscale': 'Functioning Impairments', 'options': _INTENSITY},
+    {'num': 28, 'col': '28. I feel that I worry excessively about the possibility of cancer recurrence',
+     'label': 'FCRI: Awareness of excessive worry', 'subscale': 'Insight', 'options': _INTENSITY},
+    {'num': 29, 'col': '29. Other people think that I worry excessively about the possibility of cancer recurrence',
+     'label': 'Others think I worry excessively about recurrence', 'subscale': 'Insight', 'options': _INTENSITY},
+    {'num': 30, 'col': '30. I think that I worry more about the possibility of cancer recurrence than other people who\nhave been diagnosed with cancer',
+     'label': 'I worry more about recurrence than other cancer patients', 'subscale': 'Insight', 'options': _INTENSITY},
+    {'num': 31, 'col': '31. I call my doctor or other health professional',
+     'label': 'FCRI: Seeking reassurance from doctor', 'subscale': 'Reassurance', 'options': _FREQ},
+    {'num': 32, 'col': '32. I go to the hospital or clinic for an examination',
+     'label': 'I go to the hospital/clinic for an examination', 'subscale': 'Reassurance', 'options': _FREQ},
+    {'num': 33, 'col': '33. I examine myself to see if I have any physical signs of cancer',
+     'label': 'I examine myself for physical signs of cancer', 'subscale': 'Reassurance', 'options': _FREQ},
+    {'num': 34, 'col': '34. I try to distract myself (e.g. do various activities, watch television, read, work)',
+     'label': 'Coping: I try to distract myself', 'subscale': 'Coping Strategies', 'options': _FREQ},
+    {'num': 35, 'col': '35. I try not to think about it, to get the idea out of my mind',
+     'label': 'Coping: I try not to think about it', 'subscale': 'Coping Strategies', 'options': _FREQ},
+    {'num': 36, 'col': '36. I pray, meditate or do relaxation',
+     'label': 'FCRI: Use of relaxation or prayer', 'subscale': 'Coping Strategies', 'options': _FREQ},
+    {'num': 37, 'col': '37. I try to convince myself that everything will be fine or I think positively',
+     'label': 'Coping: I try to think positively', 'subscale': 'Coping Strategies', 'options': _FREQ},
+    {'num': 38, 'col': '38. I talk to someone about it',
+     'label': 'Coping: I talk to someone about it', 'subscale': 'Coping Strategies', 'options': _FREQ},
+    {'num': 39, 'col': '39. I try to understand what is happening and deal with it',
+     'label': 'Coping: I try to understand and deal with it', 'subscale': 'Coping Strategies', 'options': _FREQ},
+    {'num': 40, 'col': '40. I try to find a solution',
+     'label': 'Coping: I try to find a solution', 'subscale': 'Coping Strategies', 'options': _FREQ},
+    {'num': 41, 'col': '41. I try to replace this thought with a more pleasant one',
+     'label': 'Coping: I try to replace the thought with a pleasant one', 'subscale': 'Coping Strategies', 'options': _FREQ},
+    {'num': 42, 'col': '42. I tell myself “stop it”',
+     'label': 'Coping: I tell myself "stop it"', 'subscale': 'Coping Strategies', 'options': _FREQ},
 ]
 
-FCRI_EXTRA_ITEMS = [
-    {
-        'col':     '13. I believe that I am cured and that the cancer will not come back',
-        'label':   'FCRI: Belief in cure (reverse-scored)',
-        'subscale':'Severity',
-        'options': ['0 - Not at all', '1 - A little', '2 - Somewhat',
-                    '3 - A lot', '4 - A great deal'],
-    },
-    {
-        'col':     '16. How much time per day do you spend thinking about the possibility of cancer recurrence?',
-        'label':   'FCRI: Time spent per day thinking about recurrence',
-        'subscale':'Severity',
-        'options': ["0 - I don't think about it", '1 - A few seconds',
-                    '2 - A few minutes', '3 - A few hours', '4 - Several hours'],
-    },
-    {
-        'col':     '23. My work or everyday activities',
-        'label':   'FCRI: Impact on work or everyday activities',
-        'subscale':'Functioning Impairments',
-        'options': ['0 - Not at all', '1 - A little', '2 - Somewhat',
-                    '3 - A lot', '4 - A great deal'],
-    },
-    {
-        'col':     '10. I am afraid of cancer recurrence',
-        'label':   'FCRI: Fear of recurrence',
-        'subscale':'Severity',
-        'options': ['0 - Not at all', '1 - A little', '2 - Somewhat',
-                    '3 - A lot', '4 - A great deal'],
-    },
-    {
-        'col':     '27. My quality of life in general',
-        'label':   'FCRI: Impact on quality of life',
-        'subscale':'Functioning Impairments',
-        'options': ['0 - Not at all', '1 - A little', '2 - Somewhat',
-                    '3 - A lot', '4 - A great deal'],
-    },
-]
+# Full lookup: column name -> item definition (covers all 42, so any item the
+# ML feature-importance ranking picks for Quick mode is guaranteed to resolve —
+# previously only 14 of 42 items had display definitions here).
+FCRI_ALL_ITEMS = {q['col']: q for q in FCRI_QUESTIONS}
 
-FCRI_ALL_ITEMS = {item['col']: item for item in FCRI_KEY_ITEMS + FCRI_EXTRA_ITEMS}
+# 9-item clinical default used by Quick mode when feature_importance.csv is
+# absent (first run, before any training) — one item per subscale.
+_fcri_by_num  = {q['num']: q for q in FCRI_QUESTIONS}
+FCRI_KEY_ITEMS = [_fcri_by_num[n] for n in [9, 14, 15, 18, 22, 26, 28, 31, 36]]
 
 # =============================================================================
 # MODEL LOADING FUNCTIONS
@@ -409,12 +419,16 @@ def load_artefacts():
         meta = json.load(f)
 
     return {
-        'binary_model':   joblib.load(paths['binary_model']),
-        'multi_model':    joblib.load(paths['multi_model']),
-        'scaler':         joblib.load(paths['scaler']),
-        'label_encoders': joblib.load(paths['label_encoders']),
-        'feature_cols':   meta['feature_cols'],
-        'feature_means':  meta['feature_means'],
+        'binary_model':    joblib.load(paths['binary_model']),
+        'multi_model':     joblib.load(paths['multi_model']),
+        'scaler':          joblib.load(paths['scaler']),
+        'label_encoders':  joblib.load(paths['label_encoders']),
+        'feature_cols':    meta['feature_cols'],
+        'feature_means':   meta['feature_means'],
+        # CV-tuned decision threshold on P(has_depression) that maximizes
+        # macro-F1 (see tune_binary_threshold() in the training pipeline).
+        # Falls back to the sklearn default of 0.5 for older metadata files.
+        'binary_threshold':meta.get('binary_threshold', 0.5),
     }
 
 def load_top_items(n_bdi=TOP_N_BDI, n_fcri=TOP_N_FCRI):
@@ -499,8 +513,8 @@ def predict(feature_vec, artefacts):
     X_df     = pd.DataFrame([feature_vec], columns=artefacts['feature_cols'])
     X_scaled = artefacts['scaler'].transform(X_df)
 
-    binary_pred  = int(artefacts['binary_model'].predict(X_scaled)[0])
     binary_proba = artefacts['binary_model'].predict_proba(X_scaled)[0]
+    binary_pred  = int(binary_proba[1] >= artefacts.get('binary_threshold', 0.5))
 
     multi_pred  = int(artefacts['multi_model'].predict(X_scaled)[0])
     multi_proba = artefacts['multi_model'].predict_proba(X_scaled)[0]

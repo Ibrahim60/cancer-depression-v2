@@ -20,6 +20,19 @@ Fixes over v1
     not included in feature engineering
 """
 
+import sys
+# Force UTF-8 stdout/stderr. Windows' default console codepage (cp1252) can't
+# encode the arrows/dashes used in this script's print statements, which
+# crashes with UnicodeEncodeError as soon as output is redirected (a log
+# file, CI, non-interactive runs) rather than shown in a UTF-8-capable
+# terminal. reconfigure() is Python 3.7+; guarded in case a stream doesn't
+# support it (e.g. some IDE-embedded consoles).
+try:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+except (AttributeError, ValueError):
+    pass
+
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -30,7 +43,8 @@ import pandas as pd
 import joblib
 import re
 
-from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
+from sklearn.model_selection import (train_test_split, StratifiedKFold, GridSearchCV,
+                                     cross_val_predict)
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
@@ -76,6 +90,15 @@ class ClinicalDataPreprocessor:
     #   item 15: 'a few times a month'→1 (was 2), 'a few times a week'→2 (was 3),
     #            'several times a day'→4 (was missing), removed 'a few times a year'/'at least once a day'
     #   item 17: 'several years'→4 (was 'since my diagnosis' which doesn't exist in data)
+    #   items 16 & 17: 'I don't think about it' → 0 was keyed with a straight
+    #     apostrophe ('), but the real CSV export uses a curly apostrophe (’,
+    #     U+2019) for this exact phrase on BOTH items. str.lower() doesn't
+    #     normalize that, so the lookup silently missed for every respondent
+    #     who picked it — 161/1531 rows (10.5%) on item 16, 122/1531 (8.0%) on
+    #     item 17 — falling through to NaN and getting subscale-mean-imputed
+    #     instead of correctly scored 0. Added the curly-quote key (kept the
+    #     straight-quote one too, in case of other/future exports); one entry
+    #     fixes both items since they share this map.
     FCRI_SCORE_MAP = {
         # Frequency scale (Triggers, Reassurance, Coping, Reassurance Effectiveness)
         'never': 0, 'rarely': 1, 'sometimes': 2, 'most of the time': 3, 'all the time': 4,
@@ -88,9 +111,11 @@ class ClinicalDataPreprocessor:
         'a few times a month': 1, 'a few times a week': 2,
         'a few times a day': 3, 'several times a day': 4,
         # Item 16 — time per day
-        "i don't think about it": 0, 'a few seconds': 1, 'a few minutes': 2,
+        "i don't think about it": 0, "i don’t think about it": 0,
+        'a few seconds': 1, 'a few minutes': 2,
         'a few hours': 3, 'several hours': 4,
         # Item 17 — duration (FIXED: 'several years' not 'since my diagnosis')
+        # Also uses "I don't think about it" → 0, same key as item 16 above.
         'a few weeks': 1, 'a few months': 2, 'a few years': 3, 'several years': 4,
     }
 
@@ -447,13 +472,17 @@ class DepressionClassificationPipeline:
         self.random_state = random_state
         self.models = {}
 
-    def _tune(self, estimator, param_grid, X_scaled, y, cv, name):
+    def _tune(self, estimator, param_grid, X_scaled, y, cv, name, sample_weight=None):
         print(f"\n  Tuning {name}…")
+        # f1_macro (unweighted mean across classes) rather than f1_weighted —
+        # f1_weighted scores by class support and so re-biases model *selection*
+        # back toward the majority class, undermining class_weight='balanced'.
         gs = GridSearchCV(estimator, param_grid, cv=cv,
-                          scoring='f1_weighted', n_jobs=-1, verbose=0)
-        gs.fit(X_scaled, y)
+                          scoring='f1_macro', n_jobs=-1, verbose=0)
+        fit_params = {'sample_weight': sample_weight} if sample_weight is not None else {}
+        gs.fit(X_scaled, y, **fit_params)
         print(f"    Best params : {gs.best_params_}")
-        print(f"    Best CV F1  : {gs.best_score_:.4f}")
+        print(f"    Best CV F1 (macro) : {gs.best_score_:.4f}")
         return gs.best_estimator_
 
     def train(self, X_train_scaled, y_train, task='binary'):
@@ -465,6 +494,15 @@ class DepressionClassificationPipeline:
         cv           = StratifiedKFold(n_splits=5, shuffle=True,
                                        random_state=self.random_state)
         class_weight = 'balanced'   # handles class imbalance for LR and RF
+
+        # XGBoost has no class_weight constructor arg, so it previously got NO
+        # imbalance handling at all while LR/RF did. Give it inverse-frequency
+        # sample weights (same 'balanced' policy) so all three base learners
+        # are treated consistently.
+        classes  = np.unique(y_train)
+        cw_arr   = compute_class_weight('balanced', classes=classes, y=y_train)
+        cw_map   = dict(zip(classes, cw_arr))
+        xgb_sample_weight = np.array([cw_map[v] for v in y_train])
 
         # ── Logistic Regression ───────────────────────────────────────────────
         lr = self._tune(
@@ -498,14 +536,22 @@ class DepressionClassificationPipeline:
                           verbosity=0, **xgb_kwargs),
             {'n_estimators': [100, 200], 'max_depth': [3, 5, 7],
              'learning_rate': [0.01, 0.1]},
-            X_train_scaled, y_train, cv, "XGBoost"
+            X_train_scaled, y_train, cv, "XGBoost",
+            sample_weight=xgb_sample_weight
         )
 
         # ── Soft-vote ensemble ────────────────────────────────────────────────
+        # Multiclass verification run showed tuned LR alone (87.6% acc) beats
+        # RF (75.2%) and XGB (78.8%) by a wide margin, and beats the old
+        # equal-weight ensemble (86.0%). Weight the vote toward LR for
+        # multiclass so the weaker learners can't drag it down. Binary already
+        # performs best under equal weights (ensemble tied RF at 99.4%), so
+        # leave that one unweighted.
         print("\n  Building Voting Ensemble…")
+        weights = [2, 1, 1] if task == 'multiclass' else None
         ensemble = VotingClassifier(
             estimators=[('lr', lr), ('rf', rf), ('xgb', xgb)],
-            voting='soft'
+            voting='soft', weights=weights
         )
         ensemble.fit(X_train_scaled, y_train)
 
@@ -517,6 +563,30 @@ class DepressionClassificationPipeline:
         }
         self.models[task] = models
         return models
+
+    def tune_binary_threshold(self, ensemble, X_train_scaled, y_train, cv):
+        """
+        Pick the P(has_depression) decision threshold that maximizes macro-F1,
+        using out-of-fold predictions on the TRAINING set only (cross_val_predict
+        refits clones of `ensemble` per fold) — the test set is never touched
+        during threshold selection, so this doesn't leak into evaluation.
+
+        Default sklearn .predict() is equivalent to threshold=0.50; class 0
+        ("No Depression") is the rare class (~5.6% of patients) and gets the
+        worst recall of any class in the whole framework, so it's the
+        threshold worth tuning.
+        """
+        proba = cross_val_predict(ensemble, X_train_scaled, y_train, cv=cv,
+                                  method='predict_proba', n_jobs=-1)[:, 1]
+        thresholds = np.linspace(0.05, 0.95, 91)
+        scores = [f1_score(y_train, (proba >= t).astype(int), average='macro')
+                 for t in thresholds]
+        best_idx = int(np.argmax(scores))
+        best_t   = float(thresholds[best_idx])
+        default_score = scores[int(np.argmin(np.abs(thresholds - 0.5)))]
+        print(f"\n  Tuned binary decision threshold : {best_t:.2f}  "
+              f"(CV macro-F1={scores[best_idx]:.4f} vs {default_score:.4f} at 0.50)")
+        return best_t
 
 
 # =============================================================================
@@ -631,7 +701,7 @@ class ModelEvaluator:
         print(f"  Confusion matrix → {path}")
 
     def export(self, models, scaler, preprocessor, feature_cols,
-               X_train, task='binary'):
+               X_train, task='binary', binary_threshold=None):
         """Save models, scaler, label encoders, and feature metadata."""
         for name, model in models.items():
             p = os.path.join(self.output_dir, f'{task}_{name}_model.joblib')
@@ -648,6 +718,11 @@ class ModelEvaluator:
             for col in feature_cols
         }
         meta = {'feature_cols': feature_cols, 'feature_means': feature_means}
+        # binary_threshold is passed in on both the binary and multiclass export
+        # calls (main() calls export() twice, second call would otherwise
+        # clobber the file and drop it) so it survives regardless of call order.
+        if binary_threshold is not None:
+            meta['binary_threshold'] = binary_threshold
         with open(os.path.join(self.output_dir, 'feature_metadata.json'), 'w') as f:
             json.dump(meta, f, indent=2)
 
@@ -727,14 +802,27 @@ def main():
     bin_results  = evaluator.evaluate(bin_models,   X_test_scaled, y_bin_te,   'binary',     bin_names)
     evaluator.plot_confusion(bin_models,   X_test_scaled, y_bin_te,   'binary',     bin_names)
 
+    # ── Threshold tuning (binary only) ────────────────────────────────────
+    # Selected using out-of-fold CV predictions on X_train only — the test
+    # set below is only used to *report* the effect, never to choose it.
+    threshold_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)
+    binary_threshold = pipeline.tune_binary_threshold(
+        bin_models['voting_ensemble'], X_train_scaled, y_bin_tr, cv=threshold_cv)
+    y_proba_ens = bin_models['voting_ensemble'].predict_proba(X_test_scaled)[:, 1]
+    y_pred_thresh = (y_proba_ens >= binary_threshold).astype(int)
+    print(f"\n  VOTING_ENSEMBLE @ tuned threshold {binary_threshold:.2f} (test set)")
+    print(classification_report(y_bin_te, y_pred_thresh, target_names=bin_names, zero_division=0))
+
     present_cls  = sorted(y_multi_te.unique())
     multi_names  = [tve.SEVERITY_LABELS[i] for i in present_cls]
     multi_results= evaluator.evaluate(multi_models, X_test_scaled, y_multi_te, 'multiclass', multi_names)
     evaluator.plot_confusion(multi_models, X_test_scaled, y_multi_te, 'multiclass', multi_names)
 
     # 9. Export (binary scaler saved; same scaler used for multiclass)
-    evaluator.export(bin_models,   scaler, preprocessor, feature_cols, X_train, task='binary')
-    evaluator.export(multi_models, scaler, preprocessor, feature_cols, X_train, task='multiclass')
+    evaluator.export(bin_models,   scaler, preprocessor, feature_cols, X_train,
+                     task='binary', binary_threshold=binary_threshold)
+    evaluator.export(multi_models, scaler, preprocessor, feature_cols, X_train,
+                     task='multiclass', binary_threshold=binary_threshold)
 
     # 10. Summary
     best_bin   = max(bin_results,   key=lambda x: bin_results[x]['f1'])
