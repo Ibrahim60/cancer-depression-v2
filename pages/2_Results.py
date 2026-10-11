@@ -9,28 +9,12 @@ clinical recommendations, and export functionality.
 import streamlit as st
 import sys
 import os
-import pandas as pd
 
 # Add parent directory to path to import from streamlit_app.py
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from streamlit_app import (
-    SEVERITY_LABELS, SEVERITY_DESCRIPTIONS, CRISIS_RESOURCES,
-    CLINICAL_FOLLOW_UP_THRESHOLD, export_results_to_csv, export_results_to_pdf,
-    init_session_state
-)
-
-# Severity index -> semantic tier, used to pick which .alert-card-<tier>
-# class colors the results hero and crisis cards.
-SEVERITY_TIERS = {
-    0: ("success", "🟢"),
-    1: ("success", "🟢"),
-    2: ("warning", "🟡"),
-    3: ("elevated", "🟠"),
-}
-
-def severity_tier(severity_idx: int):
-    return SEVERITY_TIERS.get(severity_idx, ("danger", "🔴"))
+from streamlit_app import init_session_state
+from results_view import render_assessment_results
 
 def results_page():
     st.set_page_config(
@@ -414,9 +398,6 @@ def results_page():
         return
 
     assessment = st.session_state.current_assessment
-    pred = assessment['prediction']
-    bdi_ref = assessment['bdi_reference']
-    demographics = assessment['demographics']
     mode = assessment['mode']
 
     # Display assessment info
@@ -427,188 +408,7 @@ def results_page():
     </div>
     """, unsafe_allow_html=True)
 
-    # Display demographics summary
-    with st.expander("👤 Demographics Information"):
-        st.json(demographics)
-
-    st.markdown("---")
-
-    # Primary Results Card
-    severity_idx = pred['severity_idx']
-    severity_label = pred['severity_label']
-    tier, emoji = severity_tier(severity_idx)
-
-    st.markdown(f"""
-    <div class="result-hero alert-card alert-{tier}">
-        <div class="result-hero-eyebrow">ML screening result</div>
-        <h2>{emoji} {severity_label}</h2>
-        <div class="result-grid">
-            <div class="result-stat">
-                <div class="result-stat-label">Model confidence</div>
-                <div class="result-stat-value">{pred['confidence']:.1f}%</div>
-            </div>
-            <div class="result-stat">
-                <div class="result-stat-label">Depression probability</div>
-                <div class="result-stat-value">{pred['depression_prob']:.1f}%</div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("---")
-
-    # Severity probability breakdown
-    st.markdown("## 📊 Severity Probability Breakdown")
-
-    prob_data = []
-    for i, sev in enumerate(SEVERITY_LABELS):
-        prob = float(pred['multi_proba'][i]) * 100 if i < len(pred['multi_proba']) else 0.0
-        prob_data.append({
-            'Severity': sev,
-            'Probability': prob
-        })
-
-    prob_df = pd.DataFrame(prob_data)
-    prob_df = prob_df.sort_values('Probability', ascending=False)
-
-    # Display as bar chart
-    st.bar_chart(prob_df.set_index('Severity')['Probability'])
-
-    # Display as a styled table (matches the assessment-flow results view)
-    st.dataframe(
-        prob_df.style.format({'Probability': '{:.1f}%'})
-        .background_gradient(cmap='RdYlGn_r', subset=['Probability'])
-        .set_properties(**{'text-align': 'center'}),
-        width='stretch',
-        hide_index=True
-    )
-
-    st.markdown("---")
-
-    # BDI Reference Score
-    st.markdown("## 📈 BDI Reference Score")
-
-    bdi_raw, bdi_asked, bdi_extrap, bdi_rule_label = bdi_ref
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown(f"""
-        <div class="metric-card">
-        <div class="metric-label">Raw BDI score</div>
-        <div class="metric-value">{bdi_raw}/{bdi_asked * 3}</div>
-        <div class="metric-footnote">Based on {bdi_asked} items answered</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col2:
-        st.markdown(f"""
-        <div class="metric-card">
-        <div class="metric-label">Extrapolated score</div>
-        <div class="metric-value">{bdi_extrap}/63</div>
-        <div class="metric-footnote">Severity: {bdi_rule_label}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    if bdi_asked != 21:
-        st.info("💡 **Note**: Quick-mode BDI score is extrapolated from fewer items. Run a Full Assessment for a validated 21-item BDI score.")
-
-    st.caption("Rule-based score is informational; ML model output drives the assessment.")
-
-    st.markdown("---")
-
-    # Clinical description
-    st.markdown("## 🏥 Clinical Assessment")
-    desc = SEVERITY_DESCRIPTIONS.get(severity_label, '')
-    if desc:
-        st.markdown(f"""
-        <div class="alert-card alert-info">
-        <h4>Clinical Assessment</h4>
-        <p>{desc}</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # Clinical follow-up flag
-    if bdi_extrap >= CLINICAL_FOLLOW_UP_THRESHOLD or severity_idx >= 2:
-        st.markdown(f"""
-        <div class="alert-card alert-warning alert-card--emphasis">
-        <h4>⚠️ CLINICAL FOLLOW-UP RECOMMENDED</h4>
-        <p>Please discuss these results with your oncologist or a mental health professional at the earliest opportunity.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # Crisis resources for severe cases
-    if severity_idx >= 3:  # moderate or above
-        st.markdown("---")
-        st.markdown("## 🚨 Crisis & Support Resources (Pakistan)")
-        st.error("If you are in immediate distress, please contact these resources:")
-
-        crisis_cols = st.columns(2)
-        for i, (name, number) in enumerate(CRISIS_RESOURCES.items()):
-            with crisis_cols[i % 2]:
-                st.markdown(f"""
-                <div class="alert-card alert-danger crisis-card">
-                <p class="crisis-name">{name}</p>
-                <p class="crisis-number">📞 {number}</p>
-                </div>
-                """, unsafe_allow_html=True)
-
-    st.markdown("---")
-
-    # Export functionality
-    st.markdown("## 📥 Export Results")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        csv_data = export_results_to_csv(
-            demographics,
-            assessment['bdi_responses'],
-            assessment['fcri_responses'],
-            pred,
-            bdi_ref,
-            assessment['timestamp']
-        )
-        st.download_button(
-            label="⬇️ Download CSV Report",
-            data=csv_data,
-            file_name=f"depression_assessment_{assessment['timestamp'].replace(' ', '_').replace(':', '-')}.csv",
-            mime="text/csv",
-            width='stretch'
-        )
-
-    with col2:
-        pdf_data = export_results_to_pdf(
-            demographics,
-            assessment['bdi_responses'],
-            assessment['fcri_responses'],
-            pred,
-            bdi_ref,
-            assessment['timestamp']
-        )
-        st.download_button(
-            label="⬇️ Download PDF Report",
-            data=pdf_data,
-            file_name=f"depression_assessment_{assessment['timestamp'].replace(' ', '_').replace(':', '-')}.pdf",
-            mime="application/pdf",
-            width='stretch'
-        )
-
-    st.markdown("---")
-
-    # Disclaimer
-    st.markdown("""
-    <div class="alert-card alert-warning alert-card--emphasis">
-    <h4>⚠️ Important disclaimer</h4>
-    <p>
-    This tool supports clinical screening only and is <strong>NOT a diagnostic instrument</strong>.
-    Always consult a qualified healthcare professional for diagnosis and treatment.
-    </p>
-    <p style="margin-top:.6rem;">
-    If you are experiencing thoughts of self-harm, please contact emergency services or a crisis helpline immediately.
-    </p>
-    </div>
-    """, unsafe_allow_html=True)
+    render_assessment_results(assessment)
 
     st.markdown("---")
 

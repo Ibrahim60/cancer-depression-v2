@@ -830,7 +830,8 @@ def main():
     print(classification_report(y_bin_te, y_pred_thresh, target_names=bin_names, zero_division=0))
 
     present_cls  = sorted(y_multi_te.unique())
-    multi_names  = [tve.SEVERITY_LABELS[i] for i in present_cls]
+    # Class ids come from LabelEncoder (alphabetical), not SEVERITY_LABELS order
+    multi_names  = [tve.encoder.classes_[i] for i in present_cls]
     multi_results= evaluator.evaluate(multi_models, X_test_scaled, y_multi_te, 'multiclass', multi_names)
     evaluator.plot_confusion(multi_models, X_test_scaled, y_multi_te, 'multiclass', multi_names)
 

@@ -31,9 +31,9 @@ import joblib
 import streamlit as st
 from datetime import datetime
 from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
 from reportlab.lib import colors
 
 # =============================================================================
@@ -517,19 +517,25 @@ def predict(feature_vec, artefacts):
     binary_proba = artefacts['binary_model'].predict_proba(X_scaled)[0]
     binary_pred  = int(binary_proba[1] >= artefacts.get('binary_threshold', 0.5))
 
-    multi_pred  = int(artefacts['multi_model'].predict(X_scaled)[0])
-    multi_proba = artefacts['multi_model'].predict_proba(X_scaled)[0]
+    # The pipeline encodes severity with LabelEncoder, which sorts labels
+    # alphabetically, so the model's class ids are NOT in severity order.
+    # Map each class id back to its label, then reorder the probabilities
+    # into SEVERITY_LABELS order (Normal -> Extreme).
+    encoded_labels = sorted(SEVERITY_LABELS)
+    model = artefacts['multi_model']
+    raw_proba = model.predict_proba(X_scaled)[0]
+    multi_proba = np.zeros(len(SEVERITY_LABELS))
+    for cls, p in zip(model.classes_, raw_proba):
+        multi_proba[SEVERITY_LABELS.index(encoded_labels[int(cls)])] = p
 
-    severity_label = (SEVERITY_LABELS[multi_pred]
-                      if 0 <= multi_pred < len(SEVERITY_LABELS)
-                      else 'Unknown')
-
-    confidence = float(multi_proba[multi_pred]) * 100
+    severity_idx   = int(np.argmax(multi_proba))
+    severity_label = SEVERITY_LABELS[severity_idx]
+    confidence     = float(multi_proba[severity_idx]) * 100
 
     return {
         'binary_pred':    binary_pred,
         'depression_prob':float(binary_proba[1]) * 100,
-        'severity_idx':   multi_pred,
+        'severity_idx':   severity_idx,
         'severity_label': severity_label,
         'confidence':     confidence,
         'multi_proba':    multi_proba,
@@ -609,6 +615,10 @@ def fcri_reference(fcri_responses):
         'subscales':      subscales,
     }
 
+# Final BDI + FCRI + model verdict lives in predict_depression.py so the CLI
+# and this app always reach the same conclusion.
+from predict_depression import final_verdict  # noqa: E402
+
 # =============================================================================
 # EXPORT FUNCTIONS
 # =============================================================================
@@ -642,147 +652,234 @@ def export_results_to_csv(demographics, bdi_responses, fcri_responses, pred, bdi
         key = name.lower().replace(' ', '_')
         data[f'fcri_subscale_{key}'] = sub['raw'] if sub['n_asked'] else None
 
+    verdict = final_verdict(pred, bdi_ref, fcri_ref)
+    data.update({
+        'final_cancer_depression': verdict['decision'],
+        'final_result': verdict['headline'],
+    })
+
     df = pd.DataFrame([data])
     return df.to_csv(index=False).encode('utf-8')
 
 def export_results_to_pdf(demographics, bdi_responses, fcri_responses, pred, bdi_ref, timestamp=None):
-    """Export assessment results to PDF format."""
+    """
+    Export assessment results to PDF, in the same order as the results page:
+    Step 1 BDI results -> Step 2 FCRI results -> Step 3 model result & final verdict.
+    """
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    doc = SimpleDocTemplate(buffer, pagesize=letter,
+                            leftMargin=0.7 * inch, rightMargin=0.7 * inch,
+                            topMargin=0.7 * inch, bottomMargin=0.7 * inch)
     styles = getSampleStyleSheet()
+    cell = ParagraphStyle('cell', parent=styles['Normal'], fontSize=8.5, leading=10.5)
+    cell_bold = ParagraphStyle('cell_bold', parent=cell, fontName='Helvetica-Bold', textColor=colors.white)
+    note = ParagraphStyle('note', parent=styles['Italic'], fontSize=8.5, leading=11,
+                          textColor=colors.HexColor('#475569'))
+    width = doc.width
     story = []
 
-    # Title
-    title = Paragraph("Depression Assessment Report", styles['Title'])
-    story.append(title)
-    story.append(Spacer(1, 12))
+    header_bg = colors.HexColor('#1e3a8a')
+    row_alt = colors.HexColor('#f1f5f9')
 
-    # Timestamp
+    def table(header, rows, col_widths):
+        """Table with a real header row; every cell wraps."""
+        data = [[Paragraph(str(h), cell_bold) for h in header]]
+        data += [[Paragraph(str(c), cell) for c in r] for r in rows]
+        t = Table(data, colWidths=[width * w for w in col_widths], repeatRows=1)
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), header_bg),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, row_alt]),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1')),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        return t
+
+    def section(title):
+        story.append(Spacer(1, 10))
+        story.append(Paragraph(title, styles['Heading2']))
+
+    def answer_text(options, score):
+        idx = int(score)
+        opt = options[idx] if 0 <= idx < len(options) else str(score)
+        return opt.split(' - ', 1)[1] if ' - ' in opt else opt
+
     if timestamp is None:
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    timestamp_para = Paragraph(f"Generated: {timestamp}", styles['Normal'])
-    story.append(timestamp_para)
-    story.append(Spacer(1, 12))
 
-    # Demographics
-    demo_title = Paragraph("Demographics", styles['Heading2'])
-    story.append(demo_title)
-    demo_data = [[str(k), str(v)] for k, v in demographics.items()]
-    demo_table = Table(demo_data)
-    demo_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-    ]))
-    story.append(demo_table)
-    story.append(Spacer(1, 12))
-
-    # Results
-    results_title = Paragraph("Assessment Results", styles['Heading2'])
-    story.append(results_title)
-
-    results_data = [
-        ['ML Model Severity', str(pred['severity_label'])],
-        ['Model Confidence', f"{pred['confidence']:.1f}%"],
-        ['Depression Probability', f"{pred['depression_prob']:.1f}%"],
-        ['BDI Score', f"{bdi_ref[0]}/{bdi_ref[1] * 3}"],
-        ['BDI Extrapolated', f"{bdi_ref[2]}/63"],
-        ['BDI Severity', str(bdi_ref[3])],
-    ]
-
-    results_table = Table(results_data)
-    results_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-    ]))
-    story.append(results_table)
-    story.append(Spacer(1, 12))
-
-    # FCRI results
+    bdi_raw, bdi_asked, bdi_extrap, bdi_label = bdi_ref
     fcri_ref = fcri_reference(fcri_responses)
-    if fcri_ref['total_asked']:
-        story.append(Paragraph("Fear of Cancer Recurrence (FCRI) Results", styles['Heading2']))
+    verdict = final_verdict(pred, bdi_ref, fcri_ref)
 
+    # ── Title & demographics ──────────────────────────────────────────────────
+    story.append(Paragraph("Depression Assessment Report", styles['Title']))
+    story.append(Paragraph(f"Generated: {timestamp}", styles['Normal']))
+    if demographics:
+        section("Patient Demographics")
+        story.append(table(['Field', 'Value'],
+                           [[str(k).replace('_', ' ').capitalize(), v] for k, v in demographics.items()],
+                           [0.35, 0.65]))
+
+    # ── Step 1: BDI ───────────────────────────────────────────────────────────
+    section("Step 1 - BDI Results (Depressive Symptoms)")
+    summary = []
+    if bdi_asked == 21:
+        summary.append(['BDI total score', f"{bdi_raw}/63"])
+    else:
+        summary.append(['BDI raw score', f"{bdi_raw}/{bdi_asked * 3} ({bdi_asked} of 21 items answered)"])
+        summary.append(['BDI total score (extrapolated)', f"{bdi_extrap}/63"])
+    summary.append(['BDI severity', bdi_label])
+    story.append(table(['Measure', 'Result'], summary, [0.35, 0.65]))
+    story.append(Spacer(1, 8))
+
+    bdi_rows = []
+    for q in BDI_QUESTIONS:
+        key = f"{q['num']}."
+        if key in bdi_responses:
+            score = int(bdi_responses[key])
+            bdi_rows.append([q['num'], q['title'], answer_text(q['options'], score), f"{score}/3"])
+    story.append(table(['#', 'Symptom', 'Response', 'Score'], bdi_rows, [0.06, 0.22, 0.62, 0.10]))
+    story.append(Spacer(1, 4))
+    story.append(Paragraph("BDI ranges: 0-10 Normal, 11-16 Mild mood disturbance, 17-20 Borderline clinical, "
+                           "21-30 Moderate, 31-40 Severe, 41-63 Extreme depression.", note))
+
+    # ── Step 2: FCRI ──────────────────────────────────────────────────────────
+    section("Step 2 - FCRI Results (Fear of Cancer Recurrence)")
+    if fcri_ref['total_asked']:
         sev_score = fcri_ref['severity_score']
         sev_text = 'N/A' if sev_score is None else f"{sev_score}/36"
         if fcri_ref['severity_extrapolated']:
             sev_text += " (extrapolated)"
+        story.append(table(['Measure', 'Result'], [
+            ['FCRI severity score', sev_text],
+            ['FCRI severity', fcri_ref['severity_label']],
+            ['FCRI total score', f"{fcri_ref['total_raw']}/{fcri_ref['total_asked'] * 4} "
+                                 f"({fcri_ref['total_asked']} of 42 items answered)"],
+        ], [0.35, 0.65]))
+        story.append(Spacer(1, 8))
 
-        fcri_data = [
-            ['FCRI Severity', str(fcri_ref['severity_label'])],
-            ['FCRI Severity Score', sev_text],
-            ['FCRI Total Score', f"{fcri_ref['total_raw']}/{fcri_ref['total_asked'] * 4}"],
-            ['FCRI Items Answered', f"{fcri_ref['total_asked']}/42"],
-        ]
-        for name, sub in fcri_ref['subscales'].items():
-            if sub['n_asked']:
-                fcri_data.append([
-                    f"  {name}",
-                    f"{sub['raw']}/{sub['n_asked'] * 4}  ({sub['n_asked']} of {sub['n_total']} items)",
-                ])
+        story.append(table(['Subscale', 'Score', 'Items answered'], [
+            [name, f"{sub['raw']}/{sub['n_asked'] * 4}", f"{sub['n_asked']} of {sub['n_total']}"]
+            for name, sub in fcri_ref['subscales'].items() if sub['n_asked']
+        ], [0.45, 0.25, 0.30]))
+        story.append(Spacer(1, 8))
 
-        fcri_table = Table(fcri_data)
-        fcri_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ]))
-        story.append(fcri_table)
-        story.append(Spacer(1, 6))
+        fcri_rows = []
+        for q in FCRI_QUESTIONS:
+            if q['col'] in fcri_responses:
+                score = int(fcri_responses[q['col']])
+                scored = f"{4 - score}/4 (reversed)" if q['num'] == 13 else f"{score}/4"
+                fcri_rows.append([q['num'], q['subscale'], q['label'],
+                                  answer_text(q['options'], score), scored])
+        story.append(table(['#', 'Subscale', 'Item', 'Response', 'Score'], fcri_rows,
+                           [0.05, 0.17, 0.42, 0.20, 0.16]))
+        story.append(Spacer(1, 4))
         story.append(Paragraph(
             f"Severity subscale (items 9-17): a score of {FCRI_SEVERITY_SCREEN_CUTOFF} or more "
             f"suggests clinically significant fear of recurrence; "
-            f"{FCRI_SEVERITY_CLINICAL_CUTOFF} or more suggests clinical-level fear of recurrence.",
-            styles['Italic']))
-        story.append(Spacer(1, 12))
+            f"{FCRI_SEVERITY_CLINICAL_CUTOFF} or more suggests clinical-level fear of recurrence.", note))
+    else:
+        story.append(Paragraph("No FCRI items were answered in this assessment.", styles['Normal']))
 
-    # Clinical description
+    # ── Step 3: model result & final verdict ──────────────────────────────────
+    section("Step 3 - Model Result: Depression Detection (BDI + FCRI)")
+    story.append(Paragraph("The ML ensemble was trained on all BDI and FCRI answers together; "
+                           "its prediction is the final depression-detection result.", note))
+    story.append(Spacer(1, 6))
+    story.append(table(['Model output', 'Result'], [
+        ['Depression probability', f"{pred['depression_prob']:.1f}% "
+                                   f"({'detected' if pred['binary_pred'] else 'not detected'})"],
+        ['Predicted severity', pred['severity_label']],
+        ['Model confidence', f"{pred['confidence']:.1f}%"],
+    ], [0.35, 0.65]))
+    story.append(Spacer(1, 8))
+
+    prob_rows = []
+    for i, sev in enumerate(SEVERITY_LABELS):
+        prob = float(pred['multi_proba'][i]) * 100 if i < len(pred['multi_proba']) else 0.0
+        prob_rows.append([sev, f"{prob:.1f}%"])
+    story.append(table(['Severity level', 'Model probability'], prob_rows, [0.55, 0.45]))
+    story.append(Spacer(1, 12))
+
+    # Final verdict box, colored by outcome (same tiers as the results page)
+    tier_colors = {
+        'danger':   ('#fef2f2', '#ef4444', '#991b1b'),
+        'elevated': ('#fff7ed', '#f97316', '#9a3412'),
+        'warning':  ('#fffbeb', '#f59e0b', '#92400e'),
+        'success':  ('#ecfdf5', '#22c55e', '#166534'),
+    }
+    bg, border, text = tier_colors.get(verdict['tier'], tier_colors['warning'])
+    head_style = ParagraphStyle('verdict_head', parent=styles['Heading3'],
+                                textColor=colors.HexColor(text), spaceAfter=4)
+    body_style = ParagraphStyle('verdict_body', parent=styles['Normal'],
+                                textColor=colors.HexColor(text), leading=13)
+    fcri_value = 'N/A' if fcri_ref['severity_score'] is None else f"{fcri_ref['severity_score']}/36"
+    box_content = [
+        Paragraph("FINAL RESULT - Does the patient have cancer-related depression?", body_style),
+        Paragraph(f"{verdict['decision']} - {verdict['headline']}", head_style),
+        Paragraph(verdict['summary'], body_style),
+        Spacer(1, 4),
+        Paragraph(f"Model - clinically relevant depression: "
+                  f"<b>{'Positive' if verdict['model_clinical'] else 'Negative'}</b>"
+                  f"&nbsp;&nbsp;|&nbsp;&nbsp;FCRI - fear of recurrence ({fcri_value}): "
+                  f"<b>{'Positive' if verdict['fcri_positive'] else 'Negative'}</b>", body_style),
+    ]
+    box = Table([[box_content]], colWidths=[width])
+    box.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor(bg)),
+        ('BOX', (0, 0), (-1, -1), 1.5, colors.HexColor(border)),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ('LEFTPADDING', (0, 0), (-1, -1), 12),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+    ]))
+    story.append(box)
+
+    if not verdict['bdi_agrees']:
+        story.append(Spacer(1, 6))
+        story.append(Paragraph(f"Note: the model result differs from the BDI questionnaire score "
+                               f"({bdi_extrap}/63, {bdi_label}). A clinician should review this case.", note))
+
+    story.append(Spacer(1, 6))
+    story.append(Paragraph(
+        f"How the final result is decided: model severity Borderline clinical or worse with FCRI severity "
+        f"{FCRI_SEVERITY_SCREEN_CUTOFF}+ = YES (cancer-related depression); Borderline or worse with FCRI below "
+        f"{FCRI_SEVERITY_SCREEN_CUTOFF} = YES (depression, not driven by fear of recurrence); mild with FCRI "
+        f"{FCRI_SEVERITY_SCREEN_CUTOFF}+ = POSSIBLE; otherwise NO.", note))
+
+    # ── Clinical guidance ─────────────────────────────────────────────────────
     desc = SEVERITY_DESCRIPTIONS.get(pred['severity_label'], '')
     if desc:
-        desc_title = Paragraph("Clinical Assessment", styles['Heading2'])
-        story.append(desc_title)
-        desc_para = Paragraph(desc, styles['Normal'])
-        story.append(desc_para)
-        story.append(Spacer(1, 12))
+        section("Clinical Assessment")
+        story.append(Paragraph(desc, styles['Normal']))
 
-    # Crisis resources if needed
+    if verdict['decision'] != 'NO' or bdi_extrap >= CLINICAL_FOLLOW_UP_THRESHOLD:
+        story.append(Spacer(1, 6))
+        story.append(Paragraph("<b>Clinical follow-up recommended.</b> Please discuss these results with your "
+                               "oncologist or a mental health professional at the earliest opportunity.",
+                               styles['Normal']))
+
     if pred['severity_idx'] >= 3:
-        crisis_title = Paragraph("Crisis Resources", styles['Heading2'])
-        story.append(crisis_title)
-        crisis_data = [[str(name), str(number)] for name, number in CRISIS_RESOURCES.items()]
-        crisis_table = Table(crisis_data)
-        crisis_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        # Kept on one page so the helpline list is never split
+        story.append(KeepTogether([
+            Spacer(1, 10),
+            Paragraph("Crisis & Support Resources (Pakistan)", styles['Heading2']),
+            table(['Service', 'Phone'],
+                  [[name, number] for name, number in CRISIS_RESOURCES.items()],
+                  [0.65, 0.35]),
         ]))
-        story.append(crisis_table)
 
-    # Disclaimer
-    story.append(Spacer(1, 24))
-    disclaimer = Paragraph("DISCLAIMER: This tool supports clinical screening only. It is NOT a diagnostic instrument. Always consult a qualified healthcare professional for diagnosis and treatment.", styles['Normal'])
-    story.append(disclaimer)
+    # ── Disclaimer ────────────────────────────────────────────────────────────
+    story.append(Spacer(1, 18))
+    story.append(Paragraph("DISCLAIMER: This tool supports clinical screening only. It is NOT a diagnostic "
+                           "instrument. Always consult a qualified healthcare professional for diagnosis "
+                           "and treatment.", note))
 
     doc.build(story)
     buffer.seek(0)
     return buffer.getvalue()
+
 
 def export_history_to_csv(history):
     """Export session history to CSV format."""

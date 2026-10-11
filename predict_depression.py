@@ -89,6 +89,17 @@ CRISIS_RESOURCES = {
 }
 
 CLINICAL_FOLLOW_UP_THRESHOLD = 17   # Borderline or above → recommend clinical follow-up
+BDI_MILD_CUTOFF              = 11   # Mild mood disturbance or above
+
+# FCRI Severity subscale (items 9-17, range 0-36) cutoffs from Simard & Savard
+# (2009, 2015): >=13 flags clinically significant fear of cancer recurrence,
+# >=16 indicates clinical-level FCR warranting specialist referral.
+FCRI_SEVERITY_SCREEN_CUTOFF   = 13
+FCRI_SEVERITY_CLINICAL_CUTOFF = 16
+FCRI_SUBSCALE_ORDER = [
+    'Triggers', 'Severity', 'Psychological Distress', 'Functioning Impairments',
+    'Insight', 'Reassurance', 'Coping Strategies',
+]
 
 # ── Quick-mode item counts ────────────────────────────────────────────────────
 # predict_depression.py supports two assessment modes:
@@ -743,22 +754,25 @@ def predict(feature_vec, artefacts):
     binary_proba = artefacts['binary_model'].predict_proba(X_scaled)[0]
     binary_pred  = int(binary_proba[1] >= artefacts.get('binary_threshold', 0.5))
 
-    # Multiclass: severity class (encoded label)
-    multi_pred  = int(artefacts['multi_model'].predict(X_scaled)[0])
-    multi_proba = artefacts['multi_model'].predict_proba(X_scaled)[0]
+    # The pipeline encodes severity with LabelEncoder, which sorts labels
+    # alphabetically, so the model's class ids are NOT in severity order.
+    # Map each class id back to its label, then reorder the probabilities
+    # into SEVERITY_LABELS order (Normal -> Extreme).
+    encoded_labels = sorted(SEVERITY_LABELS)
+    model = artefacts['multi_model']
+    raw_proba = model.predict_proba(X_scaled)[0]
+    multi_proba = np.zeros(len(SEVERITY_LABELS))
+    for cls, p in zip(model.classes_, raw_proba):
+        multi_proba[SEVERITY_LABELS.index(encoded_labels[int(cls)])] = p
 
-    # Resolve severity label
-    severity_label = (SEVERITY_LABELS[multi_pred]
-                      if 0 <= multi_pred < len(SEVERITY_LABELS)
-                      else 'Unknown')
-
-    # Confidence from multiclass proba
-    confidence = float(multi_proba[multi_pred]) * 100
+    severity_idx   = int(np.argmax(multi_proba))
+    severity_label = SEVERITY_LABELS[severity_idx]
+    confidence     = float(multi_proba[severity_idx]) * 100
 
     return {
         'binary_pred':    binary_pred,
         'depression_prob':float(binary_proba[1]) * 100,
-        'severity_idx':   multi_pred,
+        'severity_idx':   severity_idx,
         'severity_label': severity_label,
         'confidence':     confidence,
         'multi_proba':    multi_proba,
@@ -766,7 +780,7 @@ def predict(feature_vec, artefacts):
 
 
 # =============================================================================
-# SECTION 5: BDI REFERENCE SCORE  (informational only — not used for classification)
+# SECTION 5: BDI REFERENCE SCORE
 # =============================================================================
 
 def bdi_reference(bdi_responses, n_total=21):
@@ -797,45 +811,200 @@ def bdi_reference(bdi_responses, n_total=21):
 
 
 # =============================================================================
-# SECTION 6: RESULTS DISPLAY
+# SECTION 6: FCRI REFERENCE SCORE & FINAL MODEL RESULT
 # =============================================================================
 
-def display_results(pred, bdi_raw, bdi_asked, bdi_extrap, bdi_rule_label, mode):
+def fcri_reference(fcri_responses):
+    """
+    Score collected FCRI items: per-subscale raw totals, the overall total, and
+    the Severity subscale (extrapolated to 9 items when only some were asked)
+    with its clinical interpretation. Item 13 is reverse-scored (4 - raw).
+    """
+    subscales = {}
+    for name in FCRI_SUBSCALE_ORDER:
+        items = [q for q in FCRI_QUESTIONS if q['subscale'] == name]
+        answered = [q for q in items if q['col'] in fcri_responses]
+        raw = 0
+        for q in answered:
+            score = float(fcri_responses[q['col']])
+            raw += 4 - score if q['num'] == 13 else score
+        subscales[name] = {
+            'raw':     int(round(raw)),
+            'n_asked': len(answered),
+            'n_total': len(items),
+        }
+
+    total_raw   = sum(s['raw'] for s in subscales.values())
+    total_asked = sum(s['n_asked'] for s in subscales.values())
+
+    sev = subscales['Severity']
+    if sev['n_asked']:
+        sev_score = round(sev['raw'] * sev['n_total'] / sev['n_asked'])
+        if sev_score >= FCRI_SEVERITY_CLINICAL_CUTOFF:
+            sev_label = 'Clinical fear of recurrence'
+        elif sev_score >= FCRI_SEVERITY_SCREEN_CUTOFF:
+            sev_label = 'Clinically significant fear of recurrence'
+        else:
+            sev_label = 'Non-clinical fear of recurrence'
+    else:
+        sev_score, sev_label = None, 'Not assessed'
+
+    return {
+        'total_raw':      total_raw,
+        'total_asked':    total_asked,
+        'severity_score': sev_score,        # 0-36, extrapolated if partial
+        'severity_label': sev_label,
+        'severity_extrapolated': 0 < sev['n_asked'] < sev['n_total'],
+        'subscales':      subscales,
+    }
+
+
+def final_verdict(pred, bdi_ref, fcri_ref):
+    """
+    Final depression-detection result. The ML ensemble (trained on all BDI +
+    FCRI answers) decides whether depression is present; the FCRI Severity
+    subscale decides whether it is linked to fear of cancer recurrence:
+
+      model severity >= Borderline,  FCRI >= 13  -> YES       cancer-related depression
+      model severity >= Borderline,  FCRI <  13  -> YES       depression, not driven by fear of recurrence
+      model mild / binary positive,  FCRI >= 13  -> POSSIBLE  at risk
+      otherwise                                  -> NO
+
+    The rule-based BDI total is compared against the model as a sanity check.
+    """
+    model_clinical = pred['severity_idx'] >= 2
+    model_mild = not model_clinical and (pred['severity_idx'] == 1 or bool(pred['binary_pred']))
+    fcri_score = fcri_ref['severity_score']
+    fcri_positive = fcri_score is not None and fcri_score >= FCRI_SEVERITY_SCREEN_CUTOFF
+    bdi_clinical = bdi_ref[2] >= CLINICAL_FOLLOW_UP_THRESHOLD
+
+    if model_clinical and fcri_positive:
+        decision, tier = 'YES', 'danger'
+        headline = 'Cancer-related depression detected'
+        summary = ('The model detects clinically relevant depression, and the FCRI shows significant '
+                   'fear of cancer recurrence, consistent with depression linked to the cancer experience.')
+    elif model_clinical:
+        decision, tier = 'YES', 'elevated'
+        headline = 'Depression detected'
+        summary = ('The model detects clinically relevant depression. Fear of cancer recurrence (FCRI) '
+                   'is not elevated, so the depression does not appear to be driven mainly by cancer-related fear.')
+    elif model_mild and fcri_positive:
+        decision, tier = 'POSSIBLE', 'warning'
+        headline = 'At risk of cancer-related depression'
+        summary = ('The model finds only mild, sub-clinical mood symptoms, but the FCRI shows significant '
+                   'fear of cancer recurrence. This should be monitored.')
+    else:
+        decision, tier = 'NO', 'success'
+        headline = 'No cancer-related depression detected'
+        summary = 'The model does not detect clinically relevant depression.'
+        if fcri_positive:
+            summary += (' Fear of cancer recurrence (FCRI) is elevated on its own and may still benefit '
+                        'from psycho-oncology support.')
+
+    return {
+        'decision':      decision,        # 'YES' | 'POSSIBLE' | 'NO'
+        'has_cancer_depression': decision == 'YES',
+        'tier':          tier,
+        'headline':      headline,
+        'summary':       summary,
+        'model_clinical':model_clinical,
+        'model_mild':    model_mild,
+        'fcri_positive': fcri_positive,
+        'bdi_clinical':  bdi_clinical,
+        'bdi_agrees':    bdi_clinical == model_clinical,
+    }
+
+
+# =============================================================================
+# SECTION 7: RESULTS DISPLAY  (Step 1 BDI → Step 2 FCRI → Step 3 model result)
+# =============================================================================
+
+def _answer_text(options, score):
+    """Option text for a 0-based score, without its leading 'N - ' prefix."""
+    opt = options[int(score)]
+    return opt.split(' - ', 1)[1] if ' - ' in opt else opt
+
+
+def display_results(pred, bdi_responses, fcri_responses, bdi_ref, mode):
+    bdi_raw, bdi_asked, bdi_extrap, bdi_rule_label = bdi_ref
+    fcri_ref = fcri_reference(fcri_responses)
+    verdict  = final_verdict(pred, bdi_ref, fcri_ref)
+
     print("\n" + "=" * 65)
-    print("ASSESSMENT RESULTS")
+    print(f"ASSESSMENT RESULTS  ({mode.capitalize()} mode)")
     print("=" * 65)
 
-    # ── Primary: ML model classification ──────────────────────────────────────
-    label = pred['severity_label']
-    print(f"\n  ML Model Severity        : {label}")
-    print(f"  Model Confidence         : {pred['confidence']:.1f}%")
-    print(f"  Depression Probability   : {pred['depression_prob']:.1f}%")
+    # ── Step 1: BDI ───────────────────────────────────────────────────────────
+    print("\n" + "─" * 65)
+    print("  STEP 1 — BDI RESULTS (Depressive Symptoms)")
+    print("─" * 65)
+    for q in BDI_QUESTIONS:
+        key = f"{q['num']}."
+        if key in bdi_responses:
+            score = int(bdi_responses[key])
+            print(f"    {q['num']:>2}. {q['title']:<24} {score}/3  {_answer_text(q['options'], score)}")
+    print()
+    if bdi_asked == 21:
+        print(f"  BDI Total Score          : {bdi_raw}/63")
+    else:
+        print(f"  BDI Raw Score            : {bdi_raw}/{bdi_asked * 3}  ({bdi_asked} of 21 items asked)")
+        print(f"  BDI Extrapolated Score   : {bdi_extrap}/63")
+        print("  Note: Quick-mode BDI score is extrapolated. Run a Full Assessment for a validated score.")
+    print(f"  BDI Severity             : {bdi_rule_label}")
 
-    # Full severity probability breakdown
+    # ── Step 2: FCRI ──────────────────────────────────────────────────────────
+    print("\n" + "─" * 65)
+    print("  STEP 2 — FCRI RESULTS (Fear of Cancer Recurrence)")
+    print("─" * 65)
+    if fcri_ref['total_asked']:
+        for q in FCRI_QUESTIONS:
+            if q['col'] in fcri_responses:
+                score = int(fcri_responses[q['col']])
+                rev = ' (reversed)' if q['num'] == 13 else ''
+                print(f"    {q['num']:>2}. [{q['subscale']}] {q['label']}")
+                print(f"        {score}/4{rev}  {_answer_text(q['options'], score)}")
+        print("\n  Subscale scores:")
+        for name, sub in fcri_ref['subscales'].items():
+            if sub['n_asked']:
+                print(f"    {name:<26} {sub['raw']:>3}/{sub['n_asked'] * 4:<3}  "
+                      f"({sub['n_asked']} of {sub['n_total']} items)")
+        sev_score = fcri_ref['severity_score']
+        sev_text = 'N/A' if sev_score is None else f"{sev_score}/36"
+        if fcri_ref['severity_extrapolated']:
+            sev_text += '  (extrapolated)'
+        print(f"\n  FCRI Total Score         : {fcri_ref['total_raw']}/{fcri_ref['total_asked'] * 4}")
+        print(f"  FCRI Severity Score      : {sev_text}")
+        print(f"  FCRI Severity            : {fcri_ref['severity_label']}")
+        print(f"  (Severity >= {FCRI_SEVERITY_SCREEN_CUTOFF}: clinically significant fear; "
+              f">= {FCRI_SEVERITY_CLINICAL_CUTOFF}: clinical-level fear)")
+    else:
+        print("  No FCRI items were answered.")
+
+    # ── Step 3: model result ─────────────────────────────────────────────────
+    print("\n" + "─" * 65)
+    print("  STEP 3 — MODEL RESULT: DEPRESSION DETECTION (BDI + FCRI)")
+    print("─" * 65)
+    print(f"  Depression Probability   : {pred['depression_prob']:.1f}%  "
+          f"({'detected' if pred['binary_pred'] else 'not detected'})")
+    print(f"  Predicted Severity       : {pred['severity_label']}  "
+          f"(confidence {pred['confidence']:.1f}%)")
     print("\n  Severity probability breakdown:")
     for i, sev in enumerate(SEVERITY_LABELS):
         prob = float(pred['multi_proba'][i]) * 100 if i < len(pred['multi_proba']) else 0.0
         bar  = '█' * int(prob / 5) + '░' * (20 - int(prob / 5))
         print(f"    {sev:<38} {bar} {prob:5.1f}%")
 
-    # ── Reference: BDI rule-based score ───────────────────────────────────────
-    if bdi_asked == 21:
-        print(f"\n  BDI Score (all 21 items) : {bdi_raw}/63 → {bdi_rule_label}")
-    else:
-        print(f"\n  BDI Score ({bdi_asked}/{21} items asked)  : "
-              f"{bdi_raw}/{bdi_asked * 3}  "
-              f"(extrapolated ≈ {bdi_extrap}/63 → {bdi_rule_label})")
-        print(f"  Note: Quick-mode BDI score is extrapolated from {bdi_asked} items.")
-        print(f"        Run a Full Assessment for a validated 21-item BDI score.")
-    print(f"  (Rule-based score is informational; ML model output drives the assessment.)")
-
-    # ── Clinical description ───────────────────────────────────────────────────
-    desc = SEVERITY_DESCRIPTIONS.get(label, '')
-    if desc:
-        print(f"\n  Assessment Note:\n    {desc}")
+    print("\n  " + "=" * 61)
+    print(f"  FINAL RESULT : {verdict['decision']} — {verdict['headline']}")
+    print("  " + "=" * 61)
+    print(f"  {verdict['summary']}")
+    if not verdict['bdi_agrees']:
+        print(f"\n  Note: the model result differs from the BDI questionnaire score "
+              f"({bdi_extrap}/63, {bdi_rule_label}).")
+        print("        A clinician should review this case.")
 
     # ── Clinical follow-up flag ───────────────────────────────────────────────
-    if bdi_extrap >= CLINICAL_FOLLOW_UP_THRESHOLD or pred['severity_idx'] >= 2:
+    if verdict['decision'] != 'NO' or bdi_extrap >= CLINICAL_FOLLOW_UP_THRESHOLD:
         print("\n  ⚠  CLINICAL FOLLOW-UP RECOMMENDED")
         print("     Please discuss these results with your oncologist or a mental")
         print("     health professional at the earliest opportunity.")
@@ -915,11 +1084,9 @@ def main():
         )
         pred = predict(feature_vec, artefacts)
 
-        # ── BDI reference (informational — not used for ML classification) ─────
-        bdi_raw, bdi_asked, bdi_extrap, bdi_rule_label = bdi_reference(bdi_responses)
-
-        # ── Results ────────────────────────────────────────────────────────────
-        display_results(pred, bdi_raw, bdi_asked, bdi_extrap, bdi_rule_label, mode)
+        # ── Results: BDI → FCRI → model result ─────────────────────────────────
+        display_results(pred, bdi_responses, fcri_responses,
+                        bdi_reference(bdi_responses), mode)
 
         # ── Loop control ───────────────────────────────────────────────────────
         again = input("\nRun another assessment? (y/n): ").strip().lower()
