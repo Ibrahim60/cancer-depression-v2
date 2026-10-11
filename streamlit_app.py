@@ -441,7 +441,7 @@ def load_top_items(n_bdi=TOP_N_BDI, n_fcri=TOP_N_FCRI):
     CLINICAL_FCRI_DEFAULT = [item['col'] for item in FCRI_KEY_ITEMS]
 
     if not os.path.exists(imp_path):
-        return CLINICAL_BDI_DEFAULT[:n_bdi], CLINICAL_FCRI_DEFAULT[:n_fcri]
+        return with_safety_item(CLINICAL_BDI_DEFAULT[:n_bdi]), CLINICAL_FCRI_DEFAULT[:n_fcri]
 
     try:
         imp = pd.read_csv(imp_path)
@@ -460,10 +460,10 @@ def load_top_items(n_bdi=TOP_N_BDI, n_fcri=TOP_N_FCRI):
             if item['col'] not in fcri_cols:
                 fcri_cols.append(item['col'])
 
-        return bdi_nums, fcri_cols[:n_fcri]
+        return with_safety_item(bdi_nums), fcri_cols[:n_fcri]
 
     except Exception as e:
-        return CLINICAL_BDI_DEFAULT[:n_bdi], CLINICAL_FCRI_DEFAULT[:n_fcri]
+        return with_safety_item(CLINICAL_BDI_DEFAULT[:n_bdi]), CLINICAL_FCRI_DEFAULT[:n_fcri]
 
 # =============================================================================
 # FEATURE VECTOR CONSTRUCTION
@@ -498,10 +498,10 @@ def build_feature_vector(bdi_responses, fcri_responses, demographics,
         if le is None:
             continue
         value = demographics.get(demo_key, 'Unknown')
-        try:
+        # A category the model never saw keeps its training mean (set above),
+        # like an unasked item; code 0 would silently mean a real category.
+        if value in le.classes_:
             feat[feat_key] = float(le.transform([value])[0])
-        except ValueError:
-            feat[feat_key] = 0.0
 
     return np.array([feat[col] for col in feature_cols], dtype=np.float32)
 
@@ -615,9 +615,12 @@ def fcri_reference(fcri_responses):
         'subscales':      subscales,
     }
 
-# Final BDI + FCRI + model verdict lives in predict_depression.py so the CLI
-# and this app always reach the same conclusion.
-from predict_depression import final_verdict  # noqa: E402
+# Final BDI + FCRI + model verdict, and the safety/follow-up rules, live in
+# predict_depression.py so the CLI and this app always reach the same conclusion.
+from predict_depression import (  # noqa: E402
+    final_verdict, with_safety_item, suicide_risk,
+    needs_follow_up, needs_crisis_resources,
+)
 
 # =============================================================================
 # EXPORT FUNCTIONS
@@ -854,13 +857,19 @@ def export_results_to_pdf(demographics, bdi_responses, fcri_responses, pred, bdi
         section("Clinical Assessment")
         story.append(Paragraph(desc, styles['Normal']))
 
-    if verdict['decision'] != 'NO' or bdi_extrap >= CLINICAL_FOLLOW_UP_THRESHOLD:
+    if suicide_risk(bdi_responses):
+        story.append(Spacer(1, 6))
+        story.append(Paragraph("<b>Suicidal thoughts reported (BDI item 9).</b> Please contact a crisis "
+                               "helpline or healthcare provider now; the numbers are listed below.",
+                               styles['Normal']))
+
+    if needs_follow_up(pred, bdi_ref, verdict):
         story.append(Spacer(1, 6))
         story.append(Paragraph("<b>Clinical follow-up recommended.</b> Please discuss these results with your "
                                "oncologist or a mental health professional at the earliest opportunity.",
                                styles['Normal']))
 
-    if pred['severity_idx'] >= 3:
+    if needs_crisis_resources(pred, bdi_ref, bdi_responses):
         # Kept on one page so the helpline list is never split
         story.append(KeepTogether([
             Spacer(1, 10),

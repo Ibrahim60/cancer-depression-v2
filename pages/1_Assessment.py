@@ -19,9 +19,9 @@ from streamlit_app import (
     BDI_QUESTIONS, FCRI_QUESTIONS, FCRI_ALL_ITEMS,
     load_top_items, build_feature_vector, predict, bdi_reference,
     TOP_N_BDI, TOP_N_FCRI, CLINICAL_FOLLOW_UP_THRESHOLD,
-    CRISIS_RESOURCES, init_session_state,
+    CRISIS_RESOURCES, init_session_state, suicide_risk,
 )
-from results_view import render_assessment_results
+from results_view import render_assessment_results, render_suicide_warning
 
 def display_assessment_results(assessment):
     """Display assessment results directly in the current page."""
@@ -722,7 +722,7 @@ def assessment_page():
                 st.markdown("**Age Group**")
                 age_group = st.selectbox(
                     "Select your age group",
-                    ['Under 18', '18-30', '31-45', '46-60', 'Over 60'],
+                    ['Below 18', '18-30', '31-45', '46-60', 'Above 60'],
                     index=2,
                     label_visibility="collapsed"
                 )
@@ -753,12 +753,13 @@ def assessment_page():
                 st.markdown("**Current Cancer Status**")
                 cancer_status = st.selectbox(
                     "Select your current status",
-                    ['Newly Diagnosed', 'Under Active Treatment', 'In Remission',
-                     'Cancer Recurrence', 'Metastatic Disease', 'Palliative Care'],
+                    ['Newly Diagnosed', 'Under Treatment', 'Recurrence',
+                     'Recovered / Survivor'],
                     index=0,
                     label_visibility="collapsed"
                 )
 
+            st.caption("Age group and cancer status options match the categories the model was trained on.")
             submitted = st.form_submit_button("Continue to BDI Assessment →", width='stretch', type="primary")
             if submitted:
                 st.session_state.demographics = {
@@ -782,7 +783,7 @@ def assessment_page():
             <div class='section-card'>
             <div class="section-eyebrow">Step 3 · BDI</div>
             <h3>🧠 Beck Depression Inventory — Quick Mode</h3>
-            <p>Showing {n_asked} of {n_total} BDI items based on feature importance. Remaining items will be estimated from training averages.</p>
+            <p>Showing {n_asked} of {n_total} BDI items: the most predictive by feature importance, plus the suicidal-thoughts item, which is always asked for safety. Remaining items will be estimated from training averages.</p>
             </div>
             """, unsafe_allow_html=True)
         else:
@@ -834,24 +835,19 @@ def assessment_page():
             submitted = st.form_submit_button("Continue to FCRI Assessment →", width='stretch', type="primary")
             if submitted:
                 st.session_state.bdi_responses = bdi_responses
-
-                # Check for suicidal ideation (BDI item 9, score >= 2)
-                # Item 9 is always included in clinical defaults and typically ranks high in importance
-                if bdi_responses.get('9.', 0) >= 2:
-                    st.session_state.show_suicide_warning = True
-                    st.error("⚠️ **IMPORTANT**: Your response to the question about suicidal thoughts indicates you may be in distress.")
-                    st.error("Please contact a crisis helpline or healthcare provider now:")
-                    for name, number in list(CRISIS_RESOURCES.items())[:3]:
-                        st.error(f"**{name}**: {number}")
-                    st.warning("You can continue with the assessment, but please reach out for support.")
-                else:
-                    st.session_state.show_suicide_warning = False
-
+                # BDI item 9 (asked in both modes) scored 2+ -> the FCRI step
+                # and the results show a crisis warning. Rendering it here
+                # would be wiped by the rerun below before anyone saw it.
+                st.session_state.show_suicide_warning = suicide_risk(bdi_responses)
                 st.session_state.assessment_step = 'fcri_assessment'
                 st.rerun()
 
     # FCRI Assessment
     elif st.session_state.assessment_step == 'fcri_assessment':
+        if st.session_state.get('show_suicide_warning'):
+            render_suicide_warning()
+            st.caption("You can continue with the assessment, but please reach out for support.")
+
         # Determine which FCRI items to show
         if st.session_state.mode == 'quick':
             items_to_show = [FCRI_ALL_ITEMS[c] for c in st.session_state.top_fcri_cols if c in FCRI_ALL_ITEMS]

@@ -22,6 +22,7 @@ from streamlit_app import (
     CRISIS_RESOURCES, CLINICAL_FOLLOW_UP_THRESHOLD,
     FCRI_SEVERITY_SCREEN_CUTOFF, FCRI_SEVERITY_CLINICAL_CUTOFF,
     fcri_reference, final_verdict, export_results_to_csv, export_results_to_pdf,
+    suicide_risk, needs_follow_up, needs_crisis_resources,
 )
 
 VERDICT_EMOJI = {'YES': '🔴', 'POSSIBLE': '🟡', 'NO': '🟢'}
@@ -208,6 +209,19 @@ The BDI total (≥ {CLINICAL_FOLLOW_UP_THRESHOLD} = clinically relevant) is comp
         )
 
 
+def render_suicide_warning():
+    """Persistent warning shown when BDI item 9 (Suicidal Thoughts) is scored 2+."""
+    lines = "".join(f"<p><strong>{name}</strong>: {number}</p>"
+                    for name, number in list(CRISIS_RESOURCES.items())[:3])
+    st.markdown(f"""
+    <div class="alert-card alert-danger alert-card--emphasis">
+    <h4>⚠️ Your answer about suicidal thoughts indicates you may be in distress</h4>
+    <p style="margin-bottom:.5rem;">Please contact a crisis helpline or healthcare provider now:</p>
+    {lines}
+    </div>
+    """, unsafe_allow_html=True)
+
+
 def render_assessment_results(assessment):
     """Render the full BDI → FCRI → final-result report for one assessment."""
     pred = assessment['prediction']
@@ -219,6 +233,9 @@ def render_assessment_results(assessment):
     fcri_ref = fcri_reference(fcri_responses)
     verdict = final_verdict(pred, bdi_ref, fcri_ref)
 
+    if suicide_risk(bdi_responses):
+        render_suicide_warning()
+
     with st.expander("👤 Demographics Information"):
         st.json(demographics)
 
@@ -229,8 +246,8 @@ def render_assessment_results(assessment):
     st.markdown("---")
     _render_final_section(pred, bdi_ref, fcri_ref, verdict)
 
-    # Clinical guidance
-    desc = SEVERITY_DESCRIPTIONS.get(bdi_ref[3], '')
+    # Clinical guidance follows the model's severity, which is the final result
+    desc = SEVERITY_DESCRIPTIONS.get(pred['severity_label'], '')
     if desc:
         st.markdown(f"""
         <div class="alert-card alert-info">
@@ -239,7 +256,7 @@ def render_assessment_results(assessment):
         </div>
         """, unsafe_allow_html=True)
 
-    if verdict['decision'] != 'NO' or pred['severity_idx'] >= 2:
+    if needs_follow_up(pred, bdi_ref, verdict):
         st.markdown("""
         <div class="alert-card alert-warning alert-card--emphasis">
         <h4>⚠️ Clinical follow-up recommended</h4>
@@ -247,8 +264,8 @@ def render_assessment_results(assessment):
         </div>
         """, unsafe_allow_html=True)
 
-    # Crisis resources for moderate depression or above
-    if bdi_ref[2] >= 21 or pred['severity_idx'] >= 3:
+    # Crisis resources for moderate depression or above, or suicidal-ideation risk
+    if needs_crisis_resources(pred, bdi_ref, bdi_responses):
         st.markdown("---")
         st.markdown("## 🚨 Crisis & Support Resources (Pakistan)")
         st.error("If you are in immediate distress, please contact these resources:")

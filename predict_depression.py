@@ -90,6 +90,15 @@ CRISIS_RESOURCES = {
 
 CLINICAL_FOLLOW_UP_THRESHOLD = 17   # Borderline or above → recommend clinical follow-up
 BDI_MILD_CUTOFF              = 11   # Mild mood disturbance or above
+CRISIS_BDI_THRESHOLD         = 21   # Moderate or above -> show crisis resources
+MODERATE_SEVERITY_IDX        = 3    # index of 'Moderate depression' in SEVERITY_LABELS
+BORDERLINE_SEVERITY_IDX      = 2    # index of 'Borderline clinical depression'
+
+# BDI item 9 (Suicidal Thoughts) is a safety item: it is always asked, in both
+# modes, regardless of its feature-importance rank, so the suicidal-ideation
+# check can never be skipped. A score of 2+ triggers the crisis warning.
+SAFETY_BDI_ITEM    = 9
+SUICIDE_RISK_SCORE = 2
 
 # FCRI Severity subscale (items 9-17, range 0-36) cutoffs from Simard & Savard
 # (2009, 2015): >=13 flags clinically significant fear of cancer recurrence,
@@ -103,8 +112,9 @@ FCRI_SUBSCALE_ORDER = [
 
 # ── Quick-mode item counts ────────────────────────────────────────────────────
 # predict_depression.py supports two assessment modes:
-#   Full    — asks all 21 BDI + 9 FCRI key items  (30 questions, ~15 min)
-#   Quick   — asks top-N items ranked by feature importance (≤15 questions, ~7 min)
+#   Full    — asks all 21 BDI + all 42 FCRI items  (63 questions, ~25-30 min)
+#   Quick   — asks top-N items ranked by feature importance, plus BDI item 9
+#             as a safety item (≤16 questions, ~7 min)
 #
 # Items are chosen dynamically from models/feature_importance.csv, which is
 # re-generated each time depression_detection_pipeline.py is run.  As real
@@ -459,7 +469,7 @@ def load_top_items(n_bdi=TOP_N_BDI, n_fcri=TOP_N_FCRI):
 
     if not os.path.exists(imp_path):
         print(f"  [Quick mode] feature_importance.csv not found — using clinical default items.")
-        return CLINICAL_BDI_DEFAULT[:n_bdi], CLINICAL_FCRI_DEFAULT[:n_fcri]
+        return with_safety_item(CLINICAL_BDI_DEFAULT[:n_bdi]), CLINICAL_FCRI_DEFAULT[:n_fcri]
 
     try:
         imp = pd.read_csv(imp_path)
@@ -481,11 +491,16 @@ def load_top_items(n_bdi=TOP_N_BDI, n_fcri=TOP_N_FCRI):
             if item['col'] not in fcri_cols:
                 fcri_cols.append(item['col'])
 
-        return bdi_nums, fcri_cols[:n_fcri]
+        return with_safety_item(bdi_nums), fcri_cols[:n_fcri]
 
     except Exception as e:
         print(f"  [Quick mode] Could not read feature_importance.csv ({e}) — using clinical defaults.")
-        return CLINICAL_BDI_DEFAULT[:n_bdi], CLINICAL_FCRI_DEFAULT[:n_fcri]
+        return with_safety_item(CLINICAL_BDI_DEFAULT[:n_bdi]), CLINICAL_FCRI_DEFAULT[:n_fcri]
+
+
+def with_safety_item(bdi_nums):
+    """Add BDI item 9 to a Quick-mode item list if the ranking left it out."""
+    return bdi_nums if SAFETY_BDI_ITEM in bdi_nums else bdi_nums + [SAFETY_BDI_ITEM]
 
 
 def choose_mode():
@@ -496,8 +511,9 @@ def choose_mode():
     print("\n" + "─" * 65)
     print("  SELECT ASSESSMENT MODE")
     print("─" * 65)
-    print("  1. Quick Screening  — top-ranked items only  (~7 min, 15 questions)")
-    print(f"     {TOP_N_BDI} BDI items + {TOP_N_FCRI} FCRI items, chosen by ML feature importance")
+    print("  1. Quick Screening  — top-ranked items only  (~7 min, up to 16 questions)")
+    print(f"     {TOP_N_BDI} BDI items + {TOP_N_FCRI} FCRI items, chosen by ML feature importance,")
+    print(f"     plus BDI item {SAFETY_BDI_ITEM} (suicidal thoughts) as a safety question")
     print("     Unasked items imputed from training-data means")
     print()
     print("  2. Full Assessment  — all BDI + all FCRI items  (~25-30 min, 63 questions)")
@@ -661,13 +677,15 @@ def collect_demographics():
     print("=" * 65)
 
     gender_opts    = ['Male', 'Female', 'Other', 'Prefer not to say']
-    age_opts       = ['Under 18', '18-30', '31-45', '46-60', 'Over 60']
+    # Option text must match the training data's categories exactly
+    # (label_encoders.joblib), or the answer can't be encoded.
+    age_opts       = ['Below 18', '18-30', '31-45', '46-60', 'Above 60']
     education_opts = ['No formal education', 'Primary', 'Secondary / Matric',
                       'Intermediate / FSc', "Bachelor's", "Master's or higher"]
     cancer_stage   = ['Stage I', 'Stage II', 'Stage III', 'Stage IV',
                       'Metastatic / Advanced', 'Not sure / not told']
-    cancer_status  = ['Newly Diagnosed', 'Under Active Treatment', 'In Remission',
-                      'Cancer Recurrence', 'Metastatic Disease', 'Palliative Care']
+    cancer_status  = ['Newly Diagnosed', 'Under Treatment', 'Recurrence',
+                      'Recovered / Survivor']
 
     gender_idx  = _prompt_choice("Gender", gender_opts)
     age_idx     = _prompt_choice("Age Group", age_opts)
@@ -727,11 +745,10 @@ def build_feature_vector(bdi_responses, fcri_responses, demographics,
         if le is None:
             continue
         value = demographics.get(demo_key, 'Unknown')
-        try:
+        # A category the model never saw keeps its training mean (set above),
+        # like an unasked item; code 0 would silently mean a real category.
+        if value in le.classes_:
             feat[feat_key] = float(le.transform([value])[0])
-        except ValueError:
-            # Unseen category — use most frequent class (0)
-            feat[feat_key] = 0.0
 
     # Return ordered array matching training schema
     return np.array([feat[col] for col in feature_cols], dtype=np.float32)
@@ -915,6 +932,29 @@ def final_verdict(pred, bdi_ref, fcri_ref):
     }
 
 
+# Safety and follow-up rules, shared by the CLI, the web results page and the
+# PDF report so all three always show the same messages. Each errs towards
+# showing the message: either the model or the BDI total can trigger it.
+
+def suicide_risk(bdi_responses):
+    """True if BDI item 9 (Suicidal Thoughts) was answered 2 or higher."""
+    return bdi_responses.get(f'{SAFETY_BDI_ITEM}.', 0) >= SUICIDE_RISK_SCORE
+
+
+def needs_follow_up(pred, bdi_ref, verdict):
+    """Recommend follow-up: verdict YES/POSSIBLE, or Borderline+ by model or BDI."""
+    return (verdict['decision'] != 'NO'
+            or pred['severity_idx'] >= BORDERLINE_SEVERITY_IDX
+            or bdi_ref[2] >= CLINICAL_FOLLOW_UP_THRESHOLD)
+
+
+def needs_crisis_resources(pred, bdi_ref, bdi_responses):
+    """Show crisis helplines: Moderate+ by model or BDI, or suicidal-ideation risk."""
+    return (pred['severity_idx'] >= MODERATE_SEVERITY_IDX
+            or bdi_ref[2] >= CRISIS_BDI_THRESHOLD
+            or suicide_risk(bdi_responses))
+
+
 # =============================================================================
 # SECTION 7: RESULTS DISPLAY  (Step 1 BDI → Step 2 FCRI → Step 3 model result)
 # =============================================================================
@@ -1004,13 +1044,13 @@ def display_results(pred, bdi_responses, fcri_responses, bdi_ref, mode):
         print("        A clinician should review this case.")
 
     # ── Clinical follow-up flag ───────────────────────────────────────────────
-    if verdict['decision'] != 'NO' or bdi_extrap >= CLINICAL_FOLLOW_UP_THRESHOLD:
+    if needs_follow_up(pred, bdi_ref, verdict):
         print("\n  ⚠  CLINICAL FOLLOW-UP RECOMMENDED")
         print("     Please discuss these results with your oncologist or a mental")
         print("     health professional at the earliest opportunity.")
 
     # ── Crisis resources ──────────────────────────────────────────────────────
-    if pred['severity_idx'] >= 3:                    # moderate or above
+    if needs_crisis_resources(pred, bdi_ref, bdi_responses):
         print("\n  CRISIS & SUPPORT RESOURCES (Pakistan):")
         for name, number in CRISIS_RESOURCES.items():
             print(f"    {name:<45} {number}")
@@ -1063,10 +1103,8 @@ def main():
         fcri_responses = collect_fcri(col_filter=top_fcri_cols)
 
         # ── Suicidal ideation warning (BDI item 9, score ≥ 2) ─────────────────
-        # Item 9 is always included in Quick mode (it ranks in the top 10 BDI
-        # items by importance).  If the mode somehow excludes it, the check
-        # simply won't fire — never shows a false negative.
-        if bdi_responses.get('9.', 0) >= 2:
+        # Item 9 is asked in both modes (with_safety_item), so this always runs.
+        if suicide_risk(bdi_responses):
             print("\n" + "!" * 65)
             print("  IMPORTANT: Your response to the question about suicidal")
             print("  thoughts indicates you may be in distress.")
