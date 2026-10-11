@@ -694,10 +694,12 @@ def build_feature_vector(bdi_responses, fcri_responses, demographics,
         if col in feat:
             feat[col] = float(score)
 
-    # Fill asked FCRI items
+    # Fill asked FCRI items. Item 13 ("I believe that I am cured…") is
+    # reverse-scored (4 − raw) during training, so the raw answer must be
+    # reversed here too or the model sees the opposite of what was answered.
     for col, score in fcri_responses.items():
         if col in feat:
-            feat[col] = float(score)
+            feat[col] = 4.0 - float(score) if col.startswith('13. ') else float(score)
 
     # Encode demographics using saved LabelEncoders
     demo_map = {

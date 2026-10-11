@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from streamlit_app import (
     BDI_QUESTIONS, FCRI_QUESTIONS, FCRI_ALL_ITEMS,
     load_top_items, build_feature_vector, predict, bdi_reference,
+    fcri_reference, FCRI_SEVERITY_SCREEN_CUTOFF, FCRI_SEVERITY_CLINICAL_CUTOFF,
     TOP_N_BDI, TOP_N_FCRI, CLINICAL_FOLLOW_UP_THRESHOLD,
     CRISIS_RESOURCES, init_session_state,
     SEVERITY_LABELS, SEVERITY_DESCRIPTIONS, export_results_to_csv, export_results_to_pdf
@@ -144,6 +145,49 @@ def display_assessment_results(assessment):
     st.caption("Rule-based score is informational; ML model output drives the assessment.")
 
     st.markdown("---")
+
+    # FCRI Reference Score
+    fcri_ref = fcri_reference(assessment.get('fcri_responses', {}))
+    if fcri_ref['total_asked']:
+        st.markdown("## 🎗️ Fear of Cancer Recurrence (FCRI)")
+
+        sev_score = fcri_ref['severity_score']
+        sev_value = 'N/A' if sev_score is None else f"{sev_score}/36"
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-label">Severity subscale</div>
+                <div class="metric-value">{sev_value}</div>
+                <div class="metric-footnote">{fcri_ref['severity_label']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with col2:
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-label">Total FCRI score</div>
+                <div class="metric-value">{fcri_ref['total_raw']}/{fcri_ref['total_asked'] * 4}</div>
+                <div class="metric-footnote">Based on {fcri_ref['total_asked']} of 42 items answered</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        sub_rows = [
+            {'Subscale': name,
+             'Score': f"{sub['raw']}/{sub['n_asked'] * 4}",
+             'Items answered': f"{sub['n_asked']} of {sub['n_total']}"}
+            for name, sub in fcri_ref['subscales'].items() if sub['n_asked']
+        ]
+        st.dataframe(pd.DataFrame(sub_rows), width='stretch', hide_index=True)
+
+        if fcri_ref['severity_extrapolated']:
+            st.info("💡 **Note**: Quick-mode FCRI severity score is extrapolated from fewer items. Run a Full Assessment for a validated score.")
+        st.caption(
+            f"Severity subscale (items 9–17): ≥{FCRI_SEVERITY_SCREEN_CUTOFF} suggests clinically significant "
+            f"fear of recurrence; ≥{FCRI_SEVERITY_CLINICAL_CUTOFF} suggests clinical-level fear of recurrence."
+        )
+
+        st.markdown("---")
 
     # Clinical description
     st.markdown("## 🏥 Clinical Assessment")

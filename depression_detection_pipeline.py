@@ -53,6 +53,10 @@ from sklearn.metrics import (accuracy_score, precision_score, recall_score,
                              confusion_matrix, ConfusionMatrixDisplay)
 from sklearn.utils.class_weight import compute_class_weight
 from xgboost import XGBClassifier
+import matplotlib
+# Plots are only saved to PNG, never shown — use the non-GUI backend so the
+# script doesn't depend on Tcl/Tk (missing on some Windows Python installs).
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 RANDOM_STATE = 42
@@ -341,11 +345,20 @@ class ClinicalDataPreprocessor:
                 if mask.any():
                     df.loc[mask, col] = bdi_means[mask].round()
 
-        # FCRI: impute with patient's own subscale mean
+        # FCRI: impute with patient's own subscale mean. Imputation isn't valid
+        # when fewer than half a subscale's items were answered, so those
+        # participants are excluded instead (scoring procedure, rule 4).
         for sub in self.FCRI_SUBSCALES:
             sub_cols = [c for c in self._get_subscale_cols(sub) if c in df.columns]
             if not sub_cols:
                 continue
+            answered = df[sub_cols].notna().sum(axis=1)
+            too_sparse = answered < len(sub_cols) / 2
+            n = too_sparse.sum()
+            if n:
+                print(f"  Dropped {n} rows with <50% of '{sub}' items answered "
+                      f"(cannot impute)")
+                df = df[~too_sparse].reset_index(drop=True)
             sub_means = df[sub_cols].astype(float).mean(axis=1)
             for col in sub_cols:
                 mask = df[col].isna()
@@ -400,8 +413,11 @@ class ClinicalDataPreprocessor:
             if ok < 0.80:
                 print("  WARNING: FCRI conversion rate below 80% — check response text formats.")
 
-        df_out = self._reverse_fcri_item_13(df_out)
+        # Mechanical-response check must see RAW answers: reversing item 13
+        # first turns an all-zero respondent's item 13 into 4, so they'd never
+        # match "all FCRI = 0" and would slip through.
         df_out = self._drop_mechanical(df_out)
+        df_out = self._reverse_fcri_item_13(df_out)
         df_out = self._drop_excessive_missing(df_out)
         df_out = self._impute_subscale_means(df_out)
         df_out, enc_features = self._encode_categoricals(df_out)

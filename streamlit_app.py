@@ -478,9 +478,10 @@ def build_feature_vector(bdi_responses, fcri_responses, demographics,
         if col in feat:
             feat[col] = float(score)
 
+    # Item 13 is reverse-scored (4 − raw) in training — reverse the raw answer.
     for col, score in fcri_responses.items():
         if col in feat:
-            feat[col] = float(score)
+            feat[col] = 4.0 - float(score) if col.startswith('13. ') else float(score)
 
     demo_map = {
         'gender':          'gender_encoded',
@@ -554,6 +555,60 @@ def bdi_reference(bdi_responses, n_total=21):
             return raw_total, n_asked, extrapolated, label
     return raw_total, n_asked, extrapolated, 'Unknown'
 
+# FCRI Severity subscale (items 9-17, range 0-36) cutoffs from Simard & Savard
+# (2009, 2015): >=13 flags clinically significant fear of cancer recurrence,
+# >=16 indicates clinical-level FCR warranting specialist referral.
+FCRI_SEVERITY_SCREEN_CUTOFF   = 13
+FCRI_SEVERITY_CLINICAL_CUTOFF = 16
+FCRI_SUBSCALE_ORDER = [
+    'Triggers', 'Severity', 'Psychological Distress', 'Functioning Impairments',
+    'Insight', 'Reassurance', 'Coping Strategies',
+]
+
+def fcri_reference(fcri_responses):
+    """
+    Score collected FCRI items: per-subscale raw totals, the overall total, and
+    the Severity subscale (extrapolated to 9 items when only some were asked)
+    with its clinical interpretation. Item 13 is reverse-scored (4 - raw).
+    """
+    subscales = {}
+    for name in FCRI_SUBSCALE_ORDER:
+        items = [q for q in FCRI_QUESTIONS if q['subscale'] == name]
+        answered = [q for q in items if q['col'] in fcri_responses]
+        raw = 0
+        for q in answered:
+            score = float(fcri_responses[q['col']])
+            raw += 4 - score if q['num'] == 13 else score
+        subscales[name] = {
+            'raw':     int(round(raw)),
+            'n_asked': len(answered),
+            'n_total': len(items),
+        }
+
+    total_raw   = sum(s['raw'] for s in subscales.values())
+    total_asked = sum(s['n_asked'] for s in subscales.values())
+
+    sev = subscales['Severity']
+    if sev['n_asked']:
+        sev_score = round(sev['raw'] * sev['n_total'] / sev['n_asked'])
+        if sev_score >= FCRI_SEVERITY_CLINICAL_CUTOFF:
+            sev_label = 'Clinical fear of recurrence'
+        elif sev_score >= FCRI_SEVERITY_SCREEN_CUTOFF:
+            sev_label = 'Clinically significant fear of recurrence'
+        else:
+            sev_label = 'Non-clinical fear of recurrence'
+    else:
+        sev_score, sev_label = None, 'Not assessed'
+
+    return {
+        'total_raw':      total_raw,
+        'total_asked':    total_asked,
+        'severity_score': sev_score,        # 0-36, extrapolated if partial
+        'severity_label': sev_label,
+        'severity_extrapolated': 0 < sev['n_asked'] < sev['n_total'],
+        'subscales':      subscales,
+    }
+
 # =============================================================================
 # EXPORT FUNCTIONS
 # =============================================================================
@@ -575,6 +630,17 @@ def export_results_to_csv(demographics, bdi_responses, fcri_responses, pred, bdi
         'bdi_extrapolated_score': int(bdi_ref[2]),
         'bdi_severity': str(bdi_ref[3]),
     }
+
+    fcri_ref = fcri_reference(fcri_responses)
+    data.update({
+        'fcri_total_score': fcri_ref['total_raw'],
+        'fcri_items_answered': fcri_ref['total_asked'],
+        'fcri_severity_score': fcri_ref['severity_score'],
+        'fcri_severity': fcri_ref['severity_label'],
+    })
+    for name, sub in fcri_ref['subscales'].items():
+        key = name.lower().replace(' ', '_')
+        data[f'fcri_subscale_{key}'] = sub['raw'] if sub['n_asked'] else None
 
     df = pd.DataFrame([data])
     return df.to_csv(index=False).encode('utf-8')
@@ -643,6 +709,49 @@ def export_results_to_pdf(demographics, bdi_responses, fcri_responses, pred, bdi
     story.append(results_table)
     story.append(Spacer(1, 12))
 
+    # FCRI results
+    fcri_ref = fcri_reference(fcri_responses)
+    if fcri_ref['total_asked']:
+        story.append(Paragraph("Fear of Cancer Recurrence (FCRI) Results", styles['Heading2']))
+
+        sev_score = fcri_ref['severity_score']
+        sev_text = 'N/A' if sev_score is None else f"{sev_score}/36"
+        if fcri_ref['severity_extrapolated']:
+            sev_text += " (extrapolated)"
+
+        fcri_data = [
+            ['FCRI Severity', str(fcri_ref['severity_label'])],
+            ['FCRI Severity Score', sev_text],
+            ['FCRI Total Score', f"{fcri_ref['total_raw']}/{fcri_ref['total_asked'] * 4}"],
+            ['FCRI Items Answered', f"{fcri_ref['total_asked']}/42"],
+        ]
+        for name, sub in fcri_ref['subscales'].items():
+            if sub['n_asked']:
+                fcri_data.append([
+                    f"  {name}",
+                    f"{sub['raw']}/{sub['n_asked'] * 4}  ({sub['n_asked']} of {sub['n_total']} items)",
+                ])
+
+        fcri_table = Table(fcri_data)
+        fcri_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        story.append(fcri_table)
+        story.append(Spacer(1, 6))
+        story.append(Paragraph(
+            f"Severity subscale (items 9-17): a score of {FCRI_SEVERITY_SCREEN_CUTOFF} or more "
+            f"suggests clinically significant fear of recurrence; "
+            f"{FCRI_SEVERITY_CLINICAL_CUTOFF} or more suggests clinical-level fear of recurrence.",
+            styles['Italic']))
+        story.append(Spacer(1, 12))
+
     # Clinical description
     desc = SEVERITY_DESCRIPTIONS.get(pred['severity_label'], '')
     if desc:
@@ -702,6 +811,13 @@ def export_history_to_csv(history):
             'bdi_extrapolated_score': int(bdi_ref[2]),
             'bdi_severity': str(bdi_ref[3]),
         }
+        fcri_ref = fcri_reference(assessment.get('fcri_responses', {}))
+        row.update({
+            'fcri_total_score': fcri_ref['total_raw'],
+            'fcri_items_answered': fcri_ref['total_asked'],
+            'fcri_severity_score': fcri_ref['severity_score'],
+            'fcri_severity': fcri_ref['severity_label'],
+        })
         export_data.append(row)
 
     df = pd.DataFrame(export_data)
