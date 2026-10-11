@@ -1126,6 +1126,86 @@ def main():
         display_results(pred, bdi_responses, fcri_responses,
                         bdi_reference(bdi_responses), mode)
 
+        # ── Optional SHAP explanation ────────────────────────────────────────────
+        try:
+            from shap_analyzer import SHAPAnalyzer
+            show_explanation = input("\nShow model explanation? (y/n): ").strip().lower()
+            if show_explanation == 'y':
+                print("\nGenerating patient-level SHAP explanation...")
+                
+                # Create patient output directory
+                patient_dir = os.path.join(MODELS_DIR, 'shap', 'patients')
+                os.makedirs(patient_dir, exist_ok=True)
+                
+                shap_analyzer = SHAPAnalyzer(
+                    models={'voting_ensemble': artefacts['binary_model']},
+                    feature_names=artefacts['feature_cols'],
+                    X_train=None,  # Not needed for patient-level
+                    X_test=None,
+                    scaler=artefacts['scaler'],
+                    output_dir=patient_dir,
+                    task='binary',
+                    class_names=['No Depression', 'Has Depression'],
+                    dpi=150  # Default to standard resolution
+                )
+                
+                # Need to load training data for background dataset
+                try:
+                    from depression_detection_pipeline import ClinicalDataPreprocessor, TargetVariableEngineer
+                    from sklearn.model_selection import train_test_split
+                    from sklearn.preprocessing import StandardScaler
+                    
+                    print("Loading training data for SHAP background...")
+                    data_path = os.path.join('Data', 'cancer_psychology.csv')
+                    if os.path.exists(data_path):
+                        df_temp = pd.read_csv(data_path)
+                        preprocessor_temp = ClinicalDataPreprocessor()
+                        df_proc_temp, _ = preprocessor_temp.fit_transform(df_temp)
+                        tve_temp = TargetVariableEngineer(preprocessor_temp.bdi_columns)
+                        df_fin_temp = tve_temp.create_targets(df_proc_temp)
+                        
+                        feature_cols_temp = [c for c in
+                                          preprocessor_temp.bdi_columns + 
+                                          preprocessor_temp.fcri_columns + 
+                                          [c for c in df_fin_temp.columns if c.endswith('_encoded')]
+                                          if c in df_fin_temp.columns]
+                        X_temp = df_fin_temp[feature_cols_temp].fillna(0)
+                        y_temp = df_fin_temp['has_depression']
+                        
+                        X_tr, _, _, _ = train_test_split(
+                            X_temp, y_temp, test_size=0.2, random_state=42, stratify=y_temp
+                        )
+                        
+                        scaler_temp = StandardScaler()
+                        X_train_temp = scaler_temp.fit_transform(X_tr)
+                        
+                        # Update analyzer with training data
+                        shap_analyzer.X_train = X_train_temp
+                    else:
+                        print("Warning: Training data not found, using minimal background")
+                except Exception as e:
+                    print(f"Warning: Could not load training data ({e}), using minimal background")
+                
+                explanation = shap_analyzer.explain_patient(
+                    feature_vec=feature_vec,
+                    prediction=pred,
+                    bdi_responses=bdi_responses,
+                    fcri_responses=fcri_responses,
+                    save_plots=True
+                )
+                
+                if explanation:
+                    shap_analyzer.print_patient_explanation(explanation, hybrid_display=True)
+                    print(f"\nSHAP visualizations saved to: {patient_dir}/")
+                else:
+                    print("Could not generate SHAP explanation.")
+        except ImportError:
+            print("SHAP not installed. Prediction continues without explanations.")
+            print("Install SHAP with: pip install shap")
+        except Exception as e:
+            print(f"Error generating SHAP explanation: {e}")
+            print("Prediction completed without explanations.")
+
         # ── Loop control ───────────────────────────────────────────────────────
         again = input("\nRun another assessment? (y/n): ").strip().lower()
         run_again = (again == 'y')
