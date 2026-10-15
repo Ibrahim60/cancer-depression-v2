@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Training Pipeline Diagram</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --ink: #14181f; --ink2: #475162; --line: #8a94a6;
+    --c0: #8a94a6; --c1: #2563eb; --c2: #7c3aed; --c3: #059669;
+    --t1: #eef3ff; --t2: #f4efff; --t3: #eafaf3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1218; --card: #181d26; --ink: #eef1f6; --ink2: #a9b3c4; --line: #6b778c;
+      --c0: #6b778c; --c1: #6b9bff; --c2: #a98bff; --c3: #34d399;
+      --t1: #1a2236; --t2: #221c36; --t3: #142a24;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1218; --card: #181d26; --ink: #eef1f6; --ink2: #a9b3c4; --line: #6b778c;
+    --c0: #6b778c; --c1: #6b9bff; --c2: #a98bff; --c3: #34d399;
+    --t1: #1a2236; --t2: #221c36; --t3: #142a24;
+  }
+  html, body { margin: 0; height: 100%; background: var(--bg); }
+  body { display: flex; align-items: center; justify-content: center;
+         font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  svg { width: 100%; max-width: 1580px; max-height: 100vh; height: auto; display: block; }
+
+  .box  { fill: var(--card); stroke-width: 2.5; }
+  .s0 { stroke: var(--c0); stroke-dasharray: 7 5; } .s1 { stroke: var(--c1); }
+  .s2 { stroke: var(--c2); } .s3 { stroke: var(--c3); }
+  .f1 { fill: var(--c1); } .f2 { fill: var(--c2); } .f3 { fill: var(--c3); } .f0 { fill: var(--c0); }
+  .pill1 { fill: var(--t2); stroke: var(--c2); stroke-width: 1.5; }
+  .ens   { fill: var(--c2); }
+  .title { font-size: 21px; font-weight: 650; fill: var(--ink); }
+  .body  { font-size: 15.5px; fill: var(--ink2); }
+  .small { font-size: 14px; fill: var(--ink2); }
+  .num   { font-size: 15px; font-weight: 700; fill: #fff; text-anchor: middle; }
+  .numsm { font-size: 12px; }
+  .pilltxt { font-size: 15px; font-weight: 600; fill: var(--ink); }
+  .enstxt  { font-size: 15px; font-weight: 650; fill: #fff; text-anchor: middle; }
+  .h1    { font-size: 38px; font-weight: 750; fill: var(--ink); }
+  .h2    { font-size: 18px; fill: var(--ink2); }
+  .phase { font-size: 14px; font-weight: 700; letter-spacing: .12em; text-anchor: end; }
+  .ph1 { fill: var(--c1); } .ph2 { fill: var(--c2); } .ph3 { fill: var(--c3); }
+  .arrow { stroke: var(--line); stroke-width: 2.5; fill: none; marker-end: url(#head); }
+  .thin  { stroke: var(--c2); stroke-width: 2; fill: none; marker-end: url(#head2); }
+  .headfill { fill: var(--line); } .head2fill { fill: var(--c2); }
+  code, .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+
+  @media print { @page { size: landscape; margin: 8mm; } body { background: #fff; } }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 1580 900" role="img" aria-labelledby="t d">
+  <title id="t">Training pipeline workflow</title>
+  <desc id="d">Raw survey data is cleaned, labelled and turned into features; split 80/20 and scaled; three models are tuned and combined into a soft-voting ensemble for binary and multiclass tasks; then feature importance, evaluation, threshold tuning and export to the models folder.</desc>
+  <defs>
+    <marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" class="headfill"/></marker>
+    <marker id="head2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" class="head2fill"/></marker>
+  </defs>
+
+  <text x="60" y="68" class="h1">Training Pipeline</text>
+  <text x="60" y="100" class="h2"><tspan class="mono">depression_detection_pipeline.py</tspan> — from raw survey answers to saved, ready-to-use models</text>
+
+  <!-- ===== PHASE 1: PREPARE DATA ===== -->
+  <text x="1520" y="136" class="phase ph1">PHASE 1 · PREPARE DATA</text>
+
+  <rect x="60" y="150" width="320" height="160" rx="14" class="box s0"/>
+  <circle cx="88" cy="180" r="15" class="f0"/><text x="88" y="185" class="num">in</text>
+  <text x="112" y="187" class="title">Raw survey data</text>
+  <text x="84" y="222" class="body mono" style="font-size:14px">Data/cancer_psychology.csv</text>
+  <text x="84" y="245" class="body">≈1,531 cancer patients</text>
+  <text x="84" y="268" class="body">21 BDI + 42 FCRI answers</text>
+  <text x="84" y="291" class="body">+ demographic details</text>
+
+  <rect x="440" y="150" width="320" height="160" rx="14" class="box s1"/>
+  <circle cx="468" cy="180" r="15" class="f1"/><text x="468" y="185" class="num">1</text>
+  <text x="492" y="187" class="title">Clean &amp; convert</text>
+  <text x="464" y="222" class="body">Remove personal info (PII)</text>
+  <text x="464" y="245" class="body">Text answers → numeric scores</text>
+  <text x="464" y="268" class="body">Drop careless / empty rows</text>
+  <text x="464" y="291" class="body">Reverse item 13 · fill gaps</text>
+
+  <rect x="820" y="150" width="320" height="160" rx="14" class="box s1"/>
+  <circle cx="848" cy="180" r="15" class="f1"/><text x="848" y="185" class="num">2</text>
+  <text x="872" y="187" class="title">Create labels</text>
+  <text x="844" y="222" class="body">BDI total score (0 – 63)</text>
+  <text x="844" y="245" class="body">Binary: total ≥ 11 → depressed</text>
+  <text x="844" y="268" class="body">Multiclass: 6 severity bands</text>
+  <text x="844" y="291" class="body">(Normal → Extreme)</text>
+
+  <rect x="1200" y="150" width="320" height="160" rx="14" class="box s1"/>
+  <circle cx="1228" cy="180" r="15" class="f1"/><text x="1228" y="185" class="num">3</text>
+  <text x="1252" y="187" class="title">Build feature matrix X</text>
+  <text x="1224" y="222" class="body">21 BDI item scores</text>
+  <text x="1224" y="245" class="body">42 FCRI item scores</text>
+  <text x="1224" y="268" class="body">Encoded demographics</text>
+  <text x="1224" y="291" class="body">Targets: y_binary, y_multi</text>
+
+  <path d="M380 230 H434" class="arrow"/>
+  <path d="M760 230 H814" class="arrow"/>
+  <path d="M1140 230 H1194" class="arrow"/>
+  <path d="M1360 310 V345 H220 V379" class="arrow"/>
+
+  <!-- ===== PHASE 2: TRAIN MODELS ===== -->
+  <text x="1520" y="374" class="phase ph2">PHASE 2 · TRAIN MODELS</text>
+
+  <rect x="60" y="385" width="320" height="200" rx="14" class="box s2"/>
+  <circle cx="88" cy="415" r="15" class="f2"/><text x="88" y="420" class="num">4</text>
+  <text x="112" y="422" class="title">Split 80 / 20</text>
+  <text x="84" y="460" class="body">80% train · 20% test</text>
+  <text x="84" y="483" class="body">Stratified: keeps class ratio</text>
+  <text x="84" y="506" class="body">One split for both tasks</text>
+  <text x="84" y="529" class="body">Test set kept unseen</text>
+
+  <rect x="440" y="385" width="320" height="200" rx="14" class="box s2"/>
+  <circle cx="468" cy="415" r="15" class="f2"/><text x="468" y="420" class="num">5</text>
+  <text x="492" y="422" class="title">Scale features</text>
+  <text x="464" y="460" class="body">StandardScaler (mean 0, sd 1)</text>
+  <text x="464" y="483" class="body">Fitted on training data only</text>
+  <text x="464" y="506" class="body">Same scaler reused for test</text>
+  <text x="464" y="529" class="body">and for both tasks</text>
+
+  <rect x="820" y="385" width="700" height="200" rx="14" class="box s2"/>
+  <circle cx="848" cy="415" r="15" class="f2"/><text x="848" y="420" class="num">6</text>
+  <text x="872" y="422" class="title">Train models — run twice: binary &amp; multiclass</text>
+
+  <rect x="850" y="443" width="220" height="34" rx="8" class="pill1"/>
+  <text x="866" y="466" class="pilltxt">Logistic Regression</text>
+  <rect x="850" y="489" width="220" height="34" rx="8" class="pill1"/>
+  <text x="866" y="512" class="pilltxt">Random Forest</text>
+  <rect x="850" y="535" width="220" height="34" rx="8" class="pill1"/>
+  <text x="866" y="558" class="pilltxt">XGBoost</text>
+
+  <path d="M1070 460 C1100 460 1100 490 1124 497" class="thin"/>
+  <path d="M1070 506 H1124" class="thin"/>
+  <path d="M1070 552 C1100 552 1100 522 1124 515" class="thin"/>
+
+  <rect x="1130" y="470" width="180" height="74" rx="10" class="ens"/>
+  <text x="1220" y="501" class="enstxt">Soft-voting</text>
+  <text x="1220" y="522" class="enstxt">ensemble</text>
+
+  <text x="1336" y="458" class="small">GridSearchCV tuning</text>
+  <text x="1336" y="480" class="small">5-fold stratified CV</text>
+  <text x="1336" y="502" class="small">Scored by macro-F1</text>
+  <text x="1336" y="524" class="small">Balanced class weights</text>
+  <text x="1336" y="546" class="small">Votes: binary 1 : 1 : 1</text>
+  <text x="1336" y="568" class="small">multiclass 2 : 1 : 1</text>
+
+  <path d="M380 485 H434" class="arrow"/>
+  <path d="M760 485 H814" class="arrow"/>
+  <path d="M1170 585 V620 H220 V649" class="arrow"/>
+
+  <!-- ===== PHASE 3: EVALUATE & SAVE ===== -->
+  <text x="1520" y="644" class="phase ph3">PHASE 3 · EVALUATE &amp; SAVE</text>
+
+  <rect x="60" y="655" width="320" height="160" rx="14" class="box s3"/>
+  <circle cx="88" cy="685" r="15" class="f3"/><text x="88" y="690" class="num">7</text>
+  <text x="112" y="692" class="title">Feature importance</text>
+  <text x="84" y="727" class="body">RF + XGBoost importances</text>
+  <text x="84" y="750" class="body">averaged and ranked</text>
+  <text x="84" y="773" class="body">Top 5 BDI &amp; top 5 FCRI items</text>
+  <text x="84" y="796" class="body">→ shorter mobile screening</text>
+
+  <rect x="440" y="655" width="320" height="160" rx="14" class="box s3"/>
+  <circle cx="468" cy="685" r="15" class="f3"/><text x="468" y="689" class="num numsm">8a</text>
+  <text x="492" y="692" class="title">Evaluate on test set</text>
+  <text x="464" y="727" class="body">Accuracy · Precision · Recall</text>
+  <text x="464" y="750" class="body">F1 · ROC-AUC</text>
+  <text x="464" y="773" class="body">Confusion matrices (PNG)</text>
+  <text x="464" y="796" class="body">for every model, both tasks</text>
+
+  <rect x="820" y="655" width="320" height="160" rx="14" class="box s3"/>
+  <circle cx="848" cy="685" r="15" class="f3"/><text x="848" y="689" class="num numsm">8b</text>
+  <text x="872" y="692" class="title">Tune binary threshold</text>
+  <text x="844" y="727" class="body">Out-of-fold CV on train set</text>
+  <text x="844" y="750" class="body">Try cut-offs 0.05 → 0.95</text>
+  <text x="844" y="773" class="body">Keep best macro-F1</text>
+  <text x="844" y="796" class="body">(instead of default 0.50)</text>
+
+  <rect x="1200" y="655" width="320" height="160" rx="14" class="box s3"/>
+  <circle cx="1228" cy="685" r="15" class="f3"/><text x="1228" y="690" class="num">9</text>
+  <text x="1252" y="692" class="title">Export to models/</text>
+  <text x="1224" y="727" class="body">8 trained models (.joblib)</text>
+  <text x="1224" y="750" class="body">Scaler · label encoders</text>
+  <text x="1224" y="773" class="body mono" style="font-size:14px">feature_metadata.json</text>
+  <text x="1224" y="796" class="body mono" style="font-size:14px">feature_importance.csv</text>
+
+  <path d="M380 735 H434" class="arrow"/>
+  <path d="M760 735 H814" class="arrow"/>
+  <path d="M1140 735 H1194" class="arrow"/>
+  <path d="M1360 815 V846" class="arrow"/>
+
+  <text x="1360" y="874" class="small" text-anchor="middle">Loaded by <tspan class="mono">predict_depression.py</tspan> &amp; the Streamlit app</text>
+  <text x="60" y="874" class="small">scikit-learn + XGBoost · random_state = 42 · numbers match the steps in <tspan class="mono">main()</tspan></text>
+</svg>
+</body>
+</html>

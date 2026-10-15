@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Training Pipeline Study Guide</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --card: #ffffff; --ink: #1a1d23; --ink2: #545c6b; --rule: #e4e2dc;
+    --c1: #2563eb; --c2: #7c3aed; --c3: #059669; --warn: #b45309;
+    --t1: #eef3ff; --t2: #f4efff; --t3: #eafaf3; --tw: #fff5e6; --code: #f1efe9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #111318; --card: #191c23; --ink: #eceef2; --ink2: #a7afbd; --rule: #2a2f39;
+      --c1: #6b9bff; --c2: #a98bff; --c3: #34d399; --warn: #f5a524;
+      --t1: #1a2236; --t2: #221c36; --t3: #142a24; --tw: #2c2214; --code: #232731;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #111318; --card: #191c23; --ink: #eceef2; --ink2: #a7afbd; --rule: #2a2f39;
+    --c1: #6b9bff; --c2: #a98bff; --c3: #34d399; --warn: #f5a524;
+    --t1: #1a2236; --t2: #221c36; --t3: #142a24; --tw: #2c2214; --code: #232731;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 40px 16px 80px; }
+  h1 { font-size: 2.1rem; line-height: 1.2; margin: 0 0 .3rem; }
+  h2 { font-size: 1.45rem; margin: 3rem 0 .8rem; padding-top: .5rem; border-top: 1px solid var(--rule); }
+  h3 { font-size: 1.05rem; margin: 1.2rem 0 .3rem; color: var(--ink2); text-transform: uppercase; letter-spacing: .06em; }
+  p { margin: .5rem 0; }
+  .lede { color: var(--ink2); font-size: 1.1rem; margin-bottom: 1.5rem; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .86em;
+         background: var(--code); padding: .1em .35em; border-radius: 4px; overflow-wrap: anywhere; }
+  a { color: var(--c1); }
+  .callout { border-radius: 12px; padding: 14px 18px; margin: 1rem 0; background: var(--t1); }
+  .callout.warn { background: var(--tw); border-left: 4px solid var(--warn); }
+  .callout strong:first-child { display: block; margin-bottom: .2rem; }
+
+  /* ---- Vertical flow diagram ---- */
+  .flow { list-style: none; padding: 0; margin: 1.5rem 0; position: relative; }
+  .flow::before { content: ""; position: absolute; left: 21px; top: 22px; bottom: 22px; width: 3px; background: var(--rule); }
+  .flow li { position: relative; padding: 0 0 18px 62px; }
+  .flow .dot { position: absolute; left: 0; top: 0; width: 45px; height: 45px; border-radius: 50%;
+               display: grid; place-items: center; color: #fff; font-weight: 700; font-size: .95rem; }
+  .flow a.node { display: block; text-decoration: none; color: inherit; background: var(--card);
+                 border: 1px solid var(--rule); border-left: 5px solid; border-radius: 10px; padding: 9px 14px; }
+  .flow a.node:hover { border-color: currentColor; }
+  .flow b { display: block; }
+  .flow span { color: var(--ink2); font-size: .95rem; }
+  .flow li.phase-label { font-size: .78rem; font-weight: 700; letter-spacing: .12em; padding: 0 0 8px 62px; }
+  .p0 .dot { background: var(--ink2); } .p0 a.node { border-left-color: var(--ink2); }
+  .p1 .dot { background: var(--c1); }   .p1 a.node { border-left-color: var(--c1); }
+  .p2 .dot { background: var(--c2); }   .p2 a.node { border-left-color: var(--c2); }
+  .p3 .dot { background: var(--c3); }   .p3 a.node { border-left-color: var(--c3); }
+  .lbl1 { color: var(--c1); } .lbl2 { color: var(--c2); } .lbl3 { color: var(--c3); }
+
+  /* ---- Step sections ---- */
+  .step-num { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+              color: #fff; font-size: .9rem; margin-right: 8px; vertical-align: 3px; }
+  .kid { background: var(--card); border: 1px solid var(--rule); border-radius: 12px; padding: 14px 18px; margin: .8rem 0; }
+  .kid::before { content: "Like you're 10"; display: block; font-size: .78rem; font-weight: 700;
+                 letter-spacing: .1em; text-transform: uppercase; color: var(--c3); margin-bottom: .2rem; }
+  ul { padding-left: 1.3rem; } li { margin: .25rem 0; }
+  .words { font-size: .92rem; color: var(--ink2); }
+  .words a { white-space: nowrap; }
+
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; margin: .8rem 0; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { color: var(--ink2); font-weight: 600; }
+  .table-wrap { overflow-x: auto; }
+
+  dl.glossary dt { font-weight: 700; margin-top: 1rem; scroll-margin-top: 16px; }
+  dl.glossary dd { margin: .15rem 0 0 0; }
+  dl.glossary dd em { color: var(--ink2); }
+  :target { background: var(--tw); border-radius: 4px; }
+
+  details { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 10px 14px; margin: .6rem 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  details p { color: var(--ink2); }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Training Pipeline — Study Guide</h1>
+<p class="lede">What <code>depression_detection_pipeline.py</code> does, step by step. Each step has a simple explanation first, then the real version with the function names. Words in <a href="#glossary">the glossary</a> are linked.</p>
+
+<div class="callout">
+  <strong>The big idea in one paragraph</strong>
+  Imagine you want to teach a robot helper to tell whether a cancer patient is feeling depressed, just from their answers to two questionnaires. You have answer sheets from about 1,531 real patients. You tidy the sheets, write the correct answer on each one (depressed or not, and how much), let the robot practise on most of the sheets, and then test it on sheets it has never seen. If it does well, you save its "brain" to a folder so the app can use it later. That's the whole script.
+</div>
+
+<!-- ===================== DIAGRAM ===================== -->
+<h2 id="diagram">The diagram</h2>
+<p>Click any box to jump to its explanation. The numbers match the numbered comments inside <code>main()</code>.</p>
+
+<ol class="flow">
+  <li class="p0"><div class="dot">in</div>
+    <a class="node" href="#step-0"><b>Raw survey data</b><span>A big spreadsheet of answers, one row per patient</span></a></li>
+
+  <li class="phase-label lbl1">PHASE 1 · PREPARE THE DATA</li>
+  <li class="p1"><div class="dot">1</div>
+    <a class="node" href="#step-1"><b>Clean &amp; convert</b><span>Turn words into numbers, throw away messy sheets</span></a></li>
+  <li class="p1"><div class="dot">2</div>
+    <a class="node" href="#step-2"><b>Create labels</b><span>Write the "correct answer" on every sheet</span></a></li>
+  <li class="p1"><div class="dot">3</div>
+    <a class="node" href="#step-3"><b>Build the feature matrix</b><span>Choose which columns the robot is allowed to look at</span></a></li>
+
+  <li class="phase-label lbl2">PHASE 2 · TRAIN THE MODELS</li>
+  <li class="p2"><div class="dot">4</div>
+    <a class="node" href="#step-4"><b>Split 80 / 20</b><span>Practice pile and a hidden exam pile</span></a></li>
+  <li class="p2"><div class="dot">5</div>
+    <a class="node" href="#step-5"><b>Scale features</b><span>Put every number on the same ruler</span></a></li>
+  <li class="p2"><div class="dot">6</div>
+    <a class="node" href="#step-6"><b>Train 3 models + ensemble</b><span>Three different robots learn, then vote together (done twice)</span></a></li>
+
+  <li class="phase-label lbl3">PHASE 3 · CHECK AND SAVE</li>
+  <li class="p3"><div class="dot">7</div>
+    <a class="node" href="#step-7"><b>Feature importance</b><span>Which questions helped the most?</span></a></li>
+  <li class="p3"><div class="dot">8a</div>
+    <a class="node" href="#step-8a"><b>Evaluate on the test set</b><span>The final exam on unseen sheets</span></a></li>
+  <li class="p3"><div class="dot">8b</div>
+    <a class="node" href="#step-8b"><b>Tune the binary threshold</b><span>Decide how sure the robot must be before saying "depressed"</span></a></li>
+  <li class="p3"><div class="dot">9</div>
+    <a class="node" href="#step-9"><b>Export to <code>models/</code></b><span>Save the robots' brains for the app</span></a></li>
+</ol>
+
+<!-- ===================== STEPS ===================== -->
+<h2 id="step-0"><span class="step-num" style="background:var(--ink2)">in</span>Raw survey data</h2>
+<div class="kid">It's a giant spreadsheet. Each row is one patient. Each column is one question they answered, like "How sad do you feel?" or "How often do you worry the cancer will come back?"</div>
+<h3>What the code actually does</h3>
+<ul>
+  <li><code>main()</code> reads <code>Data/cancer_psychology.csv</code> with <code>pd.read_csv</code>.</li>
+  <li>It contains 21 <a href="#g-bdi">BDI</a> items (depression), 42 <a href="#g-fcri">FCRI</a> items (fear of cancer coming back) and demographic columns (gender, age group, cancer type, stage and so on).</li>
+</ul>
+
+<h2 id="step-1"><span class="step-num" style="background:var(--c1)">1</span>Clean &amp; convert</h2>
+<div class="kid">Computers can't do maths with words like "a few times a week", so we swap each answer for a number. We also cross out names so the robot never knows who anyone is, throw away sheets that are mostly blank or were filled in without reading, and fill in a few small gaps with a sensible guess.</div>
+<h3>What the code actually does</h3>
+<p>All of this lives in <code>ClinicalDataPreprocessor.fit_transform()</code>, in this order:</p>
+<ol>
+  <li><b>Find the columns</b> (<code>_identify_columns</code>): spots BDI, FCRI and demographic columns by name.</li>
+  <li><b>Drop personal info</b>: removes Name, Timestamp and Patient ID (<a href="#g-pii">PII</a>).</li>
+  <li><b>Text → numbers</b> (<code>_parse_bdi</code>, <code>_parse_fcri</code>): BDI answers become 0–3 by matching key phrases. FCRI answers become 0–4 using <code>FCRI_SCORE_MAP</code> ("never" = 0 … "all the time" = 4).</li>
+  <li><b>Drop mechanical responders</b> (<code>_drop_mechanical</code>): someone who answered 0 to <em>every</em> FCRI question probably didn't read them.</li>
+  <li><b>Reverse item 13</b> (<code>_reverse_fcri_item_13</code>): "I believe I am cured" points the opposite way to every other question, so its score becomes <code>4 − answer</code>. Now a high number always means more fear.</li>
+  <li><b>Drop mostly-empty rows</b> (<code>_drop_excessive_missing</code>): more than 50% of questions blank → removed.</li>
+  <li><b>Fill small gaps</b> (<code>_impute_subscale_means</code>): a blank answer gets the average of that patient's other answers in the same section (<a href="#g-impute">imputation</a>). If fewer than half of a section was answered, the patient is dropped instead.</li>
+  <li><b>Encode demographics</b> (<code>_encode_categoricals</code>): words like "Breast", "Lung" become 0, 1, 2… with a <a href="#g-encode">LabelEncoder</a>.</li>
+</ol>
+<div class="callout"><strong>Why does step 4 come before step 5?</strong>If we reversed item 13 first, an all-zero patient's item 13 would become 4, so they'd no longer look "all zero" and would slip through the check.</div>
+<p class="words">Words to know: <a href="#g-pii">PII</a> · <a href="#g-impute">imputation</a> · <a href="#g-encode">encoding</a> · <a href="#g-subscale">subscale</a></p>
+
+<h2 id="step-2"><span class="step-num" style="background:var(--c1)">2</span>Create labels</h2>
+<div class="kid">To learn, the robot needs an answer key. We add up each patient's 21 BDI scores. If the total is 11 or more, we write "depressed" on their sheet. We also write how much, using six levels from "Normal" to "Extreme".</div>
+<h3>What the code actually does</h3>
+<p><code>TargetVariableEngineer.create_targets()</code> adds three columns:</p>
+<ul>
+  <li><code>bdi_total</code>: sum of the 21 BDI items (0–63).</li>
+  <li><code>has_depression</code>: 1 if <code>bdi_total ≥ 11</code>, else 0. This is the <b>binary</b> <a href="#g-label">label</a>.</li>
+  <li><code>depression_severity_encoded</code>: one of 6 bands. This is the <b>multiclass</b> label.</li>
+</ul>
+<div class="table-wrap"><table>
+  <tr><th>BDI total</th><th>Severity band</th></tr>
+  <tr><td>0 – 10</td><td>Normal</td></tr>
+  <tr><td>11 – 16</td><td>Mild mood disturbance</td></tr>
+  <tr><td>17 – 20</td><td>Borderline clinical depression</td></tr>
+  <tr><td>21 – 30</td><td>Moderate depression</td></tr>
+  <tr><td>31 – 40</td><td>Severe depression</td></tr>
+  <tr><td>41 – 63</td><td>Extreme depression</td></tr>
+</table></div>
+<p class="words">Words to know: <a href="#g-label">label / target</a> · <a href="#g-binary">binary vs multiclass</a></p>
+
+<h2 id="step-3"><span class="step-num" style="background:var(--c1)">3</span>Build the feature matrix</h2>
+<div class="kid">Now we decide what the robot is allowed to look at when guessing. That's the clues (features). The answer key (label) is kept separately so the robot can check itself.</div>
+<h3>What the code actually does</h3>
+<ul>
+  <li><code>feature_cols</code> = BDI item columns + FCRI item columns + the <code>*_encoded</code> demographic columns.</li>
+  <li><code>X = df_fin[feature_cols].fillna(0)</code>: the table of clues, one row per patient.</li>
+  <li><code>y_bin</code> and <code>y_multi</code>: the two answer keys.</li>
+</ul>
+<div class="callout warn"><strong>Watch out: an examiner may ask about this</strong>The label is <em>calculated from</em> the BDI items (their sum), and those same 21 items are also in <code>X</code>. So the model can more or less "add up the answer key", which is part of why binary accuracy is so high (around 99%). This is called <a href="#g-leakage">label leakage</a>. Be ready to explain it: the FCRI and demographic columns add information, but the BDI items alone nearly decide the label.</div>
+<p class="words">Words to know: <a href="#g-feature">feature</a> · <a href="#g-label">label</a> · <a href="#g-leakage">leakage</a></p>
+
+<h2 id="step-4"><span class="step-num" style="background:var(--c2)">4</span>Split 80 / 20</h2>
+<div class="kid">If a teacher gave you the exact exam questions to practise, a perfect score wouldn't prove you learned anything. So we hide 20% of the sheets in a drawer. The robot practises on the other 80%, and the hidden 20% become its final exam.</div>
+<h3>What the code actually does</h3>
+<ul>
+  <li><code>train_test_split(X, y_bin, test_size=0.2, stratify=y_bin, random_state=42)</code>.</li>
+  <li><a href="#g-stratify">Stratified</a> means both piles keep the same mix of depressed and not-depressed patients. That matters because "No Depression" is rare (about 5.6%).</li>
+  <li>The same split is reused for the multiclass labels (<code>y_multi.loc[X_train.index]</code>), so both tasks are tested on exactly the same patients.</li>
+</ul>
+<p class="words">Words to know: <a href="#g-split">train / test split</a> · <a href="#g-stratify">stratified</a> · <a href="#g-imbalance">class imbalance</a></p>
+
+<h2 id="step-5"><span class="step-num" style="background:var(--c2)">5</span>Scale features</h2>
+<div class="kid">Some clues go from 0 to 3, others from 0 to 4, and encoded demographics can go higher. That's like comparing centimetres with metres. Scaling puts every clue on the same ruler so no clue looks more important just because its numbers are bigger.</div>
+<h3>What the code actually does</h3>
+<ul>
+  <li><code>StandardScaler</code> changes each column so its average is 0 and its spread (standard deviation) is 1.</li>
+  <li><code>fit_transform</code> on the training set only, then <code>transform</code> on the test set. The scaler learns averages only from practice data, so no information from the exam leaks in.</li>
+  <li>One scaler is shared by both tasks and saved for the app.</li>
+</ul>
+<p class="words">Words to know: <a href="#g-scaler">StandardScaler</a> · <a href="#g-fit">fit vs transform</a></p>
+
+<h2 id="step-6"><span class="step-num" style="background:var(--c2)">6</span>Train 3 models + ensemble</h2>
+<div class="kid">Instead of one robot, we train three different kinds, each with its own way of thinking. Then we let them vote. For each robot we also try different settings to find the ones that work best. We do all of this twice: once for "depressed or not?" and once for "how much?".</div>
+<h3>What the code actually does</h3>
+<p><code>DepressionClassificationPipeline.train()</code> is called with <code>task='binary'</code> and again with <code>task='multiclass'</code>.</p>
+<div class="table-wrap"><table>
+  <tr><th>Model</th><th>Simple idea</th><th>Settings tried</th></tr>
+  <tr><td><a href="#g-lr">Logistic Regression</a></td><td>Gives each clue a weight, adds them up, turns the total into a probability</td><td><code>C</code>: 0.01, 0.1, 1, 10</td></tr>
+  <tr><td><a href="#g-rf">Random Forest</a></td><td>Many decision trees, each sees slightly different data, then they vote</td><td>trees 100/200, depth 5/10/none, min split 2/5</td></tr>
+  <tr><td><a href="#g-xgb">XGBoost</a></td><td>Trees built one after another, each fixing the last one's mistakes</td><td>trees 100/200, depth 3/5/7, learning rate 0.01/0.1</td></tr>
+</table></div>
+<ul>
+  <li><b>Tuning</b>: <a href="#g-grid">GridSearchCV</a> tries every combination of settings using 5-fold <a href="#g-cv">cross-validation</a>, and picks the one with the best <a href="#g-macro">macro-F1</a>.</li>
+  <li><b>Fairness to rare classes</b>: <code>class_weight='balanced'</code> for LR and RF, and matching <code>sample_weight</code> for XGBoost, so mistakes on rare classes count more (<a href="#g-imbalance">class imbalance</a>).</li>
+  <li><b>Ensemble</b>: a <a href="#g-soft">soft-voting</a> <code>VotingClassifier</code> averages the three models' probabilities. Binary uses equal votes. Multiclass gives Logistic Regression a double vote (<code>weights=[2,1,1]</code>) because it was clearly the strongest on its own.</li>
+</ul>
+<p class="words">Words to know: <a href="#g-model">model</a> · <a href="#g-hyper">hyperparameter</a> · <a href="#g-grid">GridSearchCV</a> · <a href="#g-cv">cross-validation</a> · <a href="#g-ensemble">ensemble</a> · <a href="#g-soft">soft voting</a></p>
+
+<h2 id="step-7"><span class="step-num" style="background:var(--c3)">7</span>Feature importance</h2>
+<div class="kid">After training, we ask the tree robots: "Which questions helped you most?" If a few questions do most of the work, a phone app could ask only those and save the patient time.</div>
+<h3>What the code actually does</h3>
+<ul>
+  <li><code>FeatureImportanceAnalyzer.extract()</code> takes <code>feature_importances_</code> from the <b>binary</b> Random Forest and XGBoost, scales each to sum to 1, and averages them.</li>
+  <li><code>report_top()</code> prints the top 5 BDI and top 5 FCRI items. The full ranking is saved to <code>models/feature_importance.csv</code>.</li>
+</ul>
+<p class="words">Words to know: <a href="#g-importance">feature importance</a></p>
+
+<h2 id="step-8a"><span class="step-num" style="background:var(--c3)">8a</span>Evaluate on the test set</h2>
+<div class="kid">Exam day. We open the drawer with the hidden 20% and let every robot guess. Then we count how many it got right, and what kind of mistakes it made.</div>
+<h3>What the code actually does</h3>
+<ul>
+  <li><code>ModelEvaluator.evaluate()</code> scores all 4 models (LR, RF, XGB, ensemble) for each task: <a href="#g-accuracy">accuracy</a>, <a href="#g-precision">precision</a>, <a href="#g-recall">recall</a>, <a href="#g-f1">F1</a> (weighted averages) and <a href="#g-auc">ROC-AUC</a>.</li>
+  <li><code>plot_confusion()</code> saves <a href="#g-confusion">confusion matrices</a> to <code>models/binary_confusion.png</code> and <code>models/multiclass_confusion.png</code>.</li>
+  <li>At the end, the "best" model for each task is the one with the highest weighted F1.</li>
+</ul>
+<p class="words">Words to know: <a href="#g-accuracy">accuracy</a> · <a href="#g-precision">precision</a> · <a href="#g-recall">recall</a> · <a href="#g-f1">F1</a> · <a href="#g-auc">ROC-AUC</a> · <a href="#g-confusion">confusion matrix</a></p>
+
+<h2 id="step-8b"><span class="step-num" style="background:var(--c3)">8b</span>Tune the binary threshold</h2>
+<div class="kid">The ensemble doesn't say just "yes" or "no". It says something like "I'm 70% sure this person is depressed." Normally anything over 50% counts as yes. But because healthy patients are rare, the robot is bad at spotting them. So we try many cut-off lines and keep the one that is fairest to both groups.</div>
+<h3>What the code actually does</h3>
+<ul>
+  <li><code>tune_binary_threshold()</code> uses <code>cross_val_predict</code> to get out-of-fold probabilities on the <b>training</b> set only.</li>
+  <li>It tries 91 <a href="#g-threshold">thresholds</a> from 0.05 to 0.95 and keeps the one with the best macro-F1.</li>
+  <li>The test set is only used afterwards to <em>report</em> how the chosen threshold does, never to pick it. That keeps the exam honest.</li>
+</ul>
+<p class="words">Words to know: <a href="#g-threshold">threshold</a> · <a href="#g-macro">macro-F1</a> · <a href="#g-cv">cross-validation</a></p>
+
+<h2 id="step-9"><span class="step-num" style="background:var(--c3)">9</span>Export to <code>models/</code></h2>
+<div class="kid">The robots have learned, so we save their brains into a folder. Later, the app opens the folder and uses them straight away, without having to learn everything again.</div>
+<h3>What the code actually does</h3>
+<p><code>ModelEvaluator.export()</code> is called once per task and writes:</p>
+<ul>
+  <li><code>{binary|multiclass}_{model}_model.joblib</code>: 4 models × 2 tasks = 8 files (<a href="#g-joblib">joblib</a>).</li>
+  <li><code>{task}_scaler.joblib</code>: the scaler from step 5.</li>
+  <li><code>label_encoders.joblib</code>: the demographic encoders from step 1.</li>
+  <li><code>feature_metadata.json</code>: the exact column order (<code>feature_cols</code>), each column's training average (<code>feature_means</code>, used to fill missing inputs) and the tuned <code>binary_threshold</code>.</li>
+</ul>
+<p><code>predict_depression.py</code> and the Streamlit app only <em>read</em> these files. They never retrain.</p>
+
+<!-- ===================== GLOSSARY ===================== -->
+<h2 id="glossary">Glossary</h2>
+<dl class="glossary">
+  <dt id="g-accuracy">Accuracy</dt>
+  <dd>Out of all guesses, how many were right. <em>Can be misleading when one class is rare: always guessing "depressed" would already score about 94% here.</em></dd>
+
+  <dt id="g-bdi">BDI (Beck Depression Inventory)</dt>
+  <dd>A 21-question depression questionnaire. Each answer scores 0–3, so the total is 0–63. Higher means more depressed.</dd>
+
+  <dt id="g-binary">Binary vs multiclass</dt>
+  <dd>Binary: two possible answers (depressed / not). Multiclass: more than two (here, six severity bands).</dd>
+
+  <dt id="g-imbalance">Class imbalance</dt>
+  <dd>When one answer is much rarer than another (here, "No Depression" is about 5.6%). A lazy model can ignore the rare class, so we give it extra weight with <code>class_weight='balanced'</code>.</dd>
+
+  <dt id="g-confusion">Confusion matrix</dt>
+  <dd>A table of real answer vs predicted answer. The diagonal holds the correct guesses, and everything else shows which classes get mixed up.</dd>
+
+  <dt id="g-cv">Cross-validation (k-fold)</dt>
+  <dd>Cut the training data into 5 pieces. Train on 4, test on the 5th, and repeat so every piece gets a turn. The average score is more trustworthy than one lucky split. "Stratified" k-fold keeps the class mix the same in each piece.</dd>
+
+  <dt id="g-encode">Encoding (LabelEncoder)</dt>
+  <dd>Turning categories into numbers: "Female" → 0, "Male" → 1. Models only understand numbers.</dd>
+
+  <dt id="g-ensemble">Ensemble</dt>
+  <dd>Combining several models into one team. Different models make different mistakes, so together they are often steadier.</dd>
+
+  <dt id="g-f1">F1 score</dt>
+  <dd>A single score that balances precision and recall (their harmonic mean). It is only high if <em>both</em> are high.</dd>
+
+  <dt id="g-macro">Macro-F1 vs weighted-F1</dt>
+  <dd>Macro: F1 for each class, then a plain average, so every class counts equally, even rare ones. Weighted: the average is weighted by how many examples each class has, so big classes dominate. Tuning uses macro so the rare class isn't ignored.</dd>
+
+  <dt id="g-fcri">FCRI (Fear of Cancer Recurrence Inventory)</dt>
+  <dd>A 42-question survey about fear of the cancer coming back. Each answer scores 0–4. It's grouped into 7 subscales: triggers, severity, psychological distress, functioning impairments, insight, reassurance, coping strategies.</dd>
+
+  <dt id="g-feature">Feature</dt>
+  <dd>One clue the model looks at, i.e. one column of <code>X</code> (for example, the answer to BDI question 4).</dd>
+
+  <dt id="g-fit">fit vs transform</dt>
+  <dd><code>fit</code> = learn something from data (for example, column averages). <code>transform</code> = apply what was learned. You fit on training data only, then transform both train and test.</dd>
+
+  <dt id="g-grid">GridSearchCV</dt>
+  <dd>Tries every combination of the hyperparameter values you list, scores each with cross-validation, and keeps the best one.</dd>
+
+  <dt id="g-hyper">Hyperparameter</dt>
+  <dd>A setting you choose <em>before</em> training (number of trees, tree depth, <code>C</code>), as opposed to what the model learns by itself.</dd>
+
+  <dt id="g-impute">Imputation</dt>
+  <dd>Filling in a missing answer with a sensible guess, here the average of the same patient's other answers in that section.</dd>
+
+  <dt id="g-importance">Feature importance</dt>
+  <dd>How much each clue helped the tree models make decisions. High importance means the model relied on it a lot.</dd>
+
+  <dt id="g-joblib">joblib</dt>
+  <dd>A Python tool that saves a trained model to a file and loads it back later, exactly as it was.</dd>
+
+  <dt id="g-label">Label / target</dt>
+  <dd>The correct answer the model is trying to predict (<code>y</code>). Here: <code>has_depression</code> or the severity band.</dd>
+
+  <dt id="g-leakage">Label leakage</dt>
+  <dd>When the clues secretly contain the answer. Here the label is the sum of the BDI items, and those items are also clues, so scores look better than they would on a truly independent label.</dd>
+
+  <dt id="g-lr">Logistic Regression</dt>
+  <dd>Gives each feature a weight, adds them up and squashes the total into a probability between 0 and 1. Simple, fast and easy to explain. <code>C</code> controls how strongly it is held back from over-fitting (smaller C = more careful).</dd>
+
+  <dt id="g-model">Model</dt>
+  <dd>The "robot brain": a maths recipe that turns features into a prediction, with numbers learned from the training data.</dd>
+
+  <dt id="g-pii">PII (Personally Identifiable Information)</dt>
+  <dd>Anything that reveals who a person is, like their name or ID. It is removed so the model can't use it and patients stay private.</dd>
+
+  <dt id="g-precision">Precision</dt>
+  <dd>Of everyone the model <em>said</em> was depressed, how many really were. ("When it says yes, can I trust it?")</dd>
+
+  <dt id="g-rf">Random Forest</dt>
+  <dd>Many decision trees ("if answer 4 &gt; 2, go left…"), each trained on a random sample of rows and features. Their votes are combined, so one tree's mistake gets outvoted.</dd>
+
+  <dt id="g-recall">Recall</dt>
+  <dd>Of everyone who really <em>was</em> depressed, how many the model caught. ("Does it miss people?") In screening, missing a depressed patient is costly, so recall matters a lot.</dd>
+
+  <dt id="g-auc">ROC-AUC</dt>
+  <dd>How well the model ranks positives above negatives across every possible threshold. 1.0 = perfect, 0.5 = coin flip. For multiclass it is averaged one-vs-rest.</dd>
+
+  <dt id="g-scaler">StandardScaler</dt>
+  <dd>Rescales each column to mean 0 and standard deviation 1: <code>(value − mean) / std</code>.</dd>
+
+  <dt id="g-soft">Soft voting</dt>
+  <dd>Each model gives probabilities, and they are averaged (optionally weighted). The class with the highest average wins. Hard voting would just count yes/no votes.</dd>
+
+  <dt id="g-stratify">Stratified</dt>
+  <dd>Splitting so each part keeps the same proportion of each class as the full dataset.</dd>
+
+  <dt id="g-subscale">Subscale</dt>
+  <dd>A group of related questions inside a questionnaire (FCRI has 7). Its items are summed to measure one specific thing.</dd>
+
+  <dt id="g-threshold">Threshold</dt>
+  <dd>The probability cut-off for saying "yes". The default is 0.50, and this pipeline tunes it to maximise macro-F1.</dd>
+
+  <dt id="g-split">Train / test split</dt>
+  <dd>Training set = practice questions the model learns from. Test set = the locked exam, used only once at the end to measure real performance.</dd>
+
+  <dt id="g-xgb">XGBoost</dt>
+  <dd>"Extreme Gradient Boosting". Builds small trees one after another, each focused on fixing the previous trees' errors. The learning rate controls how big each fix is.</dd>
+</dl>
+
+<!-- ===================== QUIZ ===================== -->
+<h2 id="quiz">Check yourself</h2>
+<details><summary>1. Why is the scaler fitted only on the training set?</summary>
+  <p>If it learned averages from the test set too, information from the "exam" would leak into training and the test score would look better than reality.</p></details>
+<details><summary>2. Why tune with macro-F1 instead of accuracy?</summary>
+  <p>"No Depression" is only about 5.6% of patients. Accuracy would reward a model that ignores that class. Macro-F1 treats every class equally.</p></details>
+<details><summary>3. What's the difference between soft and hard voting?</summary>
+  <p>Soft averages the models' probabilities. Hard just counts their final yes/no votes. Soft uses how confident each model is.</p></details>
+<details><summary>4. Why is the threshold chosen on the training set and not the test set?</summary>
+  <p>Choosing anything using the test set turns it into training data, so it no longer gives an honest final score.</p></details>
+<details><summary>5. Why is FCRI item 13 reversed?</summary>
+  <p>"I believe I am cured" means <em>less</em> fear when agreed with. Reversing it (4 − score) makes high = more fear, like every other item.</p></details>
+<details><summary>6. Why might binary accuracy be close to 99%?</summary>
+  <p>The label is the sum of the BDI items, and those items are also features (label leakage). The model can nearly recompute the label.</p></details>
+<details><summary>7. What does <code>feature_metadata.json</code> give the app?</summary>
+  <p>The exact feature order, the training averages used to fill missing inputs, and the tuned binary threshold.</p></details>
+
+</main>
+</body>
+</html>
