@@ -191,5 +191,7 @@ def save_table(df: pd.DataFrame, key: str, cfg: dict, tables_dir: Path, note: st
     return path
 
 
-def subset_label(cfg: dict, subset: str) -> str:
+def subset_label(cfg: dict, subset: str, short: bool = False) -> str:
+    if short:
+        return cfg.get("subset_short_labels", {}).get(subset, cfg["subsets"][subset]["label"])
     return cfg["subsets"][subset]["label"]

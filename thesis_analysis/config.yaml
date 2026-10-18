@@ -46,6 +46,7 @@ provenance:
 subsets:
   all:            {exclude_generator_matched: false, label: "All rows"}
   excl_generated: {exclude_generator_matched: true,  label: "Excluding generator-matched rows"}
+subset_short_labels: {all: "All rows", excl_generated: "Excl. generator-matched"}   # figure titles
 primary_subset: all
 run_subsets: [all, excl_generated]
 

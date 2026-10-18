@@ -299,3 +299,23 @@ def task_spec(task: str, ds: Dataset) -> dict[str, Any]:
         raise KeyError(f"Unknown task '{task}'. Choose from {list(specs)}")
     col, names = specs[task]
     return {"target": col, "class_names": names, "binary": task.startswith("binary")}
+
+
+def variable_of(feature: str) -> str:
+    """Raw variable behind a transformed feature name ('province__code_3' -> 'province__code')."""
+    if "__code_" in feature:
+        return feature.rsplit("_", 1)[0]
+    return feature
+
+
+def readable_feature(feature: str, ds: Dataset) -> str:
+    """Human-readable label for raw or one-hot-encoded feature names."""
+    if "__code_" in feature:
+        var, code = feature.rsplit("_", 1)
+        base = var.replace("__code", "")
+        try:
+            level = ds.df[base].cat.categories[int(float(code))]
+        except (ValueError, IndexError, KeyError):
+            level = code
+        return f"{CAT_LABELS.get(base, base)}: {level}"
+    return ds.labels.get(feature, feature)

@@ -22,7 +22,7 @@ from statsmodels.stats.multitest import multipletests
 
 from . import catalog
 from .data import CAT_LABELS, FCRI_SUBSCALES, Dataset, subscale_cols
-from .utils import Paths, div_cmap, fig_size, get_logger, save_fig, save_json
+from .utils import Paths, div_cmap, fig_size, get_logger, save_fig, save_json, seq_cmap
 
 N_PERM = 10000
 
@@ -230,7 +230,13 @@ def _regression_frame(d: pd.DataFrame, ds: Dataset, min_level: int = 10) -> tupl
         rare = counts[counts < min_level].index.tolist()
         if rare:
             s = s.where(~s.isin(rare), "Other (combined)")
-            notes.append(f"{CAT_LABELS[c]}: {', '.join(rare)} combined")
+            if (s == "Other (combined)").sum() < min_level:
+                notes.append(f"{CAT_LABELS[c]}: {', '.join(rare)} "
+                             f"(n = {int((s == 'Other (combined)').sum())}) excluded")
+                keep = s != "Other (combined)"
+                X, s = X[keep], s[keep]
+            else:
+                notes.append(f"{CAT_LABELS[c]}: {', '.join(rare)} combined")
         X[c] = s
     return X, notes
 
@@ -387,15 +393,18 @@ def plot_correlation_heatmap(d: pd.DataFrame, ds: Dataset, cfg: dict[str, Any], 
     cols = ["bdi_total", "fcri_total"] + subscale_cols()
     C = d[cols].corr(method="spearman")
     labs = ["BDI total", "FCRI total"] + list(FCRI_SUBSCALES)
-    fig, ax = plt.subplots(figsize=fig_size(cfg, 0.85, 0.85))
-    im = ax.imshow(C.to_numpy(), cmap=div_cmap(cfg), vmin=-1, vmax=1)
+    fig, ax = plt.subplots(figsize=fig_size(cfg, 1.0, 0.8))
+    lo = min(0.0, float(C.min().min()))
+    im = ax.imshow(C.to_numpy(), cmap=div_cmap(cfg) if lo < 0 else seq_cmap(cfg),
+                   vmin=-1 if lo < 0 else 0, vmax=1)
     ax.set_xticks(range(len(cols)), labs, rotation=45, ha="right")
     ax.set_yticks(range(len(cols)), labs)
     for i in range(len(cols)):
         for j in range(len(cols)):
             v = C.iloc[i, j]
-            ax.text(j, i, f"{v:.2f}", ha="center", va="center", fontsize=cfg["style"]["font_size"] - 1,
-                    color="white" if abs(v) > 0.6 else cfg["style"]["text"])
+            ax.text(j, i, f"{v:.2f}".replace("0.", ".", 1), ha="center", va="center",
+                    fontsize=cfg["style"]["font_size"],
+                    color="white" if abs(v) > 0.55 else cfg["style"]["text"])
     ax.spines[:].set_visible(False)
     cb = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.03)
     cb.set_label("Spearman ρ")
@@ -415,7 +424,7 @@ def plot_scatter(ds: Dataset, cfg: dict[str, Any], paths: Paths) -> None:
         xs = np.linspace(d.fcri_total.min(), d.fcri_total.max(), 50)
         ax.plot(xs, np.polyval(b, xs), color=st["categorical"][1], lw=2)
         rho = stats.spearmanr(d.fcri_total, d.bdi_total)[0]
-        ax.set_title(f"{catalog.subset_label(cfg, sub)} (n = {len(d)}, ρ = {rho:.2f})",
+        ax.set_title(f"{catalog.subset_label(cfg, sub, short=True)}" + chr(10) + f"(n = {len(d)}, ρ = {rho:.2f})",
                      fontsize=st["font_size"], loc="left")
         ax.set_xlabel("FCRI total")
         for _, lo, _hi in cfg["targets"]["severity_bounds"][1:]:

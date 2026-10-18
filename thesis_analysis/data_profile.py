@@ -170,8 +170,7 @@ def data_quality_table(ds: Dataset, cfg: dict[str, Any]) -> tuple[pd.DataFrame, 
         "bdi_items_6_7_rescored": "BDI item 6/7 answers re-scored to 0 (parser correction)",
     }
     table = pd.DataFrame([{"Check": labels[k], "Result": v} for k, v in q.items()])
-    curation = pd.DataFrame(ds.curation_log)
-    return table, {"quality": q, "curation": curation.to_dict(orient="records")}
+    return table, {"quality": q, "curation": list(ds.curation_log)}
 
 
 def reliability_table(ds: Dataset, cfg: dict[str, Any]) -> pd.DataFrame:
@@ -199,7 +198,7 @@ def plot_class_distribution(ds: Dataset, cfg: dict[str, Any], paths: Paths) -> N
     subs = cfg["run_subsets"]
     fig, axes = plt.subplots(len(subs), 2, figsize=fig_size(cfg, 1.0, 0.42 * len(subs)),
                              gridspec_kw={"width_ratios": [1, 2.6]}, squeeze=False)
-    short = ["Normal", "Mild", "Borderline", "Moderate", "Severe", "Extreme"]
+    short = ["Normal", "Mild", "Border-" + chr(10) + "line", "Moder-" + chr(10) + "ate", "Severe", "Ex-" + chr(10) + "treme"]
     for r, sub in enumerate(subs):
         d = ds.subset(sub, cfg)
         ax = axes[r, 0]
@@ -210,8 +209,8 @@ def plot_class_distribution(ds: Dataset, cfg: dict[str, Any], paths: Paths) -> N
             ax.text(b.get_x() + b.get_width() / 2, v, f"{int(v)}\n({100 * v / len(d):.1f}%)",
                     ha="center", va="bottom", fontsize=st["font_size"])
         ax.set_ylim(0, counts.max() * 1.3)
-        ax.set_ylabel("Participants")
-        ax.set_title(f"Binary — {catalog.subset_label(cfg, sub)}", loc="left", fontsize=st["font_size"])
+        ax.set_ylabel(catalog.subset_label(cfg, sub, short=True) + chr(10) + "Participants")
+        ax.set_title("Binary", loc="left", fontsize=st["font_size"])
         ax = axes[r, 1]
         sc = d.severity.value_counts().reindex(ds.severity_labels).fillna(0)
         bars = ax.bar(short, sc.values, color=st["sequential"][3], width=0.65)
@@ -219,7 +218,7 @@ def plot_class_distribution(ds: Dataset, cfg: dict[str, Any], paths: Paths) -> N
             ax.text(b.get_x() + b.get_width() / 2, v, f"{int(v)}", ha="center", va="bottom",
                     fontsize=st["font_size"])
         ax.set_ylim(0, sc.max() * 1.18)
-        ax.set_title(f"Severity (6 classes) — n = {len(d)}", loc="left", fontsize=st["font_size"])
+        ax.set_title(f"Severity, 6 classes (n = {len(d)})", loc="left", fontsize=st["font_size"])
     fig.tight_layout()
     save_fig(fig, paths, catalog.figure("class_distribution", cfg)["name"])
 
@@ -227,21 +226,22 @@ def plot_class_distribution(ds: Dataset, cfg: dict[str, Any], paths: Paths) -> N
 def plot_score_distribution(ds: Dataset, cfg: dict[str, Any], paths: Paths) -> None:
     import matplotlib.pyplot as plt
     st = cfg["style"]
-    fig, axes = plt.subplots(1, 2, figsize=fig_size(cfg, 1.0, 0.4))
-    subs = cfg["run_subsets"]
-    for i, sub in enumerate(subs):
-        d = ds.subset(sub, cfg)
-        lab = catalog.subset_label(cfg, sub)
-        axes[0].hist(d.bdi_total, bins=np.arange(0, 66, 3), alpha=0.55 if i else 0.85,
-                     color=st["categorical"][i], label=lab, edgecolor="white", linewidth=0.5)
-        axes[1].hist(d.fcri_total, bins=np.arange(0, 172, 8), alpha=0.55 if i else 0.85,
-                     color=st["categorical"][i], label=lab, edgecolor="white", linewidth=0.5)
+    fig, axes = plt.subplots(1, 2, figsize=fig_size(cfg, 1.0, 0.45))
+    d = ds.df
+    groups = [(d[~d.generator_matched], "Other rows", st["categorical"][0]),
+              (d[d.generator_matched], "Generator-matched rows", st["categorical"][1])]
+    for ax, col, bins in ((axes[0], "bdi_total", np.arange(0, 66, 3)),
+                          (axes[1], "fcri_total", np.arange(0, 172, 8))):
+        ax.hist([g[col] for g, _, _ in groups], bins=bins, stacked=True,
+                color=[c for _, _, c in groups], label=[f"{l} (n = {len(g)})" for g, l, _ in groups],
+                edgecolor="white", linewidth=0.5)
     for _, lo, _hi in cfg["targets"]["severity_bounds"][1:]:
         axes[0].axvline(lo - 0.5, color=st["muted"], ls="--", lw=0.8)
     axes[0].set_xlabel("BDI total (0–63)")
     axes[1].set_xlabel("FCRI total (0–168)")
     axes[0].set_ylabel("Participants")
-    axes[1].legend(loc="upper right", fontsize=st["font_size"] - 1)
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center", ncol=2, bbox_to_anchor=(0.5, 1.06))
     fig.tight_layout()
     save_fig(fig, paths, catalog.figure("score_distribution", cfg)["name"])
 
