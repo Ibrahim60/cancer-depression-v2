@@ -345,6 +345,64 @@ Severity Level: Moderate depression
 
 ---
 
+## Thesis analysis
+
+`thesis_analysis/` reproduces every statistic, table, figure and diagram used in the thesis
+methodology and results chapters. It does not modify the Streamlit app, `predict_depression.py`
+or the saved models in `models/`; all outputs go to `thesis_outputs/`.
+
+### Setup (Windows PowerShell)
+
+```powershell
+cd cancer-depression-v2
+.\venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+# Graphviz program (needed for the methodology diagrams)
+winget install --id Graphviz.Graphviz -e --source winget
+```
+
+The module needs a full git clone: the provenance check reads two historical files with `git show`
+(a cached copy is written to `thesis_outputs/data/row_provenance.csv`).
+
+### Run
+
+```powershell
+python -m thesis_analysis.run_all --stage all          # everything (the 'train' stage takes several hours)
+python -m thesis_analysis.run_all --stage eda          # dataset description, data quality, reliability
+python -m thesis_analysis.run_all --stage stats        # statistical tests and regression
+python -m thesis_analysis.run_all --stage train        # repeated nested CV: models x feature sets x FS methods
+python -m thesis_analysis.run_all --stage fs           # feature-selection stability
+python -m thesis_analysis.run_all --stage eval         # metrics, CIs, significance tests, result figures
+python -m thesis_analysis.run_all --stage shap         # SHAP explanations
+python -m thesis_analysis.run_all --stage diagrams     # methodology diagrams (Graphviz)
+python -m thesis_analysis.run_all --stage report       # thesis_tables.docx + RESULTS_SUMMARY.md
+```
+
+Cross-validation runs are cached in `thesis_outputs/results/predictions/` and reused when the
+configuration has not changed; add `--force` to recompute them. All settings (paths, seed, feature
+groups, CV design, search spaces, plot style) are in `thesis_analysis/config.yaml`.
+
+### Outputs
+
+| Folder | Content |
+|---|---|
+| `thesis_outputs/figures/` | Chapter 3 diagrams and Chapter 4 figures, PNG (300 dpi) + SVG, named `chN_figNN_*` |
+| `thesis_outputs/figures/appendix/` | Secondary-subset and per-class figures |
+| `thesis_outputs/tables/` | Tables as CSV (`chN_tabNN_*`) and all of them in `thesis_tables.docx` |
+| `thesis_outputs/RESULTS_SUMMARY.md` | Figure/table list with captions, key findings, draft methodology, interpretation guide, limitations |
+| `thesis_outputs/data/curated_dataset.csv` | De-identified analysis dataset with scores, targets and provenance flag |
+| `thesis_outputs/results/` | Machine-readable results (summaries, significance tests, SHAP values) |
+| `thesis_outputs/logs/` | One JSON record per stage run: timestamp, configuration, git commit, library versions, results |
+
+### Design notes
+
+- Labels are derived from the BDI total, so models are compared on four feature sets:
+  A (all features, includes the BDI items), B (FCRI + demographic + clinical), C (FCRI only) and
+  D (demographic + clinical). Set B is the key experiment for detection from fear of cancer recurrence.
+- Every analysis is reported for all rows and for the subset that excludes rows matching
+  mock-generator output in the git history (see `RESULTS_SUMMARY.md`).
+- The BDI parser's scoring of the negated answers of items 6 and 7 is corrected in this module only.
+
 ## Depression Severity Levels
 
 | Score Range | Severity | Description |
