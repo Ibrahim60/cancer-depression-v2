@@ -74,3 +74,6 @@ Data/dummy_*.csv
 
 # # Feature importance exports
 # feature_importance.csv
+# Thesis analysis: large intermediate files (regenerate with python -m thesis_analysis.run_all)
+thesis_outputs/results/predictions/
+thesis_outputs/logs/*.log

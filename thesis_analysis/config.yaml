@@ -1,0 +1,145 @@
+# =============================================================================
+# Thesis analysis configuration
+# Every setting used by thesis_analysis/* is read from this file.
+# Paths are relative to the repository root.
+# =============================================================================
+
+seed: 42
+n_jobs: 8                 # parallel outer-fold workers (set to your CPU count)
+
+paths:
+  data: Data/cancer_psychology.csv
+  output_dir: thesis_outputs
+  provenance_cache: thesis_outputs/data/row_provenance.csv
+  graphviz_bin: "C:/Program Files/Graphviz/bin"   # prepended to PATH if `dot` is not found
+
+# -----------------------------------------------------------------------------
+# Data curation
+# -----------------------------------------------------------------------------
+data:
+  # BDI items 6 and 7: the legacy keyword parser scored the "I don't feel ..." (score 0)
+  # answers as 3 and 1. The thesis analysis always applies the correction below.
+  bdi_zero_statements:
+    - "i don't feel i am being punished"
+    - "i don't feel disappointed in myself"
+  # Free-text cancer-type answers harmonised to the form's categories
+  cancer_type_merge:
+    "Brain": "Brain Cancer"
+    "Brain Tumour": "Brain Cancer"
+    "Brain tumour": "Brain Cancer"
+    "Liver": "Other"
+  exclude_cancer_type: ["No disease"]   # not a cancer patient -> outside study population
+  exclude_under_18: false               # set true if your ethics approval excludes minors
+  # Ordered categories (ordinal variables keep this order in tables/plots)
+  category_order:
+    age_group: ["Below 18", "18-30", "31-45", "46-60", "Above 60"]
+    diagnosis_duration: ["Less than 3 months", "3-6 months", "6-12 months", "1-2 years", "More than 2 years"]
+
+# Row provenance: rows whose Name + all 21 BDI answers exactly match the mock-data
+# generator files in git history are flagged `generator_matched`.
+provenance:
+  generated_sources:
+    - {commit: 1f9d779, path: auto_data_submitter/test.csv}
+    - {commit: 1d7d522, path: auto_data_submitter/test_part1.csv}
+
+# Analysis subsets. Every result is produced for each subset listed in `run_subsets`.
+subsets:
+  all:            {exclude_generator_matched: false, label: "All rows"}
+  excl_generated: {exclude_generator_matched: true,  label: "Excluding generator-matched rows"}
+primary_subset: all
+run_subsets: [all, excl_generated]
+
+# -----------------------------------------------------------------------------
+# Targets (BDI-I interpretation bands, as implemented in depression_detection_pipeline.py)
+# -----------------------------------------------------------------------------
+targets:
+  severity_bounds:
+    - ["Normal", 0, 10]
+    - ["Mild mood disturbance", 11, 16]
+    - ["Borderline clinical depression", 17, 20]
+    - ["Moderate depression", 21, 30]
+    - ["Severe depression", 31, 40]
+    - ["Extreme depression", 41, 63]
+  binary_cutoff: 11               # primary: BDI >= 11 -> depressed (matches the app)
+  binary_cutoff_sensitivity: 17   # sensitivity analysis: BDI >= 17
+  severity5_merge: {"Normal": "Normal/Mild", "Mild mood disturbance": "Normal/Mild"}
+
+# -----------------------------------------------------------------------------
+# Feature groups and feature sets
+# -----------------------------------------------------------------------------
+feature_groups:
+  demographic: [gender, age_group, province]
+  clinical: [cancer_type, diagnosis_duration, cancer_status, treatment_type, on_medication]
+  # bdi = BDI_1..BDI_21, fcri = FCRI_1..FCRI_42 (added automatically)
+fcri_mood_overlap_items: [FCRI_19, FCRI_26]   # sadness / mood items (construct overlap with BDI)
+
+feature_sets:
+  A: {groups: [bdi, fcri, demographic, clinical], label: "A: All features (BDI + FCRI + demo + clinical)"}
+  B: {groups: [fcri, demographic, clinical],      label: "B: FCRI + demographic + clinical"}
+  C: {groups: [fcri],                             label: "C: FCRI only"}
+  D: {groups: [demographic, clinical],            label: "D: Demographic + clinical"}
+key_feature_set: B
+
+# -----------------------------------------------------------------------------
+# Validation
+# -----------------------------------------------------------------------------
+cv:
+  outer_splits: 5
+  outer_repeats: 5
+  inner_splits: 3
+  n_iter: 10                 # RandomizedSearchCV candidates per base learner
+  inner_scoring: f1_macro
+  primary_metric: f1_macro   # used to rank models / choose the hybrid
+  ablation_repeats: 2        # outer repeats for ablation & sensitivity runs (cheaper)
+  stacking_cv: 3
+  n_bootstrap: 1000
+  alpha: 0.05
+
+# -----------------------------------------------------------------------------
+# Models and search spaces (inner RandomizedSearchCV)
+# -----------------------------------------------------------------------------
+models:
+  base: [lr, rf, xgb, svm]
+  ensembles: [voting, stacking]
+  grids:
+    lr:  {C: [0.001, 0.01, 0.1, 1, 10, 100]}
+    rf:  {n_estimators: [300], max_depth: [3, 5, 10, null], min_samples_leaf: [1, 2, 5], max_features: ["sqrt", 0.3]}
+    xgb: {n_estimators: [100, 300], max_depth: [2, 3, 5], learning_rate: [0.03, 0.1, 0.3], subsample: [0.8, 1.0], colsample_bytree: [0.5, 0.8, 1.0]}
+    svm: {C: [0.1, 1, 10, 100], gamma: ["scale", 0.01, 0.1]}
+
+# -----------------------------------------------------------------------------
+# Feature selection (inside every training fold)
+# -----------------------------------------------------------------------------
+feature_selection:
+  methods: [mi, chi2, rfe, l1, boruta]
+  k_grid: [10, 20, 30]            # MI / chi2 / RFE: number of features (tuned in inner CV)
+  l1_C_grid: [0.01, 0.05, 0.1, 0.5]
+  boruta: {n_iter: 20, alpha: 0.05, n_estimators: 150}
+imbalance:
+  strategies: [class_weight, smote, none]
+  default: class_weight
+  smote_k_neighbors: 5
+
+# -----------------------------------------------------------------------------
+# Explainability
+# -----------------------------------------------------------------------------
+shap:
+  background_size: 50
+  explain_size: 300
+  top_dependence: 5
+  n_waterfall_patients: 3
+
+# -----------------------------------------------------------------------------
+# Figure style (Word / NUST template)
+# -----------------------------------------------------------------------------
+style:
+  dpi: 300
+  max_width_cm: 16
+  font_size: 10
+  font_family: "DejaVu Sans"
+  # Validated categorical palette (fixed order, colour-vision-deficiency safe)
+  categorical: ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
+  sequential: ["#ffffff", "#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"]
+  diverging: ["#1c5cab", "#86b6ef", "#f2f2f0", "#f5a581", "#c4471b"]
+  text: "#0b0b0b"
+  muted: "#52514e"
