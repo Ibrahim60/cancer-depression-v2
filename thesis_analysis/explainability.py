@@ -143,26 +143,38 @@ def plot_bar(panels: dict[str, pd.Series], cfg, paths, name, appendix, top=12):
 
 
 def plot_dependence(sv, Xv, names, cfg, paths, name, appendix, k=5, cols=None, ds=None):
+    """SHAP value against the feature value for the k most important features.
+
+    Item scores are shown on the x-axis; categorical variables are drawn horizontally with one
+    row per category so that category names stay readable.
+    """
     import matplotlib.pyplot as plt
     imp = np.abs(sv).mean(0)
     order = np.argsort(-imp)[:k]
-    fig, axes = plt.subplots(2, 3, figsize=fig_size(cfg, 1.0, 0.62))
+    nrow = int(np.ceil(k / 2))
+    fig, axes = plt.subplots(nrow, 2, figsize=fig_size(cfg, 1.0, 0.42 * nrow))
     rng = np.random.default_rng(cfg["seed"])
+    col0 = cfg["style"]["categorical"][0]
     for ax, j in zip(axes.ravel(), order):
         x = Xv[:, j].astype(float)
-        ax.scatter(x + rng.uniform(-0.15, 0.15, len(x)), sv[:, j], s=8, alpha=0.5, lw=0,
-                   color=cfg["style"]["categorical"][0], rasterized=True)
-        ax.axhline(0, color="#9a9993", lw=0.8)
-        ax.set_title(_short(names[j], 30), loc="left", fontsize=cfg["style"]["font_size"])
-        if cols is not None and cols[j].endswith("__code"):
-            ticks = np.unique(x)
-            ax.set_xticks(ticks, [value_label(cols[j], t, ds, 12) for t in ticks], rotation=45, ha="right")
+        cat = cols is not None and cols[j].endswith("__code")
+        if cat:
+            levels = np.unique(x)
+            pos = {v: i for i, v in enumerate(levels)}
+            yy = np.array([pos[v] for v in x]) + rng.uniform(-0.2, 0.2, len(x))
+            ax.scatter(sv[:, j], yy, s=8, alpha=0.5, lw=0, color=col0, rasterized=True)
+            ax.axvline(0, color="#9a9993", lw=0.8)
+            ax.set_yticks(range(len(levels)), [value_label(cols[j], v, ds, 18) for v in levels])
+            ax.set_xlabel("SHAP value")
         else:
-            ax.set_xlabel("Item response")
+            ax.scatter(x + rng.uniform(-0.15, 0.15, len(x)), sv[:, j], s=8, alpha=0.5, lw=0, color=col0,
+                       rasterized=True)
+            ax.axhline(0, color="#9a9993", lw=0.8)
+            ax.set_xlabel("Item response (0–4)")
+            ax.set_ylabel("SHAP value")
+        ax.set_title(_short(names[j], 34), loc="left", fontsize=cfg["style"]["font_size"])
     for ax in axes.ravel()[len(order):]:
         ax.axis("off")
-    axes[0, 0].set_ylabel("SHAP value")
-    axes[1, 0].set_ylabel("SHAP value")
     fig.tight_layout()
     save_fig(fig, paths, name, appendix=appendix)
 
