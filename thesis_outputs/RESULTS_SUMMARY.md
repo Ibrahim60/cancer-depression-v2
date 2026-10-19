@@ -1,6 +1,6 @@
 # Thesis results summary
 
-Generated 2026-10-19 06:02 from git commit `abb5154-dirty` with `python -m thesis_analysis.run_all`. Do not edit numbers by hand; re-run the pipeline.
+Generated 2026-10-19 16:18 from git commit `9bafade-dirty` with `python -m thesis_analysis.run_all`. Do not edit numbers by hand; re-run the pipeline.
 
 ## 1. Figures and tables
 
