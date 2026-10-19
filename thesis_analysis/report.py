@@ -1,4 +1,4 @@
-"""Thesis-writing support: thesis_tables.docx and thesis_outputs/RESULTS_SUMMARY.md.
+"""Thesis-writing support: thesis_tables.docx, RESULTS_SUMMARY.md and THESIS_GUIDE.docx.
 
 Every number in RESULTS_SUMMARY.md is read from result files produced by the
 earlier stages; the text around the numbers is templated. Sentences that
@@ -416,4 +416,6 @@ def run(ds, cfg: dict[str, Any], paths: Paths) -> dict[str, Any]:
     out = paths.out / "RESULTS_SUMMARY.md"
     out.write_text("\n".join(parts), encoding="utf-8")
     log.info("Results summary -> %s", out)
-    return {"summary": str(out), "docx": str(docx_path)}
+    from .guide import build as build_guide
+    guide_path = build_guide(ds, cfg, paths)
+    return {"summary": str(out), "docx": str(docx_path), "guide": str(guide_path)}

@@ -10,7 +10,7 @@ Usage (PowerShell, from the repository root, venv activated):
     python -m thesis_analysis.run_all --stage eval       # metrics, CIs, significance, curves
     python -m thesis_analysis.run_all --stage shap
     python -m thesis_analysis.run_all --stage diagrams
-    python -m thesis_analysis.run_all --stage report     # Word tables + RESULTS_SUMMARY.md
+    python -m thesis_analysis.run_all --stage report     # Word tables + RESULTS_SUMMARY.md + THESIS_GUIDE.docx
 
 Stages after ``train`` reuse the saved predictions in thesis_outputs/results/.
 Use ``--force`` to recompute cached cross-validation runs.

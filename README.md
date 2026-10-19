@@ -375,7 +375,7 @@ python -m thesis_analysis.run_all --stage fs           # feature-selection stabi
 python -m thesis_analysis.run_all --stage eval         # metrics, CIs, significance tests, result figures
 python -m thesis_analysis.run_all --stage shap         # SHAP explanations
 python -m thesis_analysis.run_all --stage diagrams     # methodology diagrams (Graphviz)
-python -m thesis_analysis.run_all --stage report       # thesis_tables.docx + RESULTS_SUMMARY.md
+python -m thesis_analysis.run_all --stage report       # thesis_tables.docx + RESULTS_SUMMARY.md + THESIS_GUIDE.docx
 ```
 
 Cross-validation runs are cached in `thesis_outputs/results/predictions/` and reused when the
@@ -390,6 +390,7 @@ groups, CV design, search spaces, plot style) are in `thesis_analysis/config.yam
 | `thesis_outputs/figures/appendix/` | Secondary-subset and per-class figures |
 | `thesis_outputs/tables/` | Tables as CSV (`chN_tabNN_*`) and all of them in `thesis_tables.docx` |
 | `thesis_outputs/RESULTS_SUMMARY.md` | Figure/table list with captions, key findings, draft methodology, interpretation guide, limitations |
+| `thesis_outputs/THESIS_GUIDE.docx` | Plain-language guide: the study in one page, each result with the figure/table to cite, figure-reading guide, glossary, limitations, decisions |
 | `thesis_outputs/data/curated_dataset.csv` | De-identified analysis dataset with scores, targets and provenance flag |
 | `thesis_outputs/results/` | Machine-readable results (summaries, significance tests, SHAP values) |
 | `thesis_outputs/logs/` | One JSON record per stage run: timestamp, configuration, git commit, library versions, results |

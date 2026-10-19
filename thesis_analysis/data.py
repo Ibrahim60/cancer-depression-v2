@@ -58,6 +58,7 @@ class Dataset:
     severity_labels: list[str]
     curation_log: list[dict[str, Any]] = field(default_factory=list)
     raw: pd.DataFrame | None = None       # raw CSV (kept for reliability analysis / profiling)
+    item_text: dict[str, str] = field(default_factory=dict)  # FCRI column -> full question wording
 
     def subset(self, name: str, cfg: dict[str, Any]) -> pd.DataFrame:
         """Rows belonging to an analysis subset defined in config.subsets."""
@@ -274,7 +275,7 @@ def load_dataset(cfg: dict[str, Any], paths: Paths, keep_raw: bool = True) -> Da
     log.info("Curated dataset: %d participants (%d generator-matched)",
              len(df), int(df["generator_matched"].sum()))
     return Dataset(df=df, bdi_cols=bdi_cols, fcri_cols=fcri_cols, cat_cols=cat_cols,
-                   groups=groups, labels=labels, severity_labels=sev_labels,
+                   groups=groups, labels=labels, severity_labels=sev_labels, item_text=dict(fcri_text),
                    curation_log=curation, raw=raw if keep_raw else None)
 
 
