@@ -1,0 +1,74 @@
+﻿Model,Predictor,OR (95% CI),p
+Univariate,FCRI total (per SD = 34.7),73.33 (36.14–148.76),<0.001
+Univariate,FCRI triggers (per SD = 7.4),9.37 (6.48–13.56),<0.001
+Univariate,FCRI severity (per SD = 6.9),42.33 (23.21–77.21),<0.001
+Univariate,FCRI psychological distress (per SD = 3.8),11.29 (7.74–16.48),<0.001
+Univariate,FCRI functioning impairments (per SD = 5.7),13.43 (8.99–20.08),<0.001
+Univariate,FCRI insight (per SD = 3.0),13.68 (8.88–21.07),<0.001
+Univariate,FCRI reassurance (per SD = 3.0),7.24 (5.08–10.30),<0.001
+Univariate,FCRI coping strategies (per SD = 8.1),5.93 (4.34–8.11),<0.001
+Univariate,Gender: Male,1.67 (1.13–2.47),0.010
+Univariate,Age group: 18-30,0.76 (0.22–2.62),0.660
+Univariate,Age group: 31-45,0.52 (0.16–1.72),0.284
+Univariate,Age group: 46-60,0.63 (0.19–2.15),0.465
+Univariate,Age group: Above 60,0.25 (0.07–0.87),0.029
+Univariate,Province: Balochistan,1.04 (0.22–4.90),0.956
+Univariate,Province: Gilgit Baltistan,1.71 (0.27–10.76),0.567
+Univariate,Province: Islamabad Capital Territory,0.96 (0.20–4.65),0.955
+Univariate,Province: Khyber Pakhtunkhwa (KPK),0.98 (0.22–4.33),0.982
+Univariate,Province: Punjab,0.53 (0.12–2.29),0.392
+Univariate,Province: Sindh,0.68 (0.15–3.01),0.611
+Univariate,Cancer type: Brain Cancer,5.44 (1.25–23.66),0.024
+Univariate,Cancer type: Breast Cancer,0.56 (0.29–1.09),0.089
+Univariate,Cancer type: Cervical Cancer,0.31 (0.15–0.64),0.001
+Univariate,Cancer type: Colorectal Cancer,0.37 (0.19–0.72),0.004
+Univariate,Cancer type: Lung Cancer,1.40 (0.71–2.78),0.331
+Univariate,Cancer type: Ovarian Cancer,1.07 (0.48–2.35),0.873
+Univariate,Cancer type: Prostate Cancer,0.74 (0.24–2.29),0.603
+Univariate,Cancer type: Stomach Cancer,0.78 (0.38–1.60),0.502
+Univariate,Time since diagnosis: 3-6 months,3.70 (1.78–7.69),<0.001
+Univariate,Time since diagnosis: 6-12 months,5.07 (2.34–10.99),<0.001
+Univariate,Time since diagnosis: 1-2 years,0.97 (0.55–1.72),0.926
+Univariate,Time since diagnosis: More than 2 years,0.60 (0.34–1.06),0.080
+Univariate,Cancer status: Recovered / Survivor,0.37 (0.23–0.61),<0.001
+Univariate,Cancer status: Recurrence,1.46 (0.68–3.10),0.330
+Univariate,Cancer status: Under Treatment,4.79 (2.50–9.18),<0.001
+Univariate,Treatment type: Immunotherapy,0.39 (0.15–1.03),0.057
+Univariate,Treatment type: Not currently in treatment,0.11 (0.06–0.19),<0.001
+Univariate,Treatment type: Radiotherapy,0.81 (0.40–1.65),0.566
+Univariate,Treatment type: Surgery,0.76 (0.36–1.61),0.472
+Univariate,Treatment type: Targeted Therapy,0.73 (0.30–1.80),0.493
+Univariate,On psychotropic medication: Yes,9.06 (5.78–14.21),<0.001
+Multivariable,FCRI total (per SD = 34.7),99.01 (41.51–236.14),<0.001
+Multivariable,Gender: Male,1.18 (0.60–2.31),0.630
+Multivariable,Age group: 18-30,0.71 (0.13–3.80),0.687
+Multivariable,Age group: 31-45,0.72 (0.13–3.91),0.705
+Multivariable,Age group: 46-60,1.64 (0.29–9.22),0.572
+Multivariable,Age group: Above 60,1.21 (0.21–7.10),0.831
+Multivariable,Province: Balochistan,0.23 (0.02–2.72),0.241
+Multivariable,Province: Gilgit Baltistan,0.16 (0.01–2.78),0.208
+Multivariable,Province: Islamabad Capital Territory,0.20 (0.02–2.50),0.211
+Multivariable,Province: Khyber Pakhtunkhwa (KPK),0.22 (0.02–2.48),0.221
+Multivariable,Province: Punjab,0.47 (0.04–4.95),0.531
+Multivariable,Province: Sindh,0.34 (0.03–3.72),0.378
+Multivariable,Cancer type: Brain Cancer,0.27 (0.03–2.09),0.209
+Multivariable,Cancer type: Breast Cancer,0.37 (0.12–1.18),0.092
+Multivariable,Cancer type: Cervical Cancer,0.44 (0.14–1.42),0.169
+Multivariable,Cancer type: Colorectal Cancer,0.50 (0.18–1.38),0.181
+Multivariable,Cancer type: Lung Cancer,0.58 (0.21–1.64),0.305
+Multivariable,Cancer type: Ovarian Cancer,0.48 (0.14–1.67),0.247
+Multivariable,Cancer type: Prostate Cancer,0.91 (0.14–5.91),0.917
+Multivariable,Cancer type: Stomach Cancer,0.30 (0.10–0.86),0.025
+Multivariable,Time since diagnosis: 3-6 months,2.26 (0.77–6.68),0.138
+Multivariable,Time since diagnosis: 6-12 months,2.12 (0.61–7.43),0.239
+Multivariable,Time since diagnosis: 1-2 years,1.13 (0.35–3.64),0.836
+Multivariable,Time since diagnosis: More than 2 years,2.16 (0.63–7.43),0.223
+Multivariable,Cancer status: Recovered / Survivor,1.20 (0.36–4.03),0.767
+Multivariable,Cancer status: Recurrence,2.87 (0.81–10.23),0.104
+Multivariable,Cancer status: Under Treatment,2.63 (0.90–7.66),0.077
+Multivariable,Treatment type: Immunotherapy,0.98 (0.26–3.69),0.980
+Multivariable,Treatment type: Not currently in treatment,0.77 (0.26–2.25),0.627
+Multivariable,Treatment type: Radiotherapy,0.79 (0.29–2.14),0.638
+Multivariable,Treatment type: Surgery,0.90 (0.28–2.85),0.856
+Multivariable,Treatment type: Targeted Therapy,1.24 (0.38–4.07),0.728
+Multivariable,On psychotropic medication: Yes,1.31 (0.68–2.54),0.421

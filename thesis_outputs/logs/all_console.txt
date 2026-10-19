@@ -1,0 +1,169 @@
+03:45:46 | INFO | Provenance: 298 rows match 1f9d779:auto_data_submitter/test.csv
+03:45:46 | INFO | Provenance: 263 rows match 1d7d522:auto_data_submitter/test_part1.csv
+03:45:47 | INFO | Curated dataset: 1530 participants (561 generator-matched)
+03:45:47 | INFO | ======================================================================
+03:45:47 | INFO | STAGE: eda
+03:46:05 | INFO | EDA: {'all': 1530, 'excl_generated': 969}
+03:46:06 | INFO | Stage 'eda' finished in 20 s (record: run_eda_20261019_034605.json)
+03:46:06 | INFO | ======================================================================
+03:46:06 | INFO | STAGE: stats
+03:46:21 | INFO | Stats [all]: rho(FCRI,BDI)=0.849, EPV=3.61
+03:46:39 | INFO | Stats [excl_generated]: rho(FCRI,BDI)=0.802, EPV=0.58
+03:46:40 | INFO | Stage 'stats' finished in 33 s (record: run_stats_20261019_034640.json)
+03:46:40 | INFO | ======================================================================
+03:46:40 | INFO | STAGE: train
+03:46:40 | INFO | Main design: 36 runs x 25 outer folds
+03:46:40 | INFO | [1/36] featuresets__binary__all__A__none__class_weight__default
+03:46:40 | INFO |   cached  featuresets__binary__all__A__none__class_weight__default
+03:46:40 | INFO | [2/36] featuresets__binary__all__B__none__class_weight__default
+03:46:40 | INFO |   cached  featuresets__binary__all__B__none__class_weight__default
+03:46:40 | INFO | [3/36] featuresets__binary__all__C__none__class_weight__default
+03:46:40 | INFO |   cached  featuresets__binary__all__C__none__class_weight__default
+03:46:40 | INFO | [4/36] featuresets__binary__all__D__none__class_weight__default
+03:46:40 | INFO |   cached  featuresets__binary__all__D__none__class_weight__default
+03:46:40 | INFO | [5/36] fs__binary__all__B__mi__class_weight__default
+03:46:40 | INFO |   cached  fs__binary__all__B__mi__class_weight__default
+03:46:40 | INFO | [6/36] fs__binary__all__B__chi2__class_weight__default
+03:46:40 | INFO |   cached  fs__binary__all__B__chi2__class_weight__default
+03:46:40 | INFO | [7/36] fs__binary__all__B__rfe__class_weight__default
+03:46:40 | INFO |   cached  fs__binary__all__B__rfe__class_weight__default
+03:46:40 | INFO | [8/36] fs__binary__all__B__l1__class_weight__default
+03:46:40 | INFO |   cached  fs__binary__all__B__l1__class_weight__default
+03:46:40 | INFO | [9/36] fs__binary__all__B__boruta__class_weight__default
+03:46:40 | INFO |   cached  fs__binary__all__B__boruta__class_weight__default
+03:46:40 | INFO | [10/36] featuresets__binary__excl_generated__A__none__class_weight__default
+03:46:40 | INFO |   cached  featuresets__binary__excl_generated__A__none__class_weight__default
+03:46:40 | INFO | [11/36] featuresets__binary__excl_generated__B__none__class_weight__default
+03:46:40 | INFO |   cached  featuresets__binary__excl_generated__B__none__class_weight__default
+03:46:40 | INFO | [12/36] featuresets__binary__excl_generated__C__none__class_weight__default
+03:46:40 | INFO |   cached  featuresets__binary__excl_generated__C__none__class_weight__default
+03:46:40 | INFO | [13/36] featuresets__binary__excl_generated__D__none__class_weight__default
+03:46:40 | INFO |   cached  featuresets__binary__excl_generated__D__none__class_weight__default
+03:46:40 | INFO | [14/36] fs__binary__excl_generated__B__mi__class_weight__default
+03:46:40 | INFO |   cached  fs__binary__excl_generated__B__mi__class_weight__default
+03:46:40 | INFO | [15/36] fs__binary__excl_generated__B__chi2__class_weight__default
+03:46:40 | INFO |   cached  fs__binary__excl_generated__B__chi2__class_weight__default
+03:46:40 | INFO | [16/36] fs__binary__excl_generated__B__rfe__class_weight__default
+03:46:40 | INFO |   cached  fs__binary__excl_generated__B__rfe__class_weight__default
+03:46:40 | INFO | [17/36] fs__binary__excl_generated__B__l1__class_weight__default
+03:46:40 | INFO |   cached  fs__binary__excl_generated__B__l1__class_weight__default
+03:46:40 | INFO | [18/36] fs__binary__excl_generated__B__boruta__class_weight__default
+03:46:40 | INFO |   cached  fs__binary__excl_generated__B__boruta__class_weight__default
+03:46:40 | INFO | [19/36] featuresets__severity6__all__A__none__class_weight__default
+03:46:40 | INFO |   cached  featuresets__severity6__all__A__none__class_weight__default
+03:46:40 | INFO | [20/36] featuresets__severity6__all__B__none__class_weight__default
+03:46:40 | INFO |   cached  featuresets__severity6__all__B__none__class_weight__default
+03:46:41 | INFO | [21/36] featuresets__severity6__all__C__none__class_weight__default
+03:46:41 | INFO |   cached  featuresets__severity6__all__C__none__class_weight__default
+03:46:41 | INFO | [22/36] featuresets__severity6__all__D__none__class_weight__default
+03:46:41 | INFO |   cached  featuresets__severity6__all__D__none__class_weight__default
+03:46:41 | INFO | [23/36] fs__severity6__all__B__mi__class_weight__default
+03:46:41 | INFO |   cached  fs__severity6__all__B__mi__class_weight__default
+03:46:41 | INFO | [24/36] fs__severity6__all__B__chi2__class_weight__default
+03:46:41 | INFO |   cached  fs__severity6__all__B__chi2__class_weight__default
+03:46:41 | INFO | [25/36] fs__severity6__all__B__rfe__class_weight__default
+03:46:41 | INFO |   cached  fs__severity6__all__B__rfe__class_weight__default
+03:46:41 | INFO | [26/36] fs__severity6__all__B__l1__class_weight__default
+03:46:41 | INFO |   cached  fs__severity6__all__B__l1__class_weight__default
+03:46:41 | INFO | [27/36] fs__severity6__all__B__boruta__class_weight__default
+03:46:41 | INFO |   cached  fs__severity6__all__B__boruta__class_weight__default
+03:46:41 | INFO | [28/36] featuresets__severity6__excl_generated__A__none__class_weight__default
+03:46:41 | INFO |   cached  featuresets__severity6__excl_generated__A__none__class_weight__default
+03:46:41 | INFO | [29/36] featuresets__severity6__excl_generated__B__none__class_weight__default
+03:46:41 | INFO |   cached  featuresets__severity6__excl_generated__B__none__class_weight__default
+03:46:41 | INFO | [30/36] featuresets__severity6__excl_generated__C__none__class_weight__default
+03:46:41 | INFO |   cached  featuresets__severity6__excl_generated__C__none__class_weight__default
+03:46:41 | INFO | [31/36] featuresets__severity6__excl_generated__D__none__class_weight__default
+03:46:41 | INFO |   cached  featuresets__severity6__excl_generated__D__none__class_weight__default
+03:46:41 | INFO | [32/36] fs__severity6__excl_generated__B__mi__class_weight__default
+03:46:41 | INFO |   cached  fs__severity6__excl_generated__B__mi__class_weight__default
+03:46:41 | INFO | [33/36] fs__severity6__excl_generated__B__chi2__class_weight__default
+03:46:41 | INFO |   cached  fs__severity6__excl_generated__B__chi2__class_weight__default
+03:46:41 | INFO | [34/36] fs__severity6__excl_generated__B__rfe__class_weight__default
+03:46:41 | INFO |   cached  fs__severity6__excl_generated__B__rfe__class_weight__default
+03:46:41 | INFO | [35/36] fs__severity6__excl_generated__B__l1__class_weight__default
+03:46:41 | INFO |   cached  fs__severity6__excl_generated__B__l1__class_weight__default
+03:46:41 | INFO | [36/36] fs__severity6__excl_generated__B__boruta__class_weight__default
+03:46:41 | INFO |   cached  fs__severity6__excl_generated__B__boruta__class_weight__default
+03:46:47 | INFO | Hybrid selection: {'binary': {'all': {'fs': 'boruta', 'model': 'voting', 'run_id': 'fs__binary__all__B__boruta__class_weight__default', 'f1_macro': 0.8816157100399864, 'sd': 0.03651727617790149}, 'excl_generated': {'fs': 'chi2', 'model': 'voting', 'run_id': 'fs__binary__excl_generated__B__chi2__class_weight__default', 'f1_macro': 0.6256093961771777, 'sd': 0.09402549611084825}}, 'severity6': {'all': {'fs': 'boruta', 'model': 'stacking', 'run_id': 'fs__severity6__all__B__boruta__class_weight__default', 'f1_macro': 0.6043928438732865, 'sd': 0.029437222080461747}, 'excl_generated': {'fs': 'l1', 'model': 'stacking', 'run_id': 'fs__severity6__excl_generated__B__l1__class_weight__default', 'f1_macro': 0.4580875738666003, 'sd': 0.03027419456114388}}}
+03:46:47 | INFO | [1/26] imbalance__binary__all__B__boruta__smote__default
+03:46:47 | INFO |   cached  imbalance__binary__all__B__boruta__smote__default
+03:46:47 | INFO | [2/26] imbalance__binary__all__B__boruta__none__default
+03:46:47 | INFO |   cached  imbalance__binary__all__B__boruta__none__default
+03:46:47 | INFO | [3/26] imbalance__binary__excl_generated__B__chi2__smote__default
+03:46:47 | INFO |   cached  imbalance__binary__excl_generated__B__chi2__smote__default
+03:46:47 | INFO | [4/26] imbalance__binary__excl_generated__B__chi2__none__default
+03:46:47 | INFO |   cached  imbalance__binary__excl_generated__B__chi2__none__default
+03:46:47 | INFO | [5/26] ablation__binary__all__B__boruta__class_weight__no_demographic
+03:46:47 | INFO |   cached  ablation__binary__all__B__boruta__class_weight__no_demographic
+03:46:47 | INFO | [6/26] ablation__binary__all__B__boruta__class_weight__no_clinical
+03:46:47 | INFO |   cached  ablation__binary__all__B__boruta__class_weight__no_clinical
+03:46:47 | INFO | [7/26] ablation__binary__all__B__boruta__class_weight__no_medication
+03:46:47 | INFO |   cached  ablation__binary__all__B__boruta__class_weight__no_medication
+03:46:47 | INFO | [8/26] ablation__binary__all__B__boruta__class_weight__no_mood_overlap_items
+03:46:47 | INFO |   cached  ablation__binary__all__B__boruta__class_weight__no_mood_overlap_items
+03:46:47 | INFO | [9/26] ablation__binary__all__B__boruta__class_weight__no_scaling
+03:46:47 | INFO |   cached  ablation__binary__all__B__boruta__class_weight__no_scaling
+03:46:47 | INFO | [10/26] ablation__binary__all__B__boruta__class_weight__ordinal_encoding
+03:46:47 | INFO |   cached  ablation__binary__all__B__boruta__class_weight__ordinal_encoding
+03:46:47 | INFO | [11/26] ablation__binary__all__D__none__class_weight__D_no_medication
+03:46:47 | INFO |   cached  ablation__binary__all__D__none__class_weight__D_no_medication
+03:46:47 | INFO | [12/26] imbalance__severity6__all__B__boruta__smote__default
+03:46:47 | INFO |   cached  imbalance__severity6__all__B__boruta__smote__default
+03:46:47 | INFO | [13/26] imbalance__severity6__all__B__boruta__none__default
+03:46:47 | INFO |   cached  imbalance__severity6__all__B__boruta__none__default
+03:46:47 | INFO | [14/26] imbalance__severity6__excl_generated__B__l1__smote__default
+03:46:47 | INFO |   cached  imbalance__severity6__excl_generated__B__l1__smote__default
+03:46:47 | INFO | [15/26] imbalance__severity6__excl_generated__B__l1__none__default
+03:46:47 | INFO |   cached  imbalance__severity6__excl_generated__B__l1__none__default
+03:46:47 | INFO | [16/26] ablation__severity6__all__B__boruta__class_weight__no_demographic
+03:46:47 | INFO |   cached  ablation__severity6__all__B__boruta__class_weight__no_demographic
+03:46:47 | INFO | [17/26] ablation__severity6__all__B__boruta__class_weight__no_clinical
+03:46:47 | INFO |   cached  ablation__severity6__all__B__boruta__class_weight__no_clinical
+03:46:47 | INFO | [18/26] ablation__severity6__all__B__boruta__class_weight__no_medication
+03:46:47 | INFO |   cached  ablation__severity6__all__B__boruta__class_weight__no_medication
+03:46:47 | INFO | [19/26] ablation__severity6__all__B__boruta__class_weight__no_mood_overlap_items
+03:46:47 | INFO |   cached  ablation__severity6__all__B__boruta__class_weight__no_mood_overlap_items
+03:46:47 | INFO | [20/26] ablation__severity6__all__B__boruta__class_weight__no_scaling
+03:46:47 | INFO |   cached  ablation__severity6__all__B__boruta__class_weight__no_scaling
+03:46:47 | INFO | [21/26] ablation__severity6__all__B__boruta__class_weight__ordinal_encoding
+03:46:47 | INFO |   cached  ablation__severity6__all__B__boruta__class_weight__ordinal_encoding
+03:46:47 | INFO | [22/26] ablation__severity6__all__D__none__class_weight__D_no_medication
+03:46:47 | INFO |   cached  ablation__severity6__all__D__none__class_weight__D_no_medication
+03:46:47 | INFO | [23/26] sensitivity__binary17__all__B__boruta__class_weight__default
+03:46:47 | INFO |   cached  sensitivity__binary17__all__B__boruta__class_weight__default
+03:46:47 | INFO | [24/26] sensitivity__severity5__all__B__boruta__class_weight__default
+03:46:47 | INFO |   cached  sensitivity__severity5__all__B__boruta__class_weight__default
+03:46:47 | INFO | [25/26] sensitivity__binary17__excl_generated__B__chi2__class_weight__default
+03:46:47 | INFO |   cached  sensitivity__binary17__excl_generated__B__chi2__class_weight__default
+03:46:47 | INFO | [26/26] sensitivity__severity5__excl_generated__B__l1__class_weight__default
+03:46:47 | INFO |   cached  sensitivity__severity5__excl_generated__B__l1__class_weight__default
+03:46:48 | INFO | Stage 'train' finished in 8 s (record: run_train_20261019_034647.json)
+03:46:48 | INFO | ======================================================================
+03:46:48 | INFO | STAGE: fs
+03:46:50 | INFO | FS stability: {'all': {'binary': 'boruta', 'severity6': 'boruta'}, 'excl_generated': {'binary': 'chi2', 'severity6': 'l1'}}
+03:46:50 | INFO | Stage 'fs' finished in 3 s (record: run_fs_20261019_034650.json)
+03:46:50 | INFO | ======================================================================
+03:46:50 | INFO | STAGE: eval
+03:46:51 | INFO | Summarising 62 runs with bootstrap CIs ...
+03:50:18 | INFO | Learning curves ...
+03:56:10 | INFO | Stage 'eval' finished in 560 s (record: run_eval_20261019_035610.json)
+03:56:10 | INFO | ======================================================================
+03:56:10 | INFO | STAGE: shap
+03:57:43 | INFO | SHAP binary/all/set B: 300 participants in 92 s
+03:59:38 | INFO | SHAP binary/all/set A: 300 participants in 115 s
+04:04:13 | INFO | SHAP severity6/all/set B: 300 participants in 275 s
+04:08:46 | INFO | SHAP severity6/all/set A: 300 participants in 274 s
+04:09:41 | INFO | SHAP binary/excl_generated/set B: 300 participants in 46 s
+04:10:55 | INFO | SHAP binary/excl_generated/set A: 300 participants in 74 s
+04:13:48 | INFO | SHAP severity6/excl_generated/set B: 300 participants in 173 s
+04:16:25 | INFO | SHAP severity6/excl_generated/set A: 300 participants in 157 s
+04:16:30 | INFO | Stage 'shap' finished in 1220 s (record: run_shap_20261019_041630.json)
+04:16:30 | INFO | ======================================================================
+04:16:30 | INFO | STAGE: diagrams
+04:16:48 | INFO | Stage 'diagrams' finished in 18 s (record: run_diagrams_20261019_041648.json)
+04:16:48 | INFO | ======================================================================
+04:16:48 | INFO | STAGE: report
+04:16:54 | INFO | Word tables: 37 tables -> C:\Users\Hannah Nasir Jamal\cancer-depression-v2\thesis_outputs\tables\thesis_tables.docx
+04:16:54 | INFO | Results summary -> C:\Users\Hannah Nasir Jamal\cancer-depression-v2\thesis_outputs\RESULTS_SUMMARY.md
+04:16:54 | INFO | Stage 'report' finished in 6 s (record: run_report_20261019_041654.json)

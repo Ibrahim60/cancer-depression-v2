@@ -120,6 +120,47 @@ def feature_sets_table(ds: Dataset, cfg: dict[str, Any]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def search_space_table(cfg: dict[str, Any]) -> pd.DataFrame:
+    """Models, fixed settings and inner-CV search spaces, read from config.yaml."""
+    fixed = {
+        "lr": "L2 penalty, lbfgs, max_iter 5000, class_weight balanced",
+        "rf": "class_weight balanced",
+        "xgb": "hist trees, balanced sample weights, logloss / mlogloss",
+        "svm": "RBF kernel, Platt probabilities, class_weight balanced",
+    }
+    names = {"lr": "Logistic regression", "rf": "Random forest", "xgb": "XGBoost", "svm": "SVM"}
+    rows = []
+    for m in cfg["models"]["base"]:
+        grid = cfg["models"]["grids"][m]
+        rows.append({"Component": names[m], "Fixed settings": fixed[m],
+                     "Tuned hyper-parameters": "; ".join(f"{k} ∈ {{{', '.join(str(x) for x in v)}}}"
+                                                         for k, v in grid.items())})
+    fsc = cfg["feature_selection"]
+    k = ", ".join(str(x) for x in fsc["k_grid"])
+    rows += [
+        {"Component": "MI / χ² filter", "Fixed settings": "SelectKBest on Min-Max-scaled inputs",
+         "Tuned hyper-parameters": f"k ∈ {{{k}}}"},
+        {"Component": "RFE", "Fixed settings": "logistic regression, step 1",
+         "Tuned hyper-parameters": f"k ∈ {{{k}}}"},
+        {"Component": "L1 logistic regression", "Fixed settings": "liblinear, one-vs-rest for severity, ≥ 3 features",
+         "Tuned hyper-parameters": "C ∈ {" + ", ".join(str(x) for x in fsc["l1_C_grid"]) + "}"},
+        {"Component": "Boruta", "Fixed settings": (f"{fsc['boruta']['n_iter']} iterations, random forest "
+                                                    f"({fsc['boruta']['n_estimators']} trees, depth 7), "
+                                                    f"Bonferroni α = {fsc['boruta']['alpha']}"),
+         "Tuned hyper-parameters": "none"},
+        {"Component": "Soft voting", "Fixed settings": "equal weights over the four tuned base pipelines",
+         "Tuned hyper-parameters": "none"},
+        {"Component": "Stacking", "Fixed settings": (f"logistic-regression meta-learner, {cfg['cv']['stacking_cv']}-fold "
+                                                     "out-of-fold probabilities"),
+         "Tuned hyper-parameters": "none"},
+        {"Component": "Inner search", "Fixed settings": (f"RandomizedSearchCV, {cfg['cv']['n_iter']} candidates, "
+                                                         f"{cfg['cv']['inner_splits']}-fold stratified CV, "
+                                                         f"scoring {cfg['cv']['inner_scoring']}"),
+         "Tuned hyper-parameters": ""},
+    ]
+    return pd.DataFrame(rows)
+
+
 def data_quality_table(ds: Dataset, cfg: dict[str, Any]) -> tuple[pd.DataFrame, dict[str, Any]]:
     """Missingness, duplicates, outliers, consistency and provenance checks."""
     raw = ds.raw
@@ -256,6 +297,8 @@ def run(ds: Dataset, cfg: dict[str, Any], paths: Paths) -> dict[str, Any]:
     out.to_csv(paths.data_out / "curated_dataset.csv", index=False, encoding="utf-8-sig")
     catalog.save_table(variables_table(ds, cfg), "variables", cfg, paths.tables)
     catalog.save_table(feature_sets_table(ds, cfg), "feature_sets", cfg, paths.tables)
+    catalog.save_table(search_space_table(cfg), "search_space", cfg, paths.tables,
+                       note=f"Random seed {cfg['seed']} for every estimator, split and search.")
     qt, qinfo = data_quality_table(ds, cfg)
     catalog.save_table(qt, "data_quality", cfg, paths.tables)
     save_json(qinfo, paths.results / "data_quality.json")

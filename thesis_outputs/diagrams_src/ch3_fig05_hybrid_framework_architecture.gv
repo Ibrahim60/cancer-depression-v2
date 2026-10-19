@@ -1,0 +1,43 @@
+digraph hybrid {
+	bgcolor=white fontname=Arial fontsize=11 nodesep=0.18 pad=0.15 rankdir=TB ranksep=0.32
+	node [fontname=Arial fontsize=11 margin="0.12,0.06" penwidth=1.2 shape=box style="rounded,filled"]
+	edge [arrowsize=0.7 color="#52514e" fontname=Arial fontsize=11 penwidth=1.1]
+	in [label=<<B>Input: feature set B</B><BR/>42 FCRI items + demographic + clinical variables> color="#6b6a66" fillcolor="#f1f1ef"]
+	pre [label=<<B>Preprocessing (in-fold)</B><BR/>one-hot encoding, Min-Max scaling, class weights> color="#2a78d6" fillcolor="#e6f0fd"]
+	fs [label=<<B>Feature selection (in-fold)</B><BR/>MI or χ² filter, RFE (LR), L1-LR or Boruta> color="#14875c" fillcolor="#e2f5ec"]
+	subgraph cluster_base {
+		color="#6b6a66" fontname=Arial fontsize=11 label="Base learners (tuned in the inner CV loop)" labelloc=b style="dashed,rounded"
+		lr [label="Logistic
+regression" color="#2a78d6" fillcolor="#e6f0fd" width=1.05]
+		rf [label="Random
+forest" color="#2a78d6" fillcolor="#e6f0fd" width=1.05]
+		xgb [label=XGBoost color="#2a78d6" fillcolor="#e6f0fd" width=1.05]
+		svm [label="SVM
+(RBF)" color="#2a78d6" fillcolor="#e6f0fd" width=1.05]
+	}
+	vote [label=<<B>Soft voting</B><BR/>mean of probabilities> color="#c4471b" fillcolor="#fdeae1"]
+	stack [label=<<B>Stacking</B><BR/>LR meta-learner> color="#c4471b" fillcolor="#fdeae1"]
+	o1 [label=<<B>Output 1: binary</B><BR/>depressed / not depressed> color="#6250d6" fillcolor="#ecebfb"]
+	o2 [label=<<B>Output 2: severity</B><BR/>six BDI classes> color="#6250d6" fillcolor="#ecebfb"]
+	in -> pre
+	pre -> fs
+	fs -> lr
+	lr -> vote
+	lr -> stack
+	fs -> rf
+	rf -> vote
+	rf -> stack
+	fs -> xgb
+	xgb -> vote
+	xgb -> stack
+	fs -> svm
+	svm -> vote
+	svm -> stack
+	vote -> o1
+	stack -> o1
+	vote -> o2
+	stack -> o2
+	sel [label=<<B>Selected hybrid (nested CV, macro F1)</B><BR/>binary: Boruta (RF) + Soft Voting<BR/>severity: Boruta (RF) + Stacking (LR meta)> color="#a87000" fillcolor="#fdf1d6"]
+	o1 -> sel [style=invis]
+	o2 -> sel [style=invis]
+}

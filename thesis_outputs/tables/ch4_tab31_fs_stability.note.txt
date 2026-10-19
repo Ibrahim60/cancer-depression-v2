@@ -1,0 +1,1 @@
+Stability over the outer folds at the variable level (a categorical variable counts as selected if any of its one-hot columns is selected). 1 = identical selections in every fold; 0 = no better than random (Nogueira et al., 2018).

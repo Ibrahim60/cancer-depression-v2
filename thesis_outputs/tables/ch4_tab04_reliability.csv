@@ -1,0 +1,19 @@
+﻿Subset,Scale,n,Cronbach's alpha,95% CI
+All rows,BDI (21 items),1530,0.914,0.908–0.921
+All rows,FCRI total (42 items),1530,0.966,0.964–0.968
+All rows,FCRI triggers (8 items),1530,0.857,0.846–0.867
+All rows,FCRI severity (9 items),1530,0.826,0.814–0.838
+All rows,FCRI psychological distress (4 items),1530,0.732,0.708–0.754
+All rows,FCRI functioning impairments (6 items),1530,0.816,0.801–0.831
+All rows,FCRI insight (3 items),1530,0.684,0.657–0.710
+All rows,FCRI reassurance (3 items),1530,0.69,0.663–0.716
+All rows,FCRI coping strategies (9 items),1530,0.853,0.841–0.864
+Excluding generator-matched rows,BDI (21 items),969,0.933,0.926–0.939
+Excluding generator-matched rows,FCRI total (42 items),969,0.964,0.961–0.966
+Excluding generator-matched rows,FCRI triggers (8 items),969,0.865,0.851–0.876
+Excluding generator-matched rows,FCRI severity (9 items),969,0.744,0.723–0.763
+Excluding generator-matched rows,FCRI psychological distress (4 items),969,0.76,0.735–0.783
+Excluding generator-matched rows,FCRI functioning impairments (6 items),969,0.817,0.798–0.833
+Excluding generator-matched rows,FCRI insight (3 items),969,0.718,0.683–0.746
+Excluding generator-matched rows,FCRI reassurance (3 items),969,0.671,0.635–0.703
+Excluding generator-matched rows,FCRI coping strategies (9 items),969,0.883,0.873–0.893

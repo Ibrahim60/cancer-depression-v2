@@ -1,0 +1,14 @@
+digraph curation {
+	bgcolor=white fontname=Arial fontsize=11 nodesep=0.2 pad=0.15 rankdir=TB ranksep=0.3
+	node [fontname=Arial fontsize=11 margin="0.12,0.06" penwidth=1.2 shape=box style="rounded,filled"]
+	edge [arrowsize=0.7 color="#52514e" fontname=Arial fontsize=11 penwidth=1.1]
+	raw [label=<<B>Raw form export (n = 1532)</B>> color="#6b6a66" fillcolor="#f1f1ef"]
+	ex [label=<<B>Excluded (n = 2)</B><BR/>1 with &gt; 50% items missing<BR/>cancer type &#x27;No disease&#x27; (n = 1)> color="#c4471b" fillcolor="#fdeae1"]
+	fin [label=<<B>Curated dataset (n = 1530)</B><BR/>provenance flag: 561 rows match<BR/>mock-generator output> color="#2a78d6" fillcolor="#e6f0fd"]
+	raw -> fin
+	raw -> ex [style=dashed]
+	s_all [label=<<B>All rows</B><BR/>n = 1530<BR/>depressed 1411<BR/>not depressed 119> color="#14875c" fillcolor="#e2f5ec"]
+	fin -> s_all
+	s_excl_generated [label=<<B>Excl. generator-matched</B><BR/>n = 969<BR/>depressed 950<BR/>not depressed 19> color="#14875c" fillcolor="#e2f5ec"]
+	fin -> s_excl_generated
+}

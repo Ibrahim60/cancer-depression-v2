@@ -1,0 +1,16 @@
+﻿Feature,SHAP rank (binary),Mean |SHAP| (binary),SHAP rank (severity),Bivariate test,Effect size,p (Holm),Selection frequency (Chi-square)
+Cancer status,1,0.0232,3,Chi-square (Monte-Carlo),Cramér's V = 0.194,<0.001,1.0
+Time since diagnosis,2,0.0176,7,Chi-square (Monte-Carlo),Cramér's V = 0.173,0.001,1.0
+Province,3,0.0149,6,Chi-square (Monte-Carlo),Cramér's V = 0.134,0.085,1.0
+FCRI 1: Television shows or newspaper articl…,4,0.0088,2,Mann-Whitney U,Rank-biserial r = 0.654,<0.001,0.95
+FCRI 9: I am worried or anxious about the po…,5,0.0083,26,Mann-Whitney U,Rank-biserial r = 0.577,<0.001,0.7
+"FCRI 14: In your opinion, are you at risk of…",6,0.0082,15,Mann-Whitney U,Rank-biserial r = 0.625,<0.001,0.96
+FCRI 10: I am afraid of cancer recurrence,7,0.007,24,Mann-Whitney U,Rank-biserial r = 0.600,<0.001,0.69
+FCRI 23: My work or everyday activities,8,0.0068,33,Mann-Whitney U,Rank-biserial r = 0.574,<0.001,0.71
+Cancer type,9,0.0062,4,Chi-square (Monte-Carlo),Cramér's V = 0.112,0.482,0.92
+Age group,10,0.0052,8,Chi-square (Monte-Carlo),Cramér's V = 0.087,0.435,0.88
+FCRI 17: How long have you been thinking abou…,11,0.0047,13,Mann-Whitney U,Rank-biserial r = 0.524,0.002,0.77
+FCRI 15: How often do you think about the pos…,12,0.0046,22,Mann-Whitney U,Rank-biserial r = 0.623,<0.001,0.89
+FCRI 26: My state of mind or my mood,13,0.0045,38,Mann-Whitney U,Rank-biserial r = 0.508,0.002,0.61
+FCRI 2: An appointment with my doctor or oth…,14,0.0033,11,Mann-Whitney U,Rank-biserial r = 0.544,<0.001,0.54
+Treatment type,15,0.0031,1,Chi-square (Monte-Carlo),Cramér's V = 0.119,0.148,0.9

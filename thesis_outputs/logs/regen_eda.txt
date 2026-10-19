@@ -1,0 +1,7 @@
+05:02:10 | INFO | Provenance: 298 rows match 1f9d779:auto_data_submitter/test.csv
+05:02:10 | INFO | Provenance: 263 rows match 1d7d522:auto_data_submitter/test_part1.csv
+05:02:11 | INFO | Curated dataset: 1530 participants (561 generator-matched)
+05:02:11 | INFO | ======================================================================
+05:02:11 | INFO | STAGE: eda
+05:02:29 | INFO | EDA: {'all': 1530, 'excl_generated': 969}
+05:02:30 | INFO | Stage 'eda' finished in 20 s (record: run_eda_20261019_050229.json)

@@ -1,0 +1,55 @@
+digraph preprocessing {
+	bgcolor=white fontname=Arial fontsize=11 newrank=true nodesep=0.25 pad=0.15 rankdir=TB ranksep=0.3 splines=line
+	node [fontname=Arial fontsize=11 margin="0.12,0.06" penwidth=1.2 shape=box style="rounded,filled"]
+	edge [arrowsize=0.7 color="#52514e" fontname=Arial fontsize=11 penwidth=1.1]
+	subgraph cluster_data {
+		color="#2a78d6" fontcolor="#2a78d6" fontname=Arial fontsize=11 label="Applied once, per participant" style="dashed,rounded"
+		raw [label=<<B>Raw form export</B><BR/>text responses> color="#6b6a66" fillcolor="#f1f1ef" width=2.0]
+		parse [label=<<B>Response scoring</B><BR/>BDI → 0–3 (items 6/7 fix)<BR/>FCRI → 0–4<BR/>FCRI item 13 reversed> color="#2a78d6" fillcolor="#e6f0fd" width=2.0]
+		q [label=<<B>Quality filters</B><BR/>all-zero FCRI responders;<BR/>&gt; 50% missing items> color="#2a78d6" fillcolor="#e6f0fd" width=2.0]
+		imp [label=<<B>Within-person imputation</B><BR/>missing item → own<BR/>subscale mean> color="#2a78d6" fillcolor="#e6f0fd" width=2.0]
+		cur [label=<<B>Curation</B><BR/>cancer-type harmonisation,<BR/>exclusions, totals, targets> color="#2a78d6" fillcolor="#e6f0fd" width=2.0]
+		raw -> parse
+		parse -> q
+		q -> imp
+		imp -> cur
+	}
+	subgraph cluster_fold {
+		color="#c4471b" fontcolor="#c4471b" fontname=Arial fontsize=11 label="Fitted on each training fold" style="dashed,rounded"
+		oh [label=<<B>One-hot encoding</B><BR/>categorical variables> color="#c4471b" fillcolor="#fdeae1" width=2.0]
+		mm [label=<<B>Min-Max scaling</B><BR/>to [0, 1]> color="#c4471b" fillcolor="#fdeae1" width=2.0]
+		sm [label=<<B>SMOTE (optional)</B><BR/>training data only> color="#c4471b" fillcolor="#fdeae1" width=2.0]
+		fs [label=<<B>Feature selection</B><BR/>MI / χ² / RFE / L1 / Boruta> color="#c4471b" fillcolor="#fdeae1" width=2.0]
+		clf [label=<<B>Classifier</B><BR/>base learner or ensemble> color="#14875c" fillcolor="#e2f5ec" width=2.0]
+		oh -> mm
+		mm -> sm
+		sm -> fs
+		fs -> clf
+	}
+	{
+		rank=same
+		raw
+		oh
+	}
+	{
+		rank=same
+		parse
+		mm
+	}
+	{
+		rank=same
+		q
+		sm
+	}
+	{
+		rank=same
+		imp
+		fs
+	}
+	{
+		rank=same
+		cur
+		clf
+	}
+	cur -> oh [constraint=false headport=w tailport=e]
+}

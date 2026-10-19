@@ -1,0 +1,21 @@
+﻿Task,Subset,Method,Nogueira stability (mean of base learners; range),Selected model inputs (mean),Selected variables (mean)
+Binary,All rows,Boruta (RF),0.772 (0.772–0.772),28.8,28.7
+Binary,All rows,Chi-square,0.732 (0.672–0.756),26.9,25.0
+Binary,All rows,L1 logistic regression,0.447 (0.440–0.454),35.5,26.6
+Binary,All rows,Mutual information,0.584 (0.521–0.609),25.8,25.7
+Binary,All rows,RFE (LR),0.535 (0.513–0.551),25.9,21.2
+Binary,Excluding generator-matched rows,Boruta (RF),0.489 (0.489–0.489),7.3,7.0
+Binary,Excluding generator-matched rows,Chi-square,0.577 (0.532–0.601),25.2,19.5
+Binary,Excluding generator-matched rows,L1 logistic regression,0.469 (0.454–0.487),20.9,15.0
+Binary,Excluding generator-matched rows,Mutual information,0.351 (0.335–0.375),24.5,23.2
+Binary,Excluding generator-matched rows,RFE (LR),0.456 (0.424–0.483),21.8,16.6
+Severity (6),All rows,Boruta (RF),0.899 (0.899–0.899),40.1,40.1
+Severity (6),All rows,Chi-square,0.774 (0.695–0.820),27.6,26.7
+Severity (6),All rows,L1 logistic regression,0.343 (0.227–0.505),62.0,44.8
+Severity (6),All rows,Mutual information,0.557 (0.503–0.615),24.2,24.2
+Severity (6),All rows,RFE (LR),0.616 (0.600–0.630),22.3,20.2
+Severity (6),Excluding generator-matched rows,Boruta (RF),0.648 (0.648–0.648),16.4,16.4
+Severity (6),Excluding generator-matched rows,Chi-square,0.668 (0.651–0.675),26.0,24.6
+Severity (6),Excluding generator-matched rows,L1 logistic regression,0.183 (0.124–0.240),64.6,42.0
+Severity (6),Excluding generator-matched rows,Mutual information,0.425 (0.391–0.443),25.5,25.5
+Severity (6),Excluding generator-matched rows,RFE (LR),0.477 (0.465–0.490),26.0,21.4

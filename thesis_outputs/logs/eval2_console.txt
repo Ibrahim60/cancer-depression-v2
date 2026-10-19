@@ -1,0 +1,8 @@
+04:18:06 | INFO | Provenance: 298 rows match 1f9d779:auto_data_submitter/test.csv
+04:18:07 | INFO | Provenance: 263 rows match 1d7d522:auto_data_submitter/test_part1.csv
+04:18:07 | INFO | Curated dataset: 1530 participants (561 generator-matched)
+04:18:07 | INFO | ======================================================================
+04:18:07 | INFO | STAGE: eval
+04:18:09 | INFO | Summarising 62 runs with bootstrap CIs ...
+04:21:24 | INFO | Learning curves ...
+04:27:14 | INFO | Stage 'eval' finished in 546 s (record: run_eval_20261019_042713.json)

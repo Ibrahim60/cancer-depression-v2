@@ -1,0 +1,17 @@
+﻿Variable,Test,Statistic,df,p,Effect size,Medians by class,p (Holm)
+FCRI total,Kruskal-Wallis H,612.09,5,<0.001,ε² = 0.632,Normal 49; Mild 54; Borderline 66; Moderate 71; Severe 106; Extreme 122,<0.001
+FCRI triggers,Kruskal-Wallis H,585.42,5,<0.001,ε² = 0.605,Normal 8; Mild 9; Borderline 10; Moderate 13; Severe 19; Extreme 23,<0.001
+FCRI severity,Kruskal-Wallis H,551.65,5,<0.001,ε² = 0.570,Normal 10; Mild 13; Borderline 14; Moderate 15; Severe 21; Extreme 24,<0.001
+FCRI psychological distress,Kruskal-Wallis H,499.38,5,<0.001,ε² = 0.516,Normal 4; Mild 5; Borderline 6; Moderate 7; Severe 10; Extreme 12,<0.001
+FCRI functioning impairments,Kruskal-Wallis H,504.4,5,<0.001,ε² = 0.521,Normal 8; Mild 8; Borderline 8; Moderate 11; Severe 15; Extreme 18,<0.001
+FCRI insight,Kruskal-Wallis H,436.82,5,<0.001,ε² = 0.451,Normal 3; Mild 4; Borderline 4; Moderate 5; Severe 8; Extreme 9,<0.001
+FCRI reassurance,Kruskal-Wallis H,388.2,5,<0.001,ε² = 0.401,Normal 4; Mild 4; Borderline 5; Moderate 5; Severe 8; Extreme 9,<0.001
+FCRI coping strategies,Kruskal-Wallis H,496.57,5,<0.001,ε² = 0.513,Normal 12; Mild 13; Borderline 13; Moderate 16; Severe 24; Extreme 27,<0.001
+Gender,Chi-square,28.76,5,<0.001,Cramér's V = 0.172,,<0.001
+Age group,Chi-square (Monte-Carlo),157.64,20,<0.001,Cramér's V = 0.202,,<0.001
+Province,Chi-square (Monte-Carlo),167.3,30,<0.001,Cramér's V = 0.186,,<0.001
+Cancer type,Chi-square (Monte-Carlo),118.94,45,<0.001,Cramér's V = 0.157,,<0.001
+Time since diagnosis,Chi-square (Monte-Carlo),117.14,20,<0.001,Cramér's V = 0.174,,<0.001
+Cancer status,Chi-square (Monte-Carlo),79.76,15,<0.001,Cramér's V = 0.166,,<0.001
+Treatment type,Chi-square (Monte-Carlo),134.06,25,<0.001,Cramér's V = 0.166,,<0.001
+On psychotropic medication,Chi-square (Monte-Carlo),103.84,5,<0.001,Cramér's V = 0.327,,<0.001

@@ -1,0 +1,74 @@
+﻿Variable,Level,Overall (n = 969),Depressed (n = 950),Not depressed (n = 19)
+Gender,,,,
+,Female,456 (47.1),449 (47.3),7 (36.8)
+,Male,513 (52.9),501 (52.7),12 (63.2)
+Age group,,,,
+,Below 18,48 (5.0),48 (5.1),0 (0.0)
+,18-30,271 (28.0),261 (27.5),10 (52.6)
+,31-45,384 (39.6),377 (39.7),7 (36.8)
+,46-60,238 (24.6),236 (24.8),2 (10.5)
+,Above 60,28 (2.9),28 (2.9),0 (0.0)
+Province,,,,
+,Azad Jammu & Kashmir,18 (1.9),18 (1.9),0 (0.0)
+,Balochistan,148 (15.3),147 (15.5),1 (5.3)
+,Gilgit Baltistan,67 (6.9),67 (7.1),0 (0.0)
+,Islamabad Capital Territory,112 (11.6),110 (11.6),2 (10.5)
+,Khyber Pakhtunkhwa (KPK),343 (35.4),328 (34.5),15 (78.9)
+,Punjab,119 (12.3),118 (12.4),1 (5.3)
+,Sindh,162 (16.7),162 (17.1),0 (0.0)
+Cancer type,,,,
+,Blood Cancer (Leukemia / Lymphoma),169 (17.4),167 (17.6),2 (10.5)
+,Brain Cancer,156 (16.1),154 (16.2),2 (10.5)
+,Breast Cancer,101 (10.4),100 (10.5),1 (5.3)
+,Cervical Cancer,31 (3.2),31 (3.3),0 (0.0)
+,Colorectal Cancer,31 (3.2),29 (3.1),2 (10.5)
+,Lung Cancer,261 (26.9),257 (27.1),4 (21.1)
+,Other,1 (0.1),1 (0.1),0 (0.0)
+,Ovarian Cancer,107 (11.0),104 (10.9),3 (15.8)
+,Prostate Cancer,20 (2.1),20 (2.1),0 (0.0)
+,Stomach Cancer,92 (9.5),87 (9.2),5 (26.3)
+Time since diagnosis,,,,
+,Less than 3 months,97 (10.0),91 (9.6),6 (31.6)
+,3-6 months,289 (29.8),285 (30.0),4 (21.1)
+,6-12 months,337 (34.8),335 (35.3),2 (10.5)
+,1-2 years,172 (17.8),171 (18.0),1 (5.3)
+,More than 2 years,74 (7.6),68 (7.2),6 (31.6)
+Cancer status,,,,
+,Newly Diagnosed,148 (15.3),137 (14.4),11 (57.9)
+,Recovered / Survivor,144 (14.9),138 (14.5),6 (31.6)
+,Recurrence,36 (3.7),36 (3.8),0 (0.0)
+,Under Treatment,641 (66.2),639 (67.3),2 (10.5)
+Treatment type,,,,
+,Chemotherapy,355 (36.6),348 (36.6),7 (36.8)
+,Immunotherapy,27 (2.8),27 (2.8),0 (0.0)
+,Not currently in treatment,43 (4.4),39 (4.1),4 (21.1)
+,Radiotherapy,270 (27.9),265 (27.9),5 (26.3)
+,Surgery,192 (19.8),190 (20.0),2 (10.5)
+,Targeted Therapy,82 (8.5),81 (8.5),1 (5.3)
+On psychotropic medication,,,,
+,No,134 (13.8),129 (13.6),5 (26.3)
+,Yes,835 (86.2),821 (86.4),14 (73.7)
+BDI total,mean ± SD,34.2 ± 11.6,34.8 ± 10.9,4.3 ± 3.8
+BDI total,median (IQR),36.0 (25.0–44.0),37.0 (26.0–44.0),4.0 (0.0–8.0)
+FCRI total,mean ± SD,96.5 ± 28.0,97.3 ± 27.4,56.4 ± 31.1
+FCRI total,median (IQR),104.0 (73.0–121.0),105.5 (73.0–121.0),49.0 (33.0–77.5)
+FCRI triggers,mean ± SD,17.7 ± 6.1,17.9 ± 6.0,9.6 ± 5.5
+FCRI triggers,median (IQR),18.0 (13.0–23.0),19.0 (13.0–23.0),8.0 (6.5–11.5)
+FCRI severity,mean ± SD,20.0 ± 5.4,20.1 ± 5.3,11.4 ± 6.2
+FCRI severity,median (IQR),21.0 (16.0–24.0),21.0 (16.0–24.0),10.0 (7.0–16.0)
+FCRI psychological distress,mean ± SD,9.3 ± 3.2,9.4 ± 3.1,5.2 ± 3.9
+FCRI psychological distress,median (IQR),10.0 (7.0–12.0),10.0 (7.0–12.0),4.0 (2.5–8.5)
+FCRI functioning impairments,mean ± SD,14.1 ± 4.6,14.2 ± 4.4,7.6 ± 5.9
+FCRI functioning impairments,median (IQR),15.0 (11.0–18.0),15.0 (11.0–18.0),8.0 (3.0–12.0)
+FCRI insight,mean ± SD,6.8 ± 2.6,6.9 ± 2.5,3.7 ± 2.9
+FCRI insight,median (IQR),7.0 (5.0–9.0),7.0 (5.0–9.0),3.0 (2.0–6.0)
+FCRI reassurance,mean ± SD,7.0 ± 2.4,7.0 ± 2.3,4.4 ± 3.0
+FCRI reassurance,median (IQR),7.0 (5.0–9.0),7.0 (5.0–9.0),4.0 (2.0–6.5)
+FCRI coping strategies,mean ± SD,21.6 ± 6.8,21.7 ± 6.7,14.4 ± 8.5
+FCRI coping strategies,median (IQR),23.0 (16.0–27.0),24.0 (16.0–27.0),12.0 (9.0–20.5)
+BDI severity class,Normal,19 (2.0),0 (0.0),19 (100.0)
+,Mild mood disturbance,47 (4.9),47 (4.9),0 (0.0)
+,Borderline clinical depression,58 (6.0),58 (6.1),0 (0.0)
+,Moderate depression,253 (26.1),253 (26.6),0 (0.0)
+,Severe depression,225 (23.2),225 (23.7),0 (0.0)
+,Extreme depression,367 (37.9),367 (38.6),0 (0.0)

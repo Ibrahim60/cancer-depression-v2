@@ -1,0 +1,34 @@
+﻿Predictor,OR (95% CI),p
+FCRI total (per SD = 34.7),34.77 (27.54–43.90),<0.001
+Gender: Male,1.17 (0.91–1.50),0.214
+Age group: 18-30,0.96 (0.56–1.64),0.888
+Age group: 31-45,1.11 (0.65–1.89),0.693
+Age group: 46-60,1.75 (1.01–3.02),0.045
+Age group: Above 60,1.82 (0.99–3.33),0.053
+Province: Balochistan,0.77 (0.36–1.63),0.494
+Province: Gilgit Baltistan,0.45 (0.19–1.03),0.060
+Province: Islamabad Capital Territory,0.70 (0.32–1.51),0.359
+Province: Khyber Pakhtunkhwa (KPK),0.69 (0.33–1.41),0.304
+Province: Punjab,0.98 (0.48–2.03),0.965
+Province: Sindh,0.81 (0.39–1.69),0.580
+Cancer type: Brain Cancer,0.53 (0.34–0.82),0.004
+Cancer type: Breast Cancer,0.63 (0.41–0.98),0.039
+Cancer type: Cervical Cancer,0.78 (0.47–1.30),0.347
+Cancer type: Colorectal Cancer,0.96 (0.62–1.49),0.870
+Cancer type: Lung Cancer,0.50 (0.36–0.70),<0.001
+Cancer type: Ovarian Cancer,1.21 (0.77–1.90),0.408
+Cancer type: Prostate Cancer,1.31 (0.69–2.49),0.408
+Cancer type: Stomach Cancer,0.90 (0.60–1.34),0.598
+Time since diagnosis: 3-6 months,1.25 (0.84–1.86),0.271
+Time since diagnosis: 6-12 months,1.10 (0.72–1.68),0.672
+Time since diagnosis: 1-2 years,1.11 (0.71–1.76),0.643
+Time since diagnosis: More than 2 years,1.45 (0.87–2.43),0.157
+Cancer status: Recovered / Survivor,0.50 (0.32–0.79),0.003
+Cancer status: Recurrence,1.41 (0.87–2.29),0.161
+Cancer status: Under Treatment,0.70 (0.50–0.99),0.045
+Treatment type: Immunotherapy,1.93 (1.12–3.32),0.018
+Treatment type: Not currently in treatment,1.50 (0.99–2.28),0.057
+Treatment type: Radiotherapy,1.26 (0.94–1.69),0.115
+Treatment type: Surgery,1.55 (1.10–2.18),0.013
+Treatment type: Targeted Therapy,2.11 (1.41–3.17),<0.001
+On psychotropic medication: Yes,1.28 (0.99–1.65),0.058

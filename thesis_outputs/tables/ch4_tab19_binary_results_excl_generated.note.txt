@@ -1,0 +1,1 @@
+Excluding generator-matched rows; feature set B (FCRI + demographic + clinical). Mean ± SD over 25 outer folds; 95% CI for macro F1 by bootstrap. ✓ marks the hybrid model (best FS method + ensemble by mean macro F1).

@@ -1,0 +1,51 @@
+,selection_frequency
+FCRI 1: Television shows or newspaper articl…,1.0
+FCRI 10: I am afraid of cancer recurrence,1.0
+FCRI 11: I believe it is normal to be worried…,0.82
+FCRI 12: When I think about the possibility o…,1.0
+FCRI 13: I believe that I am cured and that t…,1.0
+"FCRI 14: In your opinion, are you at risk of…",1.0
+FCRI 15: How often do you think about the pos…,1.0
+FCRI 16: How much time per day do you spend t…,1.0
+FCRI 17: How long have you been thinking abou…,0.85
+"FCRI 18: Worry, fear or anxiety",1.0
+"FCRI 19: Sadness, discouragement or disappoin…",1.0
+FCRI 2: An appointment with my doctor or oth…,1.0
+"FCRI 20: Frustration, anger or outrage",1.0
+FCRI 21: Helplessness or resignation,1.0
+FCRI 22: My social or leisure activities (e.g…,0.98
+FCRI 23: My work or everyday activities,0.86
+"FCRI 24: My relationships with my partner, my…",0.96
+FCRI 25: My ability to make future plans or s…,0.71
+FCRI 26: My state of mind or my mood,0.98
+FCRI 27: My quality of life in general,1.0
+FCRI 28: I feel that I worry excessively abou…,1.0
+FCRI 29: Other people think that I worry exce…,1.0
+FCRI 3: Medical examinations (e.g. annual ch…,1.0
+FCRI 30: I think that I worry more about the…,1.0
+FCRI 31: I call my doctor or other health pro…,0.8
+FCRI 32: I go to the hospital or clinic for a…,0.88
+FCRI 33: I examine myself to see if I have an…,0.32
+FCRI 34: I try to distract myself (e.g. do va…,0.41000000000000003
+"FCRI 35: I try not to think about it, to get…",0.76
+"FCRI 36: I pray, meditate or do relaxation",0.6100000000000001
+FCRI 37: I try to convince myself that everyt…,0.67
+FCRI 38: I talk to someone about it,0.98
+FCRI 39: I try to understand what is happenin…,1.0
+FCRI 4: Conversations about cancer or illnes…,1.0
+FCRI 40: I try to find a solution,0.64
+FCRI 41: I try to replace this thought with a…,0.63
+FCRI 42: I tell myself “stop it”,0.29
+FCRI 5: Seeing or hearing about someone who…,1.0
+FCRI 6: Going to a funeral or reading the ob…,0.67
+FCRI 7: When I feel unwell physically or whe…,1.0
+"FCRI 8: Generally, I avoid situations or thi…",1.0
+FCRI 9: I am worried or anxious about the po…,1.0
+Age group,1.0
+Cancer status,1.0
+Cancer type,1.0
+Time since diagnosis,0.96
+Gender,1.0
+On psychotropic medication,1.0
+Province,1.0
+Treatment type,1.0

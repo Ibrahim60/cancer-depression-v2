@@ -1,0 +1,8 @@
+05:02:35 | INFO | Provenance: 298 rows match 1f9d779:auto_data_submitter/test.csv
+05:02:35 | INFO | Provenance: 263 rows match 1d7d522:auto_data_submitter/test_part1.csv
+05:02:36 | INFO | Curated dataset: 1530 participants (561 generator-matched)
+05:02:36 | INFO | ======================================================================
+05:02:36 | INFO | STAGE: stats
+05:02:50 | INFO | Stats [all]: rho(FCRI,BDI)=0.849, EPV=3.61
+05:03:08 | INFO | Stats [excl_generated]: rho(FCRI,BDI)=0.802, EPV=0.58
+05:03:09 | INFO | Stage 'stats' finished in 33 s (record: run_stats_20261019_050308.json)

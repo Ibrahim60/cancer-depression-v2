@@ -1,0 +1,43 @@
+{
+  "quality": {
+    "raw_rows": 1532,
+    "raw_columns": 78,
+    "exact_duplicate_rows": 0,
+    "duplicate_answers_excl_name_time": 0,
+    "missing_bdi_cells": 0,
+    "missing_fcri_cells": 101,
+    "participants_with_any_missing_fcri": 54,
+    "missing_demographic_clinical_cells": 0,
+    "bdi_total_iqr_outliers": 0,
+    "fcri_total_iqr_outliers": 0,
+    "bdi_straightlining": 26,
+    "fcri_straightlining": 0,
+    "male_with_female_specific_cancer": 19,
+    "female_with_prostate_cancer": 5,
+    "under_18": 68,
+    "generator_matched_rows": 561,
+    "bdi_items_6_7_rescored": 717
+  },
+  "curation": [
+    {
+      "step": "Raw form export",
+      "n": 1532
+    },
+    {
+      "step": "Dropped 1 rows with >50% missing questionnaire items",
+      "n": null
+    },
+    {
+      "step": "After questionnaire quality filters",
+      "n": 1531
+    },
+    {
+      "step": "Excluded cancer type ['No disease']",
+      "n": 1530
+    },
+    {
+      "step": "Final curated dataset",
+      "n": 1530
+    }
+  ]
+}

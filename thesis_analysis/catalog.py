@@ -130,7 +130,7 @@ TABLES: list[Item] = [
     Item("ablation", 4, "ablation",
          "Ablation of feature groups and preprocessing steps (primary subset).", "4.7 Ablation study"),
     Item("sensitivity", 4, "sensitivity_analyses",
-         "Sensitivity analyses: BDI >= 17 binary cut-off and five-class severity.", "4.7 Ablation study"),
+         "Sensitivity analyses: BDI ≥ 17 binary cut-off and five-class severity.", "4.7 Ablation study"),
     Item("fs_stability", 4, "fs_stability",
          "Feature-selection stability (Nogueira index) and number of selected features.", "4.8 Feature selection"),
     Item("selected_features_{subset}", 4, "selected_features",

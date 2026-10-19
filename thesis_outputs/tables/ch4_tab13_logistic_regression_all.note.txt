@@ -1,0 +1,1 @@
+All rows. Outcome: depressed (BDI ≥ 11). OR > 1 = higher odds of depression. Continuous predictors standardised (per SD). Multivariable model: FCRI total + all demographic and clinical variables; 3.61 events per parameter (minority class). Rare levels: Cancer type: Other (n = 1) excluded.

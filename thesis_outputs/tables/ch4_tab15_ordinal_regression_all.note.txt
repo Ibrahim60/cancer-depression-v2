@@ -1,0 +1,1 @@
+All rows. Proportional-odds logistic model of the six ordered severity classes; OR > 1 = higher odds of a more severe class.

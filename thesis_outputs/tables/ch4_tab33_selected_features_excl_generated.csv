@@ -1,0 +1,41 @@
+﻿Task,FS method,Feature,Selection frequency
+Binary,Chi-square,Cancer status,1.0
+Binary,Chi-square,Province,1.0
+Binary,Chi-square,Time since diagnosis,1.0
+Binary,Chi-square,"FCRI 14: In your opinion, are you at risk of…",0.96
+Binary,Chi-square,FCRI 1: Television shows or newspaper articl…,0.95
+Binary,Chi-square,FCRI 16: How much time per day do you spend t…,0.93
+Binary,Chi-square,Cancer type,0.92
+Binary,Chi-square,Treatment type,0.9
+Binary,Chi-square,FCRI 15: How often do you think about the pos…,0.89
+Binary,Chi-square,Age group,0.88
+Binary,Chi-square,FCRI 5: Seeing or hearing about someone who…,0.79
+Binary,Chi-square,FCRI 17: How long have you been thinking abou…,0.77
+Binary,Chi-square,"FCRI 19: Sadness, discouragement or disappoin…",0.73
+Binary,Chi-square,FCRI 23: My work or everyday activities,0.71
+Binary,Chi-square,FCRI 9: I am worried or anxious about the po…,0.7
+Binary,Chi-square,FCRI 10: I am afraid of cancer recurrence,0.69
+Binary,Chi-square,FCRI 22: My social or leisure activities (e.g…,0.66
+Binary,Chi-square,FCRI 26: My state of mind or my mood,0.61
+Binary,Chi-square,FCRI 2: An appointment with my doctor or oth…,0.54
+Binary,Chi-square,"FCRI 24: My relationships with my partner, my…",0.54
+Severity (6),L1 logistic regression,FCRI 1: Television shows or newspaper articl…,1.0
+Severity (6),L1 logistic regression,"FCRI 14: In your opinion, are you at risk of…",1.0
+Severity (6),L1 logistic regression,FCRI 16: How much time per day do you spend t…,1.0
+Severity (6),L1 logistic regression,FCRI 13: I believe that I am cured and that t…,1.0
+Severity (6),L1 logistic regression,Province,1.0
+Severity (6),L1 logistic regression,On psychotropic medication,1.0
+Severity (6),L1 logistic regression,Time since diagnosis,1.0
+Severity (6),L1 logistic regression,Cancer type,1.0
+Severity (6),L1 logistic regression,"FCRI 8: Generally, I avoid situations or thi…",1.0
+Severity (6),L1 logistic regression,Age group,1.0
+Severity (6),L1 logistic regression,Treatment type,1.0
+Severity (6),L1 logistic regression,FCRI 7: When I feel unwell physically or whe…,1.0
+Severity (6),L1 logistic regression,Cancer status,1.0
+Severity (6),L1 logistic regression,FCRI 3: Medical examinations (e.g. annual ch…,1.0
+Severity (6),L1 logistic regression,FCRI 38: I talk to someone about it,0.98
+Severity (6),L1 logistic regression,Gender,0.98
+Severity (6),L1 logistic regression,FCRI 17: How long have you been thinking abou…,0.98
+Severity (6),L1 logistic regression,FCRI 15: How often do you think about the pos…,0.98
+Severity (6),L1 logistic regression,FCRI 5: Seeing or hearing about someone who…,0.94
+Severity (6),L1 logistic regression,FCRI 12: When I think about the possibility o…,0.94

@@ -10,7 +10,7 @@ from sklearn.metrics import (average_precision_score, confusion_matrix, precisio
 
 from .experiments import ALL_MODELS, MODEL_LABELS
 from .feature_selection import FS_LABELS
-from .utils import Paths, fig_size, save_fig, seq_cmap
+from .utils import Paths, fig_size, panel_title, save_fig, seq_cmap
 
 TASK_LABELS = {"binary": "Binary detection", "severity6": "Severity (6 classes)",
                "binary17": "Binary (BDI ≥ 17)", "severity5": "Severity (5 classes)"}
@@ -126,7 +126,7 @@ def roc_pr_curves(run: dict[str, Any], cfg: dict[str, Any], paths: Paths, roc_na
             ax.set_ylabel("Precision (not-depressed class)")
         ax.set_xlim(-0.01, 1.01)
         ax.set_ylim(-0.01, 1.02)
-        ax.legend(loc="lower right" if kind == "roc" else "upper right",
+        ax.legend(loc="lower right" if kind == "roc" else "lower left",
                   fontsize=cfg["style"]["font_size"], handlelength=1.2)
         fig.tight_layout()
         save_fig(fig, paths, roc_name if kind == "roc" else pr_name, appendix=appendix)
@@ -215,7 +215,7 @@ def calibration_plot(y: np.ndarray, P: np.ndarray, label: str, cfg: dict[str, An
     from sklearn.metrics import brier_score_loss
     yy = np.tile(y, P.shape[0])
     pp = P.reshape(-1)
-    frac, mean = calibration_curve(yy, pp, n_bins=n_bins, strategy="quantile")
+    frac, mean = calibration_curve(yy, pp, n_bins=n_bins, strategy="uniform")
     fig, (ax, axh) = plt.subplots(2, 1, figsize=fig_size(cfg, 0.7, 1.05), sharex=True,
                                   gridspec_kw={"height_ratios": [3, 1]})
     ax.plot([0, 1], [0, 1], ls="--", color="#9a9993", lw=0.8, label="Perfect calibration")
@@ -297,7 +297,7 @@ def selection_frequency_plot(freqs: dict[str, pd.Series], cfg: dict[str, Any], p
         ax.barh(range(len(f)), f.values, color=cfg["style"]["categorical"][0], height=0.7)
         ax.set_yticks(range(len(f)), f.index, fontsize=cfg["style"]["font_size"])
         ax.set_xlim(0, 1.0)
-        ax.set_title(title, loc="left", fontsize=cfg["style"]["font_size"])
+        panel_title(ax, title, cfg["style"]["font_size"])
     axes[-1, 0].set_xlabel("Selection frequency across outer training folds")
     fig.tight_layout()
     save_fig(fig, paths, name, appendix=appendix)

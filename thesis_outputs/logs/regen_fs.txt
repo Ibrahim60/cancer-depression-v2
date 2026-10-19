@@ -1,0 +1,7 @@
+05:03:14 | INFO | Provenance: 298 rows match 1f9d779:auto_data_submitter/test.csv
+05:03:14 | INFO | Provenance: 263 rows match 1d7d522:auto_data_submitter/test_part1.csv
+05:03:15 | INFO | Curated dataset: 1530 participants (561 generator-matched)
+05:03:15 | INFO | ======================================================================
+05:03:15 | INFO | STAGE: fs
+05:03:20 | INFO | FS stability: {'all': {'binary': 'boruta', 'severity6': 'boruta'}, 'excl_generated': {'binary': 'chi2', 'severity6': 'l1'}}
+05:03:20 | INFO | Stage 'fs' finished in 6 s (record: run_fs_20261019_050320.json)

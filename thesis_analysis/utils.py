@@ -253,14 +253,50 @@ def fig_size(cfg: dict[str, Any], width_frac: float = 1.0, aspect: float = 0.62)
     return (w, w * aspect)
 
 
+_MAX_WIDTH_IN = 16 * CM
+
+
+_PAD_IN = 0.05
+
+
+def panel_title(ax, text: str, fontsize: float) -> None:
+    """Panel heading anchored at the figure's left edge (not the axes), so long headings
+    above axes with long tick labels do not widen the figure."""
+    ax.annotate(text, xy=(0.01, 1.0), xycoords=("figure fraction", "axes fraction"),
+                xytext=(0, 6), textcoords="offset points", ha="left", va="bottom", fontsize=fontsize)
+
+
+def _fit_width(fig, max_in: float) -> None:
+    """Shrink the canvas until the saved image (tight box + padding) fits max_in.
+
+    Fonts keep their size; stops early rather than squeezing any axes below 1.5 inches.
+    """
+    target = max_in - 2 * _PAD_IN
+    for _ in range(12):
+        fig.canvas.draw()
+        bb = fig.get_tightbbox(fig.canvas.get_renderer())
+        if bb.width <= target:
+            return
+        if any(ax.get_position().width * fig.get_size_inches()[0] < 1.5 for ax in fig.axes if ax.get_visible()
+               and ax.axison):
+            return
+        w, h = fig.get_size_inches()
+        fig.set_size_inches(max(w - (bb.width - target) * 1.2 - 0.01, 2.0), h)
+        try:
+            fig.tight_layout()
+        except Exception:  # complex layouts
+            pass
+
+
 def save_fig(fig, paths: Paths, name: str, appendix: bool = False) -> list[Path]:
-    """Save a figure as 300-dpi PNG and SVG (never wider than the configured width)."""
+    """Save a figure as 300-dpi PNG and SVG, re-flowed so it is never wider than 16 cm."""
     import matplotlib.pyplot as plt
+    _fit_width(fig, _MAX_WIDTH_IN)
     folder = paths.appendix if appendix else paths.figures
     out = []
     for ext in ("png", "svg"):
         p = folder / f"{name}.{ext}"
-        fig.savefig(p, bbox_inches="tight", pad_inches=0.05)
+        fig.savefig(p, bbox_inches="tight", pad_inches=_PAD_IN)
         out.append(p)
     plt.close(fig)
     return out

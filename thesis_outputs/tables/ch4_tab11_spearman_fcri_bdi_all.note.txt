@@ -1,0 +1,1 @@
+All rows. 95% CI by Fisher z with the Bonett-Wright standard error.

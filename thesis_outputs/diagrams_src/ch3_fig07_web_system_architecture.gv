@@ -1,0 +1,33 @@
+digraph web {
+	bgcolor=white fontname=Arial fontsize=11 nodesep=0.3 pad=0.15 rankdir=TB ranksep=0.3
+	node [fontname=Arial fontsize=11 margin="0.12,0.06" penwidth=1.2 shape=box style="rounded,filled"]
+	edge [arrowsize=0.7 color="#52514e" fontname=Arial fontsize=11 penwidth=1.1]
+	user [label=<<B>User</B><BR/>patient or clinician> color="#6b6a66" fillcolor="#f1f1ef"]
+	a [label=<<B>Assessment page</B><BR/>Quick or Full mode;<BR/>demographics → BDI → FCRI;<BR/>BDI item 9 safety check> color="#2a78d6" fillcolor="#e6f0fd"]
+	fv [label=<<B>build_feature_vector()</B><BR/>label encoders; unanswered items<BR/>→ training means> color="#14875c" fillcolor="#e2f5ec"]
+	sc [label=<<B>StandardScaler</B><BR/>binary_scaler.joblib> color="#14875c" fillcolor="#e2f5ec"]
+	subgraph cluster_m {
+		color="#14875c" fontcolor="#14875c" fontname=Arial fontsize=11 label="Saved models (models/)" style="dashed,rounded"
+		mb [label=<<B>Binary ensemble</B><BR/>soft voting, tuned threshold> color="#a87000" fillcolor="#fdf1d6"]
+		mm [label=<<B>Severity ensemble</B><BR/>soft voting, 6 classes> color="#a87000" fillcolor="#fdf1d6"]
+	}
+	pred [label=<<B>predict() + final_verdict()</B><BR/>probabilities, severity, advice> color="#c4471b" fillcolor="#fdeae1"]
+	r [label=<<B>Results page</B><BR/>BDI &amp; FCRI reference scores,<BR/>model verdict, CSV/PDF export> color="#2a78d6" fillcolor="#e6f0fd"]
+	h [label=<<B>History page</B><BR/>session history, CSV export> color="#2a78d6" fillcolor="#e6f0fd"]
+	shap [label=<<B>SHAP explanation</B><BR/>shap_analyzer.py;<BR/>command-line predictor only> color="#6250d6" fillcolor="#ecebfb" style="rounded,filled,dashed"]
+	user -> a
+	a -> fv
+	fv -> sc
+	sc -> mb
+	sc -> mm
+	mb -> pred
+	mm -> pred
+	pred -> r
+	r -> h
+	pred -> shap [style=dashed]
+	{
+		rank=same
+		r
+		shap
+	}
+}

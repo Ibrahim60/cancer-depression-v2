@@ -16,6 +16,7 @@ plots go to thesis_outputs/figures/appendix.
 """
 from __future__ import annotations
 
+import textwrap
 import time
 from typing import Any
 
@@ -26,7 +27,7 @@ from . import catalog
 from .data import GROUP_LABELS, Dataset, readable_feature
 from .experiments import MODEL_LABELS, RunSpec, build_final_model, load_run
 from .feature_selection import FS_LABELS
-from .utils import Paths, fig_size, get_logger, load_json, save_fig, save_json
+from .utils import Paths, fig_size, get_logger, load_json, panel_title, save_fig, save_json
 
 
 def _explain(est, X: pd.DataFrame, y: np.ndarray, binary: bool, cfg: dict[str, Any]):
@@ -136,7 +137,7 @@ def plot_bar(panels: dict[str, pd.Series], cfg, paths, name, appendix, top=12):
         s = s.sort_values(ascending=False).head(top)[::-1]
         ax.barh(range(len(s)), s.values, color=cfg["style"]["categorical"][0], height=0.7)
         ax.set_yticks(range(len(s)), s.index)
-        ax.set_title(title, loc="left", fontsize=cfg["style"]["font_size"])
+        panel_title(ax, title, cfg["style"]["font_size"])
     axes[-1, 0].set_xlabel("Mean |SHAP value|")
     fig.tight_layout()
     save_fig(fig, paths, name, appendix=appendix)
@@ -164,7 +165,7 @@ def plot_dependence(sv, Xv, names, cfg, paths, name, appendix, k=5, cols=None, d
             yy = np.array([pos[v] for v in x]) + rng.uniform(-0.2, 0.2, len(x))
             ax.scatter(sv[:, j], yy, s=8, alpha=0.5, lw=0, color=col0, rasterized=True)
             ax.axvline(0, color="#9a9993", lw=0.8)
-            ax.set_yticks(range(len(levels)), [value_label(cols[j], v, ds, 18) for v in levels])
+            ax.set_yticks(range(len(levels)), [value_label(cols[j], v, ds, 14) for v in levels])
             ax.set_xlabel("SHAP value")
         else:
             ax.scatter(x + rng.uniform(-0.15, 0.15, len(x)), sv[:, j], s=8, alpha=0.5, lw=0, color=col0,
@@ -172,7 +173,7 @@ def plot_dependence(sv, Xv, names, cfg, paths, name, appendix, k=5, cols=None, d
             ax.axhline(0, color="#9a9993", lw=0.8)
             ax.set_xlabel("Item response (0–4)")
             ax.set_ylabel("SHAP value")
-        ax.set_title(_short(names[j], 34), loc="left", fontsize=cfg["style"]["font_size"])
+        ax.set_title(_short(names[j], 28), loc="left", fontsize=cfg["style"]["font_size"])
     for ax in axes.ravel()[len(order):]:
         ax.axis("off")
     fig.tight_layout()
@@ -205,8 +206,8 @@ def plot_waterfalls(cases: list[dict], cfg, paths, name, appendix, top=7, ds=Non
         pad = 0.25 * (span.max() - span.min()) + 0.03
         lo, hi = span.min() - pad, span.max() + pad
         ax.set_xlim(max(-0.15, lo), min(1.15, hi))
-        ax.set_title(f"{c['title']}: base {c['base']:.2f} → P(depressed) = {start:.2f}", loc="left",
-                     fontsize=cfg["style"]["font_size"])
+        panel_title(ax, f"{c['title']}; base value {c['base']:.2f} → P(depressed) = {start:.2f}",
+                    cfg["style"]["font_size"])
     axes[-1, 0].set_xlabel("Predicted probability of depression")
     fig.tight_layout()
     save_fig(fig, paths, name, appendix=appendix)
@@ -282,8 +283,8 @@ def run(ds: Dataset, cfg: dict[str, Any], paths: Paths) -> dict[str, Any]:
         lbl = lambda s: pd.Series(s.values, index=[_short(readable_feature(c, ds)) for c in s.index])
         plot_beeswarm(rb["sv"], rb["X"], [_short(n) for n in rb["names"]], cfg, paths,
                       catalog.figure("shap_beeswarm", cfg)["name"] + sfx, appendix, cols=rb["cols"])
-        plot_bar({f"Binary — {MODEL_LABELS[hb['model']]} + {FS_LABELS[hb['fs']]}": lbl(rb["imp"]),
-                  f"Severity (mean over 6 classes) — {MODEL_LABELS[hsv['model']]} + {FS_LABELS[hsv['fs']]}":
+        plot_bar({f"Binary: {MODEL_LABELS[hb['model']]} + {FS_LABELS[hb['fs']]}": lbl(rb["imp"]),
+                  f"Severity (mean over 6 classes): {MODEL_LABELS[hsv['model']]} + {FS_LABELS[hsv['fs']]}":
                       lbl(rs["imp"])},
                  cfg, paths, catalog.figure("shap_bar", cfg)["name"] + sfx, appendix)
         plot_dependence(rb["sv"], rb["X"], rb["names"], cfg, paths,

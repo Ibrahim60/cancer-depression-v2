@@ -1,0 +1,29 @@
+digraph nestedcv {
+	bgcolor=white fontname=Arial fontsize=11 nodesep=0.25 pad=0.15 rankdir=TB ranksep=0.3
+	node [fontname=Arial fontsize=11 margin="0.12,0.06" penwidth=1.2 shape=box style="rounded,filled"]
+	edge [arrowsize=0.7 color="#52514e" fontname=Arial fontsize=11 penwidth=1.1]
+	data [label=<<B>Analysis dataset</B><BR/>stratified by class> color="#6b6a66" fillcolor="#f1f1ef"]
+	outer [label=<<B>Outer loop: 5-fold stratified CV × 5 repeats</B><BR/>25 train/test splits> color="#c4471b" fillcolor="#fdeae1"]
+	subgraph cluster_o {
+		color="#c4471b" fontcolor="#c4471b" fontname=Arial fontsize=11 label="For each outer split" style="dashed,rounded"
+		otr [label=<<B>Outer training fold</B><BR/>(≈80% of participants)> color="#2a78d6" fillcolor="#e6f0fd"]
+		ote [label=<<B>Outer test fold</B><BR/>(≈20%, never used for tuning)> color="#a87000" fillcolor="#fdf1d6"]
+		subgraph cluster_i {
+			color="#2a78d6" fontcolor="#2a78d6" fontname=Arial fontsize=11 label="Inner loop" style="dashed,rounded"
+			inner [label=<<B>3-fold stratified CV</B><BR/>RandomizedSearchCV, 10 candidates<BR/>score: f1 macro> color="#2a78d6" fillcolor="#e6f0fd"]
+			best [label=<<B>Best hyper-parameters</B><BR/>incl. FS parameter> color="#2a78d6" fillcolor="#e6f0fd"]
+			inner -> best
+		}
+		refit [label=<<B>Refit pipeline on outer training fold</B><BR/>build voting &amp; stacking> color="#14875c" fillcolor="#e2f5ec"]
+		pred [label=<<B>Predict outer test fold</B><BR/>store probabilities> color="#14875c" fillcolor="#e2f5ec"]
+		otr -> inner
+		best -> refit
+		refit -> pred
+		ote -> pred
+	}
+	agg [label=<<B>Aggregate</B><BR/>mean ± SD over folds, bootstrap 95% CI,<BR/>paired significance tests> color="#6250d6" fillcolor="#ecebfb"]
+	data -> outer
+	outer -> otr
+	outer -> ote
+	pred -> agg
+}

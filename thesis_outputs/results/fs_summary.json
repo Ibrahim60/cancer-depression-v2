@@ -1,0 +1,66 @@
+{
+  "all": {
+    "binary": {
+      "method": "boruta",
+      "top10": {
+        "FCRI 1: Television shows or newspaper articl\u2026": 1.0,
+        "FCRI 10: I am afraid of cancer recurrence": 1.0,
+        "FCRI 11: I believe it is normal to be worried\u2026": 1.0,
+        "FCRI 13: I believe that I am cured and that t\u2026": 1.0,
+        "FCRI 14: In your opinion, are you at risk of\u2026": 1.0,
+        "FCRI 15: How often do you think about the pos\u2026": 1.0,
+        "FCRI 17: How long have you been thinking abou\u2026": 1.0,
+        "FCRI 16: How much time per day do you spend t\u2026": 1.0,
+        "FCRI 18: Worry, fear or anxiety": 1.0,
+        "FCRI 19: Sadness, discouragement or disappoin\u2026": 1.0
+      }
+    },
+    "severity6": {
+      "method": "boruta",
+      "top10": {
+        "FCRI 1: Television shows or newspaper articl\u2026": 1.0,
+        "FCRI 10: I am afraid of cancer recurrence": 1.0,
+        "FCRI 11: I believe it is normal to be worried\u2026": 1.0,
+        "FCRI 12: When I think about the possibility o\u2026": 1.0,
+        "FCRI 13: I believe that I am cured and that t\u2026": 1.0,
+        "FCRI 14: In your opinion, are you at risk of\u2026": 1.0,
+        "FCRI 15: How often do you think about the pos\u2026": 1.0,
+        "FCRI 16: How much time per day do you spend t\u2026": 1.0,
+        "FCRI 17: How long have you been thinking abou\u2026": 1.0,
+        "FCRI 18: Worry, fear or anxiety": 1.0
+      }
+    }
+  },
+  "excl_generated": {
+    "binary": {
+      "method": "chi2",
+      "top10": {
+        "Cancer status": 1.0,
+        "Province": 1.0,
+        "Time since diagnosis": 1.0,
+        "FCRI 14: In your opinion, are you at risk of\u2026": 0.96,
+        "FCRI 1: Television shows or newspaper articl\u2026": 0.95,
+        "FCRI 16: How much time per day do you spend t\u2026": 0.9299999999999999,
+        "Cancer type": 0.92,
+        "Treatment type": 0.9,
+        "FCRI 15: How often do you think about the pos\u2026": 0.8899999999999999,
+        "Age group": 0.8800000000000001
+      }
+    },
+    "severity6": {
+      "method": "l1",
+      "top10": {
+        "FCRI 1: Television shows or newspaper articl\u2026": 1.0,
+        "FCRI 14: In your opinion, are you at risk of\u2026": 1.0,
+        "FCRI 16: How much time per day do you spend t\u2026": 1.0,
+        "FCRI 13: I believe that I am cured and that t\u2026": 1.0,
+        "Province": 1.0,
+        "On psychotropic medication": 1.0,
+        "Time since diagnosis": 1.0,
+        "Cancer type": 1.0,
+        "FCRI 8: Generally, I avoid situations or thi\u2026": 1.0,
+        "Age group": 1.0
+      }
+    }
+  }
+}

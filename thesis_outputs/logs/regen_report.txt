@@ -1,0 +1,8 @@
+05:33:08 | INFO | Provenance: 298 rows match 1f9d779:auto_data_submitter/test.csv
+05:33:08 | INFO | Provenance: 263 rows match 1d7d522:auto_data_submitter/test_part1.csv
+05:33:09 | INFO | Curated dataset: 1530 participants (561 generator-matched)
+05:33:09 | INFO | ======================================================================
+05:33:09 | INFO | STAGE: report
+05:33:14 | INFO | Word tables: 38 tables -> C:\Users\Hannah Nasir Jamal\cancer-depression-v2\thesis_outputs\tables\thesis_tables.docx
+05:33:14 | INFO | Results summary -> C:\Users\Hannah Nasir Jamal\cancer-depression-v2\thesis_outputs\RESULTS_SUMMARY.md
+05:33:14 | INFO | Stage 'report' finished in 6 s (record: run_report_20261019_053314.json)

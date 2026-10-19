@@ -1,0 +1,1 @@
+Excluding generator-matched rows. Paired over the same 25 outer folds. Corrected t-test: Nadeau & Bengio (2003). McNemar: paired out-of-fold predictions of the first repetition. Holm adjustment within each task.

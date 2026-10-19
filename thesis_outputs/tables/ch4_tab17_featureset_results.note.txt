@@ -1,0 +1,1 @@
+Mean ± SD over 5 × 5 outer folds; 95% CI: participant-level bootstrap of pooled out-of-fold predictions. No feature selection. ROC-AUC is macro one-vs-rest for severity. Set A contains the BDI items from which the labels are computed.

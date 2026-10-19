@@ -1,0 +1,34 @@
+{
+  "binary": {
+    "all": {
+      "fs": "boruta",
+      "model": "voting",
+      "run_id": "fs__binary__all__B__boruta__class_weight__default",
+      "f1_macro": 0.8816157100399864,
+      "sd": 0.03651727617790149
+    },
+    "excl_generated": {
+      "fs": "chi2",
+      "model": "voting",
+      "run_id": "fs__binary__excl_generated__B__chi2__class_weight__default",
+      "f1_macro": 0.6256093961771777,
+      "sd": 0.09402549611084825
+    }
+  },
+  "severity6": {
+    "all": {
+      "fs": "boruta",
+      "model": "stacking",
+      "run_id": "fs__severity6__all__B__boruta__class_weight__default",
+      "f1_macro": 0.6043928438732865,
+      "sd": 0.029437222080461747
+    },
+    "excl_generated": {
+      "fs": "l1",
+      "model": "stacking",
+      "run_id": "fs__severity6__excl_generated__B__l1__class_weight__default",
+      "f1_macro": 0.4580875738666003,
+      "sd": 0.03027419456114388
+    }
+  }
+}

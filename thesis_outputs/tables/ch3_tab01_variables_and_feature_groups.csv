@@ -1,0 +1,20 @@
+﻿Group,Variables,Scale,Role
+BDI items,BDI 1–21 (sadness … loss of interest in sex),0–3 per item; total 0–63,Target source; features in set A only
+FCRI items,FCRI 1–42 (7 subscales),0–4 per item (item 13 reverse-scored); total 0–168,Features (sets A–C)
+  FCRI subscale,Triggers (items 1–8),0–32,Statistical analysis
+  FCRI subscale,Severity (items 9–17),0–36,Statistical analysis
+  FCRI subscale,Psychological distress (items 18–21),0–16,Statistical analysis
+  FCRI subscale,Functioning impairments (items 22–27),0–24,Statistical analysis
+  FCRI subscale,Insight (items 28–30),0–12,Statistical analysis
+  FCRI subscale,Reassurance (items 31–33),0–12,Statistical analysis
+  FCRI subscale,Coping strategies (items 34–42),0–36,Statistical analysis
+Demographic,Gender,Categorical (2 levels),"Features (sets A, B, D); one-hot encoded"
+Demographic,Age group,Categorical (5 levels),"Features (sets A, B, D); one-hot encoded"
+Demographic,Province,Categorical (7 levels),"Features (sets A, B, D); one-hot encoded"
+Clinical,Cancer type,Categorical (10 levels),"Features (sets A, B, D); one-hot encoded"
+Clinical,Time since diagnosis,Categorical (5 levels),"Features (sets A, B, D); one-hot encoded"
+Clinical,Cancer status,Categorical (4 levels),"Features (sets A, B, D); one-hot encoded"
+Clinical,Treatment type,Categorical (6 levels),"Features (sets A, B, D); one-hot encoded"
+Clinical,On psychotropic medication,Categorical (2 levels),"Features (sets A, B, D); one-hot encoded"
+Targets,Depression status (binary),BDI total ≥ 11,Outcome 1
+Targets,Depression severity (6 classes),Normal 0–10; Mild mood disturbance 11–16; Borderline clinical depression 17–20; Moderate depression 21–30; Severe depression 31–40; Extreme depression 41–63,Outcome 2

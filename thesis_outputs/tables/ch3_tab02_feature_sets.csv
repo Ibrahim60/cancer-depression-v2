@@ -1,0 +1,5 @@
+﻿Feature set,Description,Raw variables,Model inputs after one-hot encoding,Contains BDI (label source)
+A,All features (BDI + FCRI + demo + clinical),71,104,Yes
+B,FCRI + demographic + clinical,50,83,No
+C,FCRI only,42,42,No
+D,Demographic + clinical,8,41,No

@@ -1,0 +1,5 @@
+﻿Subset,Task,FS method,Friedman χ²,p,Critical difference,Average ranks (1 = best)
+All rows,Binary detection,Boruta (RF),86.07,4.5e-17,1.51,Voting 1.64; XGB 2.42; RF 2.90; SVM 3.68; Stacking 4.36; LR 6.00
+All rows,Severity (6 classes),Boruta (RF),81.62,3.85e-16,1.51,Stacking 1.40; Voting 3.04; RF 3.16; SVM 3.20; XGB 4.24; LR 5.96
+Excluding generator-matched rows,Binary detection,Chi-square,26.22,8.1e-05,1.51,Voting 2.26; XGB 3.04; LR 3.28; RF 3.56; Stacking 4.24; SVM 4.62
+Excluding generator-matched rows,Severity (6 classes),L1 logistic regression,56.27,7.15e-11,1.51,Stacking 2.24; RF 2.56; XGB 2.88; Voting 3.20; LR 4.88; SVM 5.24

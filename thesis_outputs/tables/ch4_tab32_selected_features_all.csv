@@ -1,0 +1,41 @@
+﻿Task,FS method,Feature,Selection frequency
+Binary,Boruta (RF),FCRI 1: Television shows or newspaper articl…,1.0
+Binary,Boruta (RF),FCRI 10: I am afraid of cancer recurrence,1.0
+Binary,Boruta (RF),FCRI 11: I believe it is normal to be worried…,1.0
+Binary,Boruta (RF),FCRI 13: I believe that I am cured and that t…,1.0
+Binary,Boruta (RF),"FCRI 14: In your opinion, are you at risk of…",1.0
+Binary,Boruta (RF),FCRI 15: How often do you think about the pos…,1.0
+Binary,Boruta (RF),FCRI 17: How long have you been thinking abou…,1.0
+Binary,Boruta (RF),FCRI 16: How much time per day do you spend t…,1.0
+Binary,Boruta (RF),"FCRI 18: Worry, fear or anxiety",1.0
+Binary,Boruta (RF),"FCRI 19: Sadness, discouragement or disappoin…",1.0
+Binary,Boruta (RF),"FCRI 24: My relationships with my partner, my…",1.0
+Binary,Boruta (RF),"FCRI 20: Frustration, anger or outrage",1.0
+Binary,Boruta (RF),FCRI 21: Helplessness or resignation,1.0
+Binary,Boruta (RF),FCRI 22: My social or leisure activities (e.g…,1.0
+Binary,Boruta (RF),FCRI 25: My ability to make future plans or s…,1.0
+Binary,Boruta (RF),FCRI 23: My work or everyday activities,1.0
+Binary,Boruta (RF),FCRI 27: My quality of life in general,1.0
+Binary,Boruta (RF),FCRI 26: My state of mind or my mood,1.0
+Binary,Boruta (RF),FCRI 9: I am worried or anxious about the po…,1.0
+Binary,Boruta (RF),FCRI 30: I think that I worry more about the…,1.0
+Severity (6),Boruta (RF),FCRI 1: Television shows or newspaper articl…,1.0
+Severity (6),Boruta (RF),FCRI 10: I am afraid of cancer recurrence,1.0
+Severity (6),Boruta (RF),FCRI 11: I believe it is normal to be worried…,1.0
+Severity (6),Boruta (RF),FCRI 12: When I think about the possibility o…,1.0
+Severity (6),Boruta (RF),FCRI 13: I believe that I am cured and that t…,1.0
+Severity (6),Boruta (RF),"FCRI 14: In your opinion, are you at risk of…",1.0
+Severity (6),Boruta (RF),FCRI 15: How often do you think about the pos…,1.0
+Severity (6),Boruta (RF),FCRI 16: How much time per day do you spend t…,1.0
+Severity (6),Boruta (RF),FCRI 17: How long have you been thinking abou…,1.0
+Severity (6),Boruta (RF),"FCRI 18: Worry, fear or anxiety",1.0
+Severity (6),Boruta (RF),"FCRI 19: Sadness, discouragement or disappoin…",1.0
+Severity (6),Boruta (RF),FCRI 2: An appointment with my doctor or oth…,1.0
+Severity (6),Boruta (RF),"FCRI 20: Frustration, anger or outrage",1.0
+Severity (6),Boruta (RF),FCRI 21: Helplessness or resignation,1.0
+Severity (6),Boruta (RF),FCRI 22: My social or leisure activities (e.g…,1.0
+Severity (6),Boruta (RF),FCRI 23: My work or everyday activities,1.0
+Severity (6),Boruta (RF),"FCRI 24: My relationships with my partner, my…",1.0
+Severity (6),Boruta (RF),FCRI 25: My ability to make future plans or s…,1.0
+Severity (6),Boruta (RF),FCRI 26: My state of mind or my mood,1.0
+Severity (6),Boruta (RF),FCRI 27: My quality of life in general,1.0

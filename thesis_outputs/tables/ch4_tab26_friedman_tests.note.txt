@@ -1,0 +1,1 @@
+Friedman test over the 25 outer folds of the hybrid FS configuration; Nemenyi critical difference at α = 0.05. Fold scores are not fully independent, so p-values are approximate.

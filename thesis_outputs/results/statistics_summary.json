@@ -1,0 +1,64 @@
+{
+  "all": {
+    "logistic": {
+      "notes": [
+        "Cancer type: Other (n = 1) excluded"
+      ],
+      "n": 1529,
+      "n_depressed": 1410,
+      "n_not_depressed": 119,
+      "multivariable_parameters": 33,
+      "events_per_variable": 3.61,
+      "multivariable_converged": true,
+      "pseudo_r2": 0.5729512402612889,
+      "llr_p": 1.4566054006809957e-80,
+      "max_se": 1.4599518708785502,
+      "possible_separation": false
+    },
+    "ordinal": {
+      "notes": [
+        "Cancer type: Other (n = 1) excluded"
+      ],
+      "n": 1529,
+      "converged": true,
+      "pseudo_r2": 0.4072709918269517
+    },
+    "spearman_fcri_total_bdi": {
+      "rho": 0.8492959662631269,
+      "p": 0.0
+    },
+    "n_significant_bivariate_holm": 15,
+    "n_bivariate_tests": 16
+  },
+  "excl_generated": {
+    "logistic": {
+      "notes": [
+        "Cancer type: Other (n = 1) excluded"
+      ],
+      "n": 968,
+      "n_depressed": 949,
+      "n_not_depressed": 19,
+      "multivariable_parameters": 33,
+      "events_per_variable": 0.58,
+      "multivariable_converged": false,
+      "pseudo_r2": 0.5893594362474772,
+      "llr_p": 3.0296169217486565e-10,
+      "max_se": 99731.682925112,
+      "possible_separation": true
+    },
+    "ordinal": {
+      "notes": [
+        "Cancer type: Other (n = 1) excluded"
+      ],
+      "n": 968,
+      "converged": true,
+      "pseudo_r2": 0.3511079934117993
+    },
+    "spearman_fcri_total_bdi": {
+      "rho": 0.801869995232461,
+      "p": 1.6691590126164177e-218
+    },
+    "n_significant_bivariate_holm": 10,
+    "n_bivariate_tests": 16
+  }
+}

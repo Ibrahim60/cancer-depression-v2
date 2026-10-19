@@ -1,0 +1,116 @@
+{
+  "all": {
+    "group_shares": {
+      "Binary, set A": {
+        "bdi": 0.6709,
+        "clinical": 0.0496,
+        "demographic": 0.0272,
+        "fcri": 0.2523
+      },
+      "Binary, set B": {
+        "bdi": 0.0,
+        "clinical": 0.0,
+        "demographic": 0.0,
+        "fcri": 1.0
+      },
+      "Severity, set A": {
+        "bdi": 0.6518,
+        "clinical": 0.0574,
+        "demographic": 0.0275,
+        "fcri": 0.2634
+      },
+      "Severity, set B": {
+        "bdi": 0.0,
+        "clinical": 0.0,
+        "demographic": 0.0,
+        "fcri": 1.0
+      }
+    },
+    "top_binary": {
+      "FCRI 14: In your opinion, are you at risk of\u2026": 0.033399580072843854,
+      "FCRI 9: I am worried or anxious about the po\u2026": 0.02406300869620792,
+      "FCRI 1: Television shows or newspaper articl\u2026": 0.02267564775519616,
+      "FCRI 16: How much time per day do you spend t\u2026": 0.021952620529567292,
+      "FCRI 13: I believe that I am cured and that t\u2026": 0.019149597866041344,
+      "FCRI 15: How often do you think about the pos\u2026": 0.01707558043852789,
+      "FCRI 10: I am afraid of cancer recurrence": 0.013698183245663603,
+      "FCRI 22: My social or leisure activities (e.g\u2026": 0.013694550093288526,
+      "FCRI 23: My work or everyday activities": 0.01301106194479381,
+      "FCRI 17: How long have you been thinking abou\u2026": 0.012230222558528958
+    },
+    "top_severity": {
+      "FCRI 14: In your opinion, are you at risk of\u2026": 0.02018582322659,
+      "FCRI 16: How much time per day do you spend t\u2026": 0.013665151564338923,
+      "FCRI 1: Television shows or newspaper articl\u2026": 0.01352121361219738,
+      "FCRI 15: How often do you think about the pos\u2026": 0.01108125201130617,
+      "FCRI 10: I am afraid of cancer recurrence": 0.01073527226153112,
+      "FCRI 9: I am worried or anxious about the po\u2026": 0.010227373400840751,
+      "FCRI 19: Sadness, discouragement or disappoin\u2026": 0.010021714214621506,
+      "FCRI 3: Medical examinations (e.g. annual ch\u2026": 0.009788892977100444,
+      "FCRI 17: How long have you been thinking abou\u2026": 0.00959062962436096,
+      "FCRI 29: Other people think that I worry exce\u2026": 0.009353419251803425
+    },
+    "waterfall_cases": [
+      "A: depressed, correctly detected",
+      "B: not depressed, correctly identified",
+      "C: misclassified"
+    ]
+  },
+  "excl_generated": {
+    "group_shares": {
+      "Binary, set A": {
+        "bdi": 0.7307,
+        "clinical": 0.0847,
+        "demographic": 0.0293,
+        "fcri": 0.1554
+      },
+      "Binary, set B": {
+        "bdi": 0.0,
+        "clinical": 0.3413,
+        "demographic": 0.1371,
+        "fcri": 0.5215
+      },
+      "Severity, set A": {
+        "bdi": 0.6236,
+        "clinical": 0.0716,
+        "demographic": 0.0359,
+        "fcri": 0.2689
+      },
+      "Severity, set B": {
+        "bdi": 0.0,
+        "clinical": 0.2163,
+        "demographic": 0.0822,
+        "fcri": 0.7015
+      }
+    },
+    "top_binary": {
+      "Cancer status": 0.023214417208437844,
+      "Time since diagnosis": 0.017574608641284222,
+      "Province": 0.014916900991201798,
+      "FCRI 1: Television shows or newspaper articl\u2026": 0.008804571530896275,
+      "FCRI 9: I am worried or anxious about the po\u2026": 0.008279054049291242,
+      "FCRI 14: In your opinion, are you at risk of\u2026": 0.008242444686649357,
+      "FCRI 10: I am afraid of cancer recurrence": 0.007047017532631525,
+      "FCRI 23: My work or everyday activities": 0.006763487313048355,
+      "Cancer type": 0.006215994974715697,
+      "Age group": 0.005202381692728686
+    },
+    "top_severity": {
+      "Treatment type": 0.021005499484929347,
+      "FCRI 1: Television shows or newspaper articl\u2026": 0.017810884123144476,
+      "Cancer status": 0.01575841597935124,
+      "Cancer type": 0.013868743975310682,
+      "FCRI 3: Medical examinations (e.g. annual ch\u2026": 0.011517364139110378,
+      "Province": 0.011187667215677455,
+      "Time since diagnosis": 0.010382666257226413,
+      "Age group": 0.008357827211743685,
+      "FCRI 16: How much time per day do you spend t\u2026": 0.008063217566201942,
+      "FCRI 5: Seeing or hearing about someone who\u2026": 0.007770699544537805
+    },
+    "waterfall_cases": [
+      "A: depressed, correctly detected",
+      "B: not depressed, correctly identified",
+      "C: misclassified"
+    ]
+  }
+}

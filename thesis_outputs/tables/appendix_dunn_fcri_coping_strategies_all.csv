@@ -1,0 +1,16 @@
+﻿Class A,Class B,Median A,Median B,p (Holm)
+Normal,Mild mood disturbance,7.0,10.0,0.061
+Normal,Borderline clinical depression,7.0,12.0,0.002
+Normal,Moderate depression,7.0,14.0,<0.001
+Normal,Severe depression,7.0,22.0,<0.001
+Normal,Extreme depression,7.0,27.0,<0.001
+Mild mood disturbance,Borderline clinical depression,10.0,12.0,0.203
+Mild mood disturbance,Moderate depression,10.0,14.0,<0.001
+Mild mood disturbance,Severe depression,10.0,22.0,<0.001
+Mild mood disturbance,Extreme depression,10.0,27.0,<0.001
+Borderline clinical depression,Moderate depression,12.0,14.0,0.004
+Borderline clinical depression,Severe depression,12.0,22.0,<0.001
+Borderline clinical depression,Extreme depression,12.0,27.0,<0.001
+Moderate depression,Severe depression,14.0,22.0,<0.001
+Moderate depression,Extreme depression,14.0,27.0,<0.001
+Severe depression,Extreme depression,22.0,27.0,<0.001

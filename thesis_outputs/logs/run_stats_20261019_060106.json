@@ -1,0 +1,421 @@
+{
+  "timestamp": "2026-10-19T06:01:06",
+  "stage": "stats",
+  "git_commit": "abb5154-dirty",
+  "config_path": "C:\\Users\\Hannah Nasir Jamal\\cancer-depression-v2\\thesis_analysis\\config.yaml",
+  "config": {
+    "seed": 42,
+    "n_jobs": 8,
+    "paths": {
+      "data": "Data/cancer_psychology.csv",
+      "output_dir": "thesis_outputs",
+      "provenance_cache": "thesis_outputs/data/row_provenance.csv",
+      "graphviz_bin": "C:/Program Files/Graphviz/bin"
+    },
+    "data": {
+      "bdi_zero_statements": [
+        "i don't feel i am being punished",
+        "i don't feel disappointed in myself"
+      ],
+      "cancer_type_merge": {
+        "Brain": "Brain Cancer",
+        "Brain Tumour": "Brain Cancer",
+        "Brain tumour": "Brain Cancer",
+        "Liver": "Other"
+      },
+      "exclude_cancer_type": [
+        "No disease"
+      ],
+      "exclude_under_18": false,
+      "category_order": {
+        "age_group": [
+          "Below 18",
+          "18-30",
+          "31-45",
+          "46-60",
+          "Above 60"
+        ],
+        "diagnosis_duration": [
+          "Less than 3 months",
+          "3-6 months",
+          "6-12 months",
+          "1-2 years",
+          "More than 2 years"
+        ]
+      }
+    },
+    "provenance": {
+      "generated_sources": [
+        {
+          "commit": "1f9d779",
+          "path": "auto_data_submitter/test.csv"
+        },
+        {
+          "commit": "1d7d522",
+          "path": "auto_data_submitter/test_part1.csv"
+        }
+      ]
+    },
+    "subsets": {
+      "all": {
+        "exclude_generator_matched": false,
+        "label": "All rows"
+      },
+      "excl_generated": {
+        "exclude_generator_matched": true,
+        "label": "Excluding generator-matched rows"
+      }
+    },
+    "subset_short_labels": {
+      "all": "All rows",
+      "excl_generated": "Excl. generator-matched"
+    },
+    "primary_subset": "all",
+    "run_subsets": [
+      "all",
+      "excl_generated"
+    ],
+    "targets": {
+      "severity_bounds": [
+        [
+          "Normal",
+          0,
+          10
+        ],
+        [
+          "Mild mood disturbance",
+          11,
+          16
+        ],
+        [
+          "Borderline clinical depression",
+          17,
+          20
+        ],
+        [
+          "Moderate depression",
+          21,
+          30
+        ],
+        [
+          "Severe depression",
+          31,
+          40
+        ],
+        [
+          "Extreme depression",
+          41,
+          63
+        ]
+      ],
+      "binary_cutoff": 11,
+      "binary_cutoff_sensitivity": 17,
+      "severity5_merge": {
+        "Normal": "Normal/Mild",
+        "Mild mood disturbance": "Normal/Mild"
+      }
+    },
+    "feature_groups": {
+      "demographic": [
+        "gender",
+        "age_group",
+        "province"
+      ],
+      "clinical": [
+        "cancer_type",
+        "diagnosis_duration",
+        "cancer_status",
+        "treatment_type",
+        "on_medication"
+      ]
+    },
+    "fcri_mood_overlap_items": [
+      "FCRI_19",
+      "FCRI_26"
+    ],
+    "feature_sets": {
+      "A": {
+        "groups": [
+          "bdi",
+          "fcri",
+          "demographic",
+          "clinical"
+        ],
+        "label": "A: All features (BDI + FCRI + demo + clinical)"
+      },
+      "B": {
+        "groups": [
+          "fcri",
+          "demographic",
+          "clinical"
+        ],
+        "label": "B: FCRI + demographic + clinical"
+      },
+      "C": {
+        "groups": [
+          "fcri"
+        ],
+        "label": "C: FCRI only"
+      },
+      "D": {
+        "groups": [
+          "demographic",
+          "clinical"
+        ],
+        "label": "D: Demographic + clinical"
+      }
+    },
+    "key_feature_set": "B",
+    "cv": {
+      "outer_splits": 5,
+      "outer_repeats": 5,
+      "inner_splits": 3,
+      "n_iter": 10,
+      "inner_scoring": "f1_macro",
+      "primary_metric": "f1_macro",
+      "ablation_repeats": 2,
+      "stacking_cv": 3,
+      "n_bootstrap": 1000,
+      "alpha": 0.05
+    },
+    "models": {
+      "base": [
+        "lr",
+        "rf",
+        "xgb",
+        "svm"
+      ],
+      "ensembles": [
+        "voting",
+        "stacking"
+      ],
+      "grids": {
+        "lr": {
+          "C": [
+            0.001,
+            0.01,
+            0.1,
+            1,
+            10,
+            100
+          ]
+        },
+        "rf": {
+          "n_estimators": [
+            300
+          ],
+          "max_depth": [
+            3,
+            5,
+            10,
+            null
+          ],
+          "min_samples_leaf": [
+            1,
+            2,
+            5
+          ],
+          "max_features": [
+            "sqrt",
+            0.3
+          ]
+        },
+        "xgb": {
+          "n_estimators": [
+            100,
+            300
+          ],
+          "max_depth": [
+            2,
+            3,
+            5
+          ],
+          "learning_rate": [
+            0.03,
+            0.1,
+            0.3
+          ],
+          "subsample": [
+            0.8,
+            1.0
+          ],
+          "colsample_bytree": [
+            0.5,
+            0.8,
+            1.0
+          ]
+        },
+        "svm": {
+          "C": [
+            0.1,
+            1,
+            10,
+            100
+          ],
+          "gamma": [
+            "scale",
+            0.01,
+            0.1
+          ]
+        }
+      }
+    },
+    "feature_selection": {
+      "methods": [
+        "mi",
+        "chi2",
+        "rfe",
+        "l1",
+        "boruta"
+      ],
+      "k_grid": [
+        10,
+        20,
+        30
+      ],
+      "l1_C_grid": [
+        0.01,
+        0.05,
+        0.1,
+        0.5
+      ],
+      "boruta": {
+        "n_iter": 20,
+        "alpha": 0.05,
+        "n_estimators": 150
+      }
+    },
+    "imbalance": {
+      "strategies": [
+        "class_weight",
+        "smote",
+        "none"
+      ],
+      "default": "class_weight",
+      "smote_k_neighbors": 5
+    },
+    "shap": {
+      "background_size": 50,
+      "explain_size": 300,
+      "top_dependence": 5,
+      "n_waterfall_patients": 3
+    },
+    "style": {
+      "dpi": 300,
+      "max_width_cm": 16,
+      "font_size": 10,
+      "font_family": "DejaVu Sans",
+      "categorical": [
+        "#2a78d6",
+        "#eb6834",
+        "#1baf7a",
+        "#eda100",
+        "#e87ba4",
+        "#008300",
+        "#6250d6",
+        "#e34948"
+      ],
+      "sequential": [
+        "#ffffff",
+        "#cde2fb",
+        "#9ec5f4",
+        "#6da7ec",
+        "#3987e5",
+        "#256abf",
+        "#184f95",
+        "#0d366b"
+      ],
+      "diverging": [
+        "#1c5cab",
+        "#86b6ef",
+        "#f2f2f0",
+        "#f5a581",
+        "#c4471b"
+      ],
+      "text": "#0b0b0b",
+      "muted": "#52514e"
+    }
+  },
+  "library_versions": {
+    "python": "3.13.0",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "xgboost": "3.4.1",
+    "imbalanced-learn": "0.14.2",
+    "statsmodels": "0.15.0",
+    "scikit-posthocs": "0.17.1",
+    "shap": "0.54.1",
+    "matplotlib": "3.11.2",
+    "python-docx": "1.2.0",
+    "graphviz (python)": "0.21",
+    "PyYAML": "6.0.3"
+  },
+  "status": "ok",
+  "result": {
+    "all": {
+      "logistic": {
+        "notes": [
+          "Cancer type: Other (n = 1) excluded"
+        ],
+        "n": 1529,
+        "n_depressed": 1410,
+        "n_not_depressed": 119,
+        "multivariable_parameters": 33,
+        "events_per_variable": 3.61,
+        "multivariable_converged": true,
+        "pseudo_r2": 0.5729512402612889,
+        "llr_p": 1.4566054006809957e-80,
+        "max_se": 1.4599518708785502,
+        "possible_separation": false
+      },
+      "ordinal": {
+        "notes": [
+          "Cancer type: Other (n = 1) excluded"
+        ],
+        "n": 1529,
+        "converged": true,
+        "pseudo_r2": 0.4072709918269517
+      },
+      "spearman_fcri_total_bdi": {
+        "rho": 0.8492959662631269,
+        "p": 0.0
+      },
+      "n_significant_bivariate_holm": 15,
+      "n_bivariate_tests": 16
+    },
+    "excl_generated": {
+      "logistic": {
+        "notes": [
+          "Cancer type: Other (n = 1) excluded"
+        ],
+        "n": 968,
+        "n_depressed": 949,
+        "n_not_depressed": 19,
+        "multivariable_parameters": 33,
+        "events_per_variable": 0.58,
+        "multivariable_converged": false,
+        "pseudo_r2": 0.5893594362474772,
+        "llr_p": 3.0296169217486565e-10,
+        "max_se": 99731.682925112,
+        "possible_separation": true
+      },
+      "ordinal": {
+        "notes": [
+          "Cancer type: Other (n = 1) excluded"
+        ],
+        "n": 968,
+        "converged": true,
+        "pseudo_r2": 0.3511079934117993
+      },
+      "spearman_fcri_total_bdi": {
+        "rho": 0.801869995232461,
+        "p": 1.6691590126164177e-218
+      },
+      "n_significant_bivariate_holm": 10,
+      "n_bivariate_tests": 16
+    }
+  },
+  "seconds": 33.6
+}

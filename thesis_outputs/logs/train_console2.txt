@@ -1,0 +1,132 @@
+21:28:11 | INFO | Provenance: 298 rows match 1f9d779:auto_data_submitter/test.csv
+21:28:12 | INFO | Provenance: 263 rows match 1d7d522:auto_data_submitter/test_part1.csv
+21:28:12 | INFO | Curated dataset: 1530 participants (561 generator-matched)
+21:28:12 | INFO | ======================================================================
+21:28:12 | INFO | STAGE: train
+21:28:13 | INFO | Main design: 36 runs x 25 outer folds
+21:28:13 | INFO | [1/36] featuresets__binary__all__A__none__class_weight__default
+21:28:13 | INFO |   cached  featuresets__binary__all__A__none__class_weight__default
+21:28:13 | INFO | [2/36] featuresets__binary__all__B__none__class_weight__default
+21:28:13 | INFO |   cached  featuresets__binary__all__B__none__class_weight__default
+21:28:13 | INFO | [3/36] featuresets__binary__all__C__none__class_weight__default
+21:28:13 | INFO |   cached  featuresets__binary__all__C__none__class_weight__default
+21:28:13 | INFO | [4/36] featuresets__binary__all__D__none__class_weight__default
+21:28:13 | INFO |   cached  featuresets__binary__all__D__none__class_weight__default
+21:28:13 | INFO | [5/36] fs__binary__all__B__mi__class_weight__default
+21:28:13 | INFO |   cached  fs__binary__all__B__mi__class_weight__default
+21:28:13 | INFO | [6/36] fs__binary__all__B__chi2__class_weight__default
+21:28:13 | INFO |   cached  fs__binary__all__B__chi2__class_weight__default
+21:28:13 | INFO | [7/36] fs__binary__all__B__rfe__class_weight__default
+21:28:13 | INFO |   cached  fs__binary__all__B__rfe__class_weight__default
+21:28:13 | INFO | [8/36] fs__binary__all__B__l1__class_weight__default
+21:28:13 | INFO |   cached  fs__binary__all__B__l1__class_weight__default
+21:28:13 | INFO | [9/36] fs__binary__all__B__boruta__class_weight__default
+21:28:13 | INFO |   cached  fs__binary__all__B__boruta__class_weight__default
+21:28:13 | INFO | [10/36] featuresets__binary__excl_generated__A__none__class_weight__default
+21:33:48 | INFO |   done    featuresets__binary__excl_generated__A__none__class_weight__default  (335 s)
+21:33:48 | INFO | [11/36] featuresets__binary__excl_generated__B__none__class_weight__default
+21:38:52 | INFO |   done    featuresets__binary__excl_generated__B__none__class_weight__default  (303 s)
+21:38:52 | INFO | [12/36] featuresets__binary__excl_generated__C__none__class_weight__default
+21:43:39 | INFO |   done    featuresets__binary__excl_generated__C__none__class_weight__default  (288 s)
+21:43:39 | INFO | [13/36] featuresets__binary__excl_generated__D__none__class_weight__default
+21:48:26 | INFO |   done    featuresets__binary__excl_generated__D__none__class_weight__default  (287 s)
+21:48:26 | INFO | [14/36] fs__binary__excl_generated__B__mi__class_weight__default
+21:53:31 | INFO |   done    fs__binary__excl_generated__B__mi__class_weight__default  (305 s)
+21:53:31 | INFO | [15/36] fs__binary__excl_generated__B__chi2__class_weight__default
+21:59:03 | INFO |   done    fs__binary__excl_generated__B__chi2__class_weight__default  (333 s)
+21:59:04 | INFO | [16/36] fs__binary__excl_generated__B__rfe__class_weight__default
+22:05:37 | INFO |   done    fs__binary__excl_generated__B__rfe__class_weight__default  (393 s)
+22:05:37 | INFO | [17/36] fs__binary__excl_generated__B__l1__class_weight__default
+22:11:33 | INFO |   done    fs__binary__excl_generated__B__l1__class_weight__default  (356 s)
+22:11:33 | INFO | [18/36] fs__binary__excl_generated__B__boruta__class_weight__default
+22:21:20 | INFO |   done    fs__binary__excl_generated__B__boruta__class_weight__default  (586 s)
+22:21:20 | INFO | [19/36] featuresets__severity6__all__A__none__class_weight__default
+22:34:27 | INFO |   done    featuresets__severity6__all__A__none__class_weight__default  (787 s)
+22:34:27 | INFO | [20/36] featuresets__severity6__all__B__none__class_weight__default
+22:48:08 | INFO |   done    featuresets__severity6__all__B__none__class_weight__default  (821 s)
+22:48:08 | INFO | [21/36] featuresets__severity6__all__C__none__class_weight__default
+22:59:29 | INFO |   done    featuresets__severity6__all__C__none__class_weight__default  (680 s)
+22:59:29 | INFO | [22/36] featuresets__severity6__all__D__none__class_weight__default
+23:11:55 | INFO |   done    featuresets__severity6__all__D__none__class_weight__default  (746 s)
+23:11:55 | INFO | [23/36] fs__severity6__all__B__mi__class_weight__default
+23:23:08 | INFO |   done    fs__severity6__all__B__mi__class_weight__default  (673 s)
+23:23:08 | INFO | [24/36] fs__severity6__all__B__chi2__class_weight__default
+23:33:53 | INFO |   done    fs__severity6__all__B__chi2__class_weight__default  (645 s)
+23:33:53 | INFO | [25/36] fs__severity6__all__B__rfe__class_weight__default
+23:47:44 | INFO |   done    fs__severity6__all__B__rfe__class_weight__default  (831 s)
+23:47:45 | INFO | [26/36] fs__severity6__all__B__l1__class_weight__default
+00:00:26 | INFO |   done    fs__severity6__all__B__l1__class_weight__default  (762 s)
+00:00:26 | INFO | [27/36] fs__severity6__all__B__boruta__class_weight__default
+00:17:41 | INFO |   done    fs__severity6__all__B__boruta__class_weight__default  (1035 s)
+00:17:41 | INFO | [28/36] featuresets__severity6__excl_generated__A__none__class_weight__default
+00:26:58 | INFO |   done    featuresets__severity6__excl_generated__A__none__class_weight__default  (556 s)
+00:26:58 | INFO | [29/36] featuresets__severity6__excl_generated__B__none__class_weight__default
+00:36:06 | INFO |   done    featuresets__severity6__excl_generated__B__none__class_weight__default  (548 s)
+00:36:06 | INFO | [30/36] featuresets__severity6__excl_generated__C__none__class_weight__default
+00:44:40 | INFO |   done    featuresets__severity6__excl_generated__C__none__class_weight__default  (514 s)
+00:44:40 | INFO | [31/36] featuresets__severity6__excl_generated__D__none__class_weight__default
+00:54:52 | INFO |   done    featuresets__severity6__excl_generated__D__none__class_weight__default  (612 s)
+00:54:52 | INFO | [32/36] fs__severity6__excl_generated__B__mi__class_weight__default
+01:02:11 | INFO |   done    fs__severity6__excl_generated__B__mi__class_weight__default  (438 s)
+01:02:11 | INFO | [33/36] fs__severity6__excl_generated__B__chi2__class_weight__default
+01:09:34 | INFO |   done    fs__severity6__excl_generated__B__chi2__class_weight__default  (443 s)
+01:09:34 | INFO | [34/36] fs__severity6__excl_generated__B__rfe__class_weight__default
+01:19:03 | INFO |   done    fs__severity6__excl_generated__B__rfe__class_weight__default  (569 s)
+01:19:03 | INFO | [35/36] fs__severity6__excl_generated__B__l1__class_weight__default
+01:26:26 | INFO |   done    fs__severity6__excl_generated__B__l1__class_weight__default  (443 s)
+01:26:26 | INFO | [36/36] fs__severity6__excl_generated__B__boruta__class_weight__default
+01:36:57 | INFO |   done    fs__severity6__excl_generated__B__boruta__class_weight__default  (631 s)
+01:37:04 | INFO | Hybrid selection: {'binary': {'all': {'fs': 'boruta', 'model': 'voting', 'run_id': 'fs__binary__all__B__boruta__class_weight__default', 'f1_macro': 0.8816157100399864, 'sd': 0.03651727617790149}, 'excl_generated': {'fs': 'chi2', 'model': 'voting', 'run_id': 'fs__binary__excl_generated__B__chi2__class_weight__default', 'f1_macro': 0.6256093961771777, 'sd': 0.09402549611084825}}, 'severity6': {'all': {'fs': 'boruta', 'model': 'stacking', 'run_id': 'fs__severity6__all__B__boruta__class_weight__default', 'f1_macro': 0.6043928438732865, 'sd': 0.029437222080461747}, 'excl_generated': {'fs': 'l1', 'model': 'stacking', 'run_id': 'fs__severity6__excl_generated__B__l1__class_weight__default', 'f1_macro': 0.4580875738666003, 'sd': 0.03027419456114388}}}
+01:37:04 | INFO | [1/26] imbalance__binary__all__B__boruta__smote__default
+01:44:19 | INFO |   done    imbalance__binary__all__B__boruta__smote__default  (435 s)
+01:44:19 | INFO | [2/26] imbalance__binary__all__B__boruta__none__default
+01:48:14 | INFO |   done    imbalance__binary__all__B__boruta__none__default  (235 s)
+01:48:14 | INFO | [3/26] imbalance__binary__excl_generated__B__chi2__smote__default
+01:50:57 | INFO |   done    imbalance__binary__excl_generated__B__chi2__smote__default  (163 s)
+01:50:57 | INFO | [4/26] imbalance__binary__excl_generated__B__chi2__none__default
+01:53:02 | INFO |   done    imbalance__binary__excl_generated__B__chi2__none__default  (124 s)
+01:53:02 | INFO | [5/26] ablation__binary__all__B__boruta__class_weight__no_demographic
+01:57:12 | INFO |   done    ablation__binary__all__B__boruta__class_weight__no_demographic  (251 s)
+01:57:12 | INFO | [6/26] ablation__binary__all__B__boruta__class_weight__no_clinical
+02:01:12 | INFO |   done    ablation__binary__all__B__boruta__class_weight__no_clinical  (239 s)
+02:01:12 | INFO | [7/26] ablation__binary__all__B__boruta__class_weight__no_medication
+02:05:11 | INFO |   done    ablation__binary__all__B__boruta__class_weight__no_medication  (240 s)
+02:05:11 | INFO | [8/26] ablation__binary__all__B__boruta__class_weight__no_mood_overlap_items
+02:09:13 | INFO |   done    ablation__binary__all__B__boruta__class_weight__no_mood_overlap_items  (242 s)
+02:09:13 | INFO | [9/26] ablation__binary__all__B__boruta__class_weight__no_scaling
+02:13:19 | INFO |   done    ablation__binary__all__B__boruta__class_weight__no_scaling  (246 s)
+02:13:20 | INFO | [10/26] ablation__binary__all__B__boruta__class_weight__ordinal_encoding
+02:17:06 | INFO |   done    ablation__binary__all__B__boruta__class_weight__ordinal_encoding  (227 s)
+02:17:06 | INFO | [11/26] ablation__binary__all__D__none__class_weight__D_no_medication
+02:19:47 | INFO |   done    ablation__binary__all__D__none__class_weight__D_no_medication  (161 s)
+02:19:47 | INFO | [12/26] imbalance__severity6__all__B__boruta__smote__default
+02:33:50 | INFO |   done    imbalance__severity6__all__B__boruta__smote__default  (843 s)
+02:33:50 | INFO | [13/26] imbalance__severity6__all__B__boruta__none__default
+02:39:49 | INFO |   done    imbalance__severity6__all__B__boruta__none__default  (359 s)
+02:39:49 | INFO | [14/26] imbalance__severity6__excl_generated__B__l1__smote__default
+02:47:58 | INFO |   done    imbalance__severity6__excl_generated__B__l1__smote__default  (489 s)
+02:47:58 | INFO | [15/26] imbalance__severity6__excl_generated__B__l1__none__default
+02:51:07 | INFO |   done    imbalance__severity6__excl_generated__B__l1__none__default  (189 s)
+02:51:08 | INFO | [16/26] ablation__severity6__all__B__boruta__class_weight__no_demographic
+02:56:52 | INFO |   done    ablation__severity6__all__B__boruta__class_weight__no_demographic  (344 s)
+02:56:52 | INFO | [17/26] ablation__severity6__all__B__boruta__class_weight__no_clinical
+03:02:15 | INFO |   done    ablation__severity6__all__B__boruta__class_weight__no_clinical  (323 s)
+03:02:15 | INFO | [18/26] ablation__severity6__all__B__boruta__class_weight__no_medication
+03:07:47 | INFO |   done    ablation__severity6__all__B__boruta__class_weight__no_medication  (332 s)
+03:07:47 | INFO | [19/26] ablation__severity6__all__B__boruta__class_weight__no_mood_overlap_items
+03:13:36 | INFO |   done    ablation__severity6__all__B__boruta__class_weight__no_mood_overlap_items  (349 s)
+03:13:36 | INFO | [20/26] ablation__severity6__all__B__boruta__class_weight__no_scaling
+03:19:36 | INFO |   done    ablation__severity6__all__B__boruta__class_weight__no_scaling  (360 s)
+03:19:36 | INFO | [21/26] ablation__severity6__all__B__boruta__class_weight__ordinal_encoding
+03:25:23 | INFO |   done    ablation__severity6__all__B__boruta__class_weight__ordinal_encoding  (347 s)
+03:25:23 | INFO | [22/26] ablation__severity6__all__D__none__class_weight__D_no_medication
+03:29:09 | INFO |   done    ablation__severity6__all__D__none__class_weight__D_no_medication  (226 s)
+03:29:10 | INFO | [23/26] sensitivity__binary17__all__B__boruta__class_weight__default
+03:33:25 | INFO |   done    sensitivity__binary17__all__B__boruta__class_weight__default  (255 s)
+03:33:25 | INFO | [24/26] sensitivity__severity5__all__B__boruta__class_weight__default
+03:39:06 | INFO |   done    sensitivity__severity5__all__B__boruta__class_weight__default  (341 s)
+03:39:06 | INFO | [25/26] sensitivity__binary17__excl_generated__B__chi2__class_weight__default
+03:41:15 | INFO |   done    sensitivity__binary17__excl_generated__B__chi2__class_weight__default  (129 s)
+03:41:15 | INFO | [26/26] sensitivity__severity5__excl_generated__B__l1__class_weight__default
+03:44:19 | INFO |   done    sensitivity__severity5__excl_generated__B__l1__class_weight__default  (184 s)
+03:44:22 | INFO | Stage 'train' finished in 22569 s (record: run_train_20261019_034419.json)

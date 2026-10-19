@@ -1,0 +1,18 @@
+﻿Check,Result
+Rows in raw form export,1532
+Columns in raw form export,78
+Exact duplicate rows,0
+Duplicate answer patterns (ignoring name/timestamp),0
+Missing BDI item responses (cells),0
+Missing FCRI item responses (cells),101
+Participants with ≥1 missing FCRI item (imputed with own subscale mean),54
+Missing demographic/clinical responses (cells),0
+BDI total outliers (1.5 × IQR rule),0
+FCRI total outliers (1.5 × IQR rule),0
+Identical answer on all 21 BDI items,26
+Identical answer on all 42 FCRI items,0
+Male participants reporting ovarian/cervical cancer,19
+Female participants reporting prostate cancer,5
+Participants aged under 18,68
+Rows matching mock-generator output in git history,561
+BDI item 6/7 answers re-scored to 0 (parser correction),717

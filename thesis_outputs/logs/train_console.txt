@@ -1,0 +1,25 @@
+20:13:59 | INFO | Provenance: 298 rows match 1f9d779:auto_data_submitter/test.csv
+20:13:59 | INFO | Provenance: 263 rows match 1d7d522:auto_data_submitter/test_part1.csv
+20:14:01 | INFO | Curated dataset: 1530 participants (561 generator-matched)
+20:14:01 | INFO | ======================================================================
+20:14:01 | INFO | STAGE: train
+20:14:02 | INFO | Main design: 36 runs x 25 outer folds
+20:14:02 | INFO | [1/36] featuresets__binary__all__A__none__class_weight__default
+20:23:09 | INFO |   done    featuresets__binary__all__A__none__class_weight__default  (546 s)
+20:23:09 | INFO | [2/36] featuresets__binary__all__B__none__class_weight__default
+20:31:50 | INFO |   done    featuresets__binary__all__B__none__class_weight__default  (521 s)
+20:31:50 | INFO | [3/36] featuresets__binary__all__C__none__class_weight__default
+20:39:46 | INFO |   done    featuresets__binary__all__C__none__class_weight__default  (476 s)
+20:39:46 | INFO | [4/36] featuresets__binary__all__D__none__class_weight__default
+20:46:13 | INFO |   done    featuresets__binary__all__D__none__class_weight__default  (387 s)
+20:46:13 | INFO | [5/36] fs__binary__all__B__mi__class_weight__default
+20:52:12 | INFO |   done    fs__binary__all__B__mi__class_weight__default  (360 s)
+20:52:13 | INFO | [6/36] fs__binary__all__B__chi2__class_weight__default
+20:58:47 | INFO |   done    fs__binary__all__B__chi2__class_weight__default  (395 s)
+20:58:48 | INFO | [7/36] fs__binary__all__B__rfe__class_weight__default
+21:05:11 | INFO |   done    fs__binary__all__B__rfe__class_weight__default  (383 s)
+21:05:11 | INFO | [8/36] fs__binary__all__B__l1__class_weight__default
+21:12:26 | INFO |   done    fs__binary__all__B__l1__class_weight__default  (435 s)
+21:12:26 | INFO | [9/36] fs__binary__all__B__boruta__class_weight__default
+21:24:58 | INFO |   done    fs__binary__all__B__boruta__class_weight__default  (753 s)
+21:24:58 | INFO | [10/36] featuresets__binary__excl_generated__A__none__class_weight__default

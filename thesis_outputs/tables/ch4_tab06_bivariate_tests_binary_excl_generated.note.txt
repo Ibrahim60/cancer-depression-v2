@@ -1,0 +1,1 @@
+Excluding generator-matched rows. Holm correction across all tests in this table. Continuous variables: Welch t-test when both groups passed Shapiro-Wilk (α = 0.05), otherwise Mann-Whitney U.

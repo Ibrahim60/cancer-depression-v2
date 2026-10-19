@@ -1,0 +1,25 @@
+﻿Subset,Analysis,Model,Macro F1,Balanced accuracy,MCC,AUC
+All rows,Binary (BDI ≥ 17),Logistic Regression,0.772 ± 0.019,0.849 ± 0.020,0.582 ± 0.033,0.915 ± 0.024
+All rows,Binary (BDI ≥ 17),Random Forest,0.843 ± 0.020,0.851 ± 0.019,0.687 ± 0.040,0.923 ± 0.020
+All rows,Binary (BDI ≥ 17),XGBoost,0.830 ± 0.022,0.844 ± 0.022,0.663 ± 0.043,0.917 ± 0.025
+All rows,Binary (BDI ≥ 17),SVM (RBF),0.830 ± 0.024,0.806 ± 0.026,0.668 ± 0.048,0.919 ± 0.022
+All rows,Binary (BDI ≥ 17),Soft Voting,0.843 ± 0.019,0.854 ± 0.018,0.688 ± 0.037,0.925 ± 0.022
+All rows,Binary (BDI ≥ 17),Stacking (LR meta),0.817 ± 0.023,0.864 ± 0.023,0.649 ± 0.044,0.925 ± 0.022
+All rows,Severity (5 classes),Logistic Regression,0.548 ± 0.032,0.554 ± 0.031,0.484 ± 0.034,0.856 ± 0.009
+All rows,Severity (5 classes),Random Forest,0.589 ± 0.024,0.591 ± 0.023,0.540 ± 0.033,0.880 ± 0.011
+All rows,Severity (5 classes),XGBoost,0.573 ± 0.021,0.574 ± 0.019,0.524 ± 0.019,0.875 ± 0.011
+All rows,Severity (5 classes),SVM (RBF),0.582 ± 0.023,0.597 ± 0.018,0.587 ± 0.018,0.888 ± 0.009
+All rows,Severity (5 classes),Soft Voting,0.589 ± 0.033,0.594 ± 0.029,0.561 ± 0.031,0.883 ± 0.009
+All rows,Severity (5 classes),Stacking (LR meta),0.627 ± 0.021,0.629 ± 0.023,0.570 ± 0.021,0.893 ± 0.010
+Excluding generator-matched rows,Binary (BDI ≥ 17),Logistic Regression,0.578 ± 0.033,0.750 ± 0.066,0.286 ± 0.072,0.794 ± 0.062
+Excluding generator-matched rows,Binary (BDI ≥ 17),Random Forest,0.658 ± 0.039,0.690 ± 0.070,0.331 ± 0.086,0.819 ± 0.066
+Excluding generator-matched rows,Binary (BDI ≥ 17),XGBoost,0.666 ± 0.046,0.715 ± 0.075,0.349 ± 0.101,0.807 ± 0.066
+Excluding generator-matched rows,Binary (BDI ≥ 17),SVM (RBF),0.554 ± 0.053,0.541 ± 0.034,0.181 ± 0.139,0.809 ± 0.068
+Excluding generator-matched rows,Binary (BDI ≥ 17),Soft Voting,0.672 ± 0.049,0.688 ± 0.058,0.348 ± 0.100,0.821 ± 0.074
+Excluding generator-matched rows,Binary (BDI ≥ 17),Stacking (LR meta),0.626 ± 0.030,0.772 ± 0.062,0.340 ± 0.070,0.822 ± 0.074
+Excluding generator-matched rows,Severity (5 classes),Logistic Regression,0.472 ± 0.032,0.485 ± 0.037,0.457 ± 0.034,0.826 ± 0.028
+Excluding generator-matched rows,Severity (5 classes),Random Forest,0.490 ± 0.047,0.494 ± 0.048,0.532 ± 0.061,0.867 ± 0.022
+Excluding generator-matched rows,Severity (5 classes),XGBoost,0.498 ± 0.051,0.502 ± 0.048,0.505 ± 0.053,0.844 ± 0.021
+Excluding generator-matched rows,Severity (5 classes),SVM (RBF),0.464 ± 0.030,0.479 ± 0.026,0.558 ± 0.044,0.871 ± 0.015
+Excluding generator-matched rows,Severity (5 classes),Soft Voting,0.508 ± 0.048,0.510 ± 0.046,0.550 ± 0.052,0.866 ± 0.019
+Excluding generator-matched rows,Severity (5 classes),Stacking (LR meta),0.546 ± 0.044,0.557 ± 0.046,0.542 ± 0.048,0.868 ± 0.019

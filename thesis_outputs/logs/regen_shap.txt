@@ -1,0 +1,14 @@
+05:12:31 | INFO | Provenance: 298 rows match 1f9d779:auto_data_submitter/test.csv
+05:12:32 | INFO | Provenance: 263 rows match 1d7d522:auto_data_submitter/test_part1.csv
+05:12:32 | INFO | Curated dataset: 1530 participants (561 generator-matched)
+05:12:32 | INFO | ======================================================================
+05:12:32 | INFO | STAGE: shap
+05:13:59 | INFO | SHAP binary/all/set B: 300 participants in 86 s
+05:15:45 | INFO | SHAP binary/all/set A: 300 participants in 106 s
+05:20:09 | INFO | SHAP severity6/all/set B: 300 participants in 264 s
+05:24:42 | INFO | SHAP severity6/all/set A: 300 participants in 274 s
+05:25:39 | INFO | SHAP binary/excl_generated/set B: 300 participants in 45 s
+05:26:49 | INFO | SHAP binary/excl_generated/set A: 300 participants in 70 s
+05:29:46 | INFO | SHAP severity6/excl_generated/set B: 300 participants in 177 s
+05:32:29 | INFO | SHAP severity6/excl_generated/set A: 300 participants in 164 s
+05:32:41 | INFO | Stage 'shap' finished in 1209 s (record: run_shap_20261019_053240.json)

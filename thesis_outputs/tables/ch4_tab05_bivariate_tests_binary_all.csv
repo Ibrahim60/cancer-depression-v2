@@ -1,0 +1,17 @@
+﻿Variable,"Depressed, median (IQR)","Not depressed, median (IQR)",Test,Statistic,Effect size,p,p (Holm)
+FCRI total,77.0 (56.0–114.0),20.0 (16.0–28.0),Mann-Whitney U,159251.0,Rank-biserial r = 0.897,<0.001,<0.001
+FCRI triggers,14.0 (10.0–22.0),4.0 (1.0–7.0),Mann-Whitney U,149701.0,Rank-biserial r = 0.783,<0.001,<0.001
+FCRI severity,18.0 (13.5–23.0),4.0 (3.0–6.0),Mann-Whitney U,160570.0,Rank-biserial r = 0.913,<0.001,<0.001
+FCRI psychological distress,8.0 (5.0–11.0),2.0 (0.0–3.0),Mann-Whitney U,153656.0,Rank-biserial r = 0.83,<0.001,<0.001
+FCRI functioning impairments,12.0 (8.0–17.0),2.0 (0.0–4.0),Mann-Whitney U,154660.0,Rank-biserial r = 0.842,<0.001,<0.001
+FCRI insight,6.0 (4.0–8.0),1.0 (0.0–2.0),Mann-Whitney U,152182.0,Rank-biserial r = 0.813,<0.001,<0.001
+FCRI reassurance,6.0 (3.0–8.0),2.0 (1.0–2.5),Mann-Whitney U,144970.5,Rank-biserial r = 0.727,<0.001,<0.001
+FCRI coping strategies,17.0 (12.0–26.0),7.0 (4.0–12.0),Mann-Whitney U,142971.0,Rank-biserial r = 0.703,<0.001,<0.001
+Gender,,,Chi-square,6.78,Cramér's V = 0.067,0.009,0.018
+Age group,,,Chi-square,16.18,Cramér's V = 0.103,0.003,0.008
+Province,,,Chi-square (Monte-Carlo),10.67,Cramér's V = 0.083,0.098,0.098
+Cancer type,,,Chi-square (Monte-Carlo),42.44,Cramér's V = 0.167,<0.001,<0.001
+Time since diagnosis,,,Chi-square,64.24,Cramér's V = 0.205,<0.001,<0.001
+Cancer status,,,Chi-square,112.73,Cramér's V = 0.271,<0.001,<0.001
+Treatment type,,,Chi-square,127.23,Cramér's V = 0.288,<0.001,<0.001
+On psychotropic medication,,,Chi-square,125.12,Cramér's V = 0.286,<0.001,<0.001

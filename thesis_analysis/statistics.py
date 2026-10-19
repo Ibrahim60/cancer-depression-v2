@@ -369,7 +369,7 @@ def plot_fcri_by_severity(d: pd.DataFrame, ds: Dataset, cfg: dict[str, Any], pat
     import matplotlib.pyplot as plt
     st = cfg["style"]
     cols = ["fcri_total"] + subscale_cols()
-    fig, axes = plt.subplots(2, 4, figsize=fig_size(cfg, 1.0, 0.62))
+    fig, axes = plt.subplots(2, 4, figsize=fig_size(cfg, 0.97, 0.64))
     short = ["Nor", "Mild", "Bord", "Mod", "Sev", "Ext"]
     for ax, c in zip(axes.ravel(), cols):
         data = [d.loc[d.severity == s, c].to_numpy() for s in ds.severity_labels]

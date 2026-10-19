@@ -1,0 +1,1 @@
+Feature set B with the hybrid FS method; 2 × 5 outer folds (class-weight results restricted to the same folds). SMOTE is applied to training folds only.

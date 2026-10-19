@@ -1,0 +1,7 @@
+﻿Class,Support (n),Precision,Recall,F1
+Normal,119,0.801 ± 0.027,0.785 ± 0.032,0.793 ± 0.027
+Mild mood disturbance,133,0.447 ± 0.015,0.519 ± 0.028,0.480 ± 0.016
+Borderline clinical depression,138,0.290 ± 0.022,0.287 ± 0.036,0.288 ± 0.029
+Moderate depression,424,0.715 ± 0.010,0.670 ± 0.004,0.692 ± 0.005
+Severe depression,317,0.582 ± 0.010,0.595 ± 0.013,0.589 ± 0.010
+Extreme depression,399,0.787 ± 0.006,0.791 ± 0.008,0.789 ± 0.005

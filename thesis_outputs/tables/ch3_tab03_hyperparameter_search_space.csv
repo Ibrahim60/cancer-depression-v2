@@ -1,0 +1,12 @@
+﻿Component,Fixed settings,Tuned hyper-parameters
+Logistic regression,"L2 penalty, lbfgs, max_iter 5000, class_weight balanced","C ∈ {0.001, 0.01, 0.1, 1, 10, 100}"
+Random forest,class_weight balanced,"n_estimators ∈ {300}; max_depth ∈ {3, 5, 10, None}; min_samples_leaf ∈ {1, 2, 5}; max_features ∈ {sqrt, 0.3}"
+XGBoost,"hist trees, balanced sample weights, logloss / mlogloss","n_estimators ∈ {100, 300}; max_depth ∈ {2, 3, 5}; learning_rate ∈ {0.03, 0.1, 0.3}; subsample ∈ {0.8, 1.0}; colsample_bytree ∈ {0.5, 0.8, 1.0}"
+SVM,"RBF kernel, Platt probabilities, class_weight balanced","C ∈ {0.1, 1, 10, 100}; gamma ∈ {scale, 0.01, 0.1}"
+MI / χ² filter,SelectKBest on Min-Max-scaled inputs,"k ∈ {10, 20, 30}"
+RFE,"logistic regression, step 1","k ∈ {10, 20, 30}"
+L1 logistic regression,"liblinear, one-vs-rest for severity, ≥ 3 features","C ∈ {0.01, 0.05, 0.1, 0.5}"
+Boruta,"20 iterations, random forest (150 trees, depth 7), Bonferroni α = 0.05",none
+Soft voting,equal weights over the four tuned base pipelines,none
+Stacking,"logistic-regression meta-learner, 3-fold out-of-fold probabilities",none
+Inner search,"RandomizedSearchCV, 10 candidates, 3-fold stratified CV, scoring f1_macro",

@@ -1,0 +1,62 @@
+{
+  "all": {
+    "n": 1530,
+    "binary": {
+      "0": 119,
+      "1": 1411
+    },
+    "severity6": {
+      "Normal": 119,
+      "Mild mood disturbance": 133,
+      "Borderline clinical depression": 138,
+      "Moderate depression": 424,
+      "Severe depression": 317,
+      "Extreme depression": 399
+    },
+    "severity5": {
+      "Normal/Mild": 252,
+      "Borderline clinical depression": 138,
+      "Moderate depression": 424,
+      "Severe depression": 317,
+      "Extreme depression": 399
+    },
+    "binary17": {
+      "0": 252,
+      "1": 1278
+    },
+    "bdi_total_mean": 29.72156862745098,
+    "bdi_total_sd": 13.04385589999719,
+    "fcri_total_mean": 78.54248366013071,
+    "fcri_total_sd": 34.73313884910741
+  },
+  "excl_generated": {
+    "n": 969,
+    "binary": {
+      "0": 19,
+      "1": 950
+    },
+    "severity6": {
+      "Normal": 19,
+      "Mild mood disturbance": 47,
+      "Borderline clinical depression": 58,
+      "Moderate depression": 253,
+      "Severe depression": 225,
+      "Extreme depression": 367
+    },
+    "severity5": {
+      "Normal/Mild": 66,
+      "Borderline clinical depression": 58,
+      "Moderate depression": 253,
+      "Severe depression": 225,
+      "Extreme depression": 367
+    },
+    "binary17": {
+      "0": 66,
+      "1": 903
+    },
+    "bdi_total_mean": 34.22910216718266,
+    "bdi_total_sd": 11.565352365121743,
+    "fcri_total_mean": 96.47471620227039,
+    "fcri_total_sd": 28.002465035880288
+  }
+}

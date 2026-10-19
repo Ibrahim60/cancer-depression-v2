@@ -111,9 +111,9 @@ def methodology_flowchart(cfg, paths, info):
 
 
 def preprocessing_pipeline(cfg, paths, info):
-    g = _graph("preprocessing", "TB", nodesep="0.35", ranksep="0.3", newrank="true", splines="line")
+    g = _graph("preprocessing", "TB", nodesep="0.25", ranksep="0.3", newrank="true", splines="line")
     with g.subgraph(name="cluster_data") as d:
-        d.attr(label="Applied once to the whole dataset (per participant)", style="dashed,rounded",
+        d.attr(label="Applied once, per participant", style="dashed,rounded",
                color="#2a78d6", fontcolor="#2a78d6", fontname=FONT, fontsize=FS)
         _node(d, "raw", _html("Raw form export", ["text responses"]), "grey", width="2.0")
         _node(d, "parse", _html("Response scoring", ["BDI → 0–3 (items 6/7 fix)", "FCRI → 0–4", "FCRI item 13 reversed"]),
@@ -125,7 +125,7 @@ def preprocessing_pipeline(cfg, paths, info):
         for a, b in [("raw", "parse"), ("parse", "q"), ("q", "imp"), ("imp", "cur")]:
             d.edge(a, b)
     with g.subgraph(name="cluster_fold") as f:
-        f.attr(label="Fitted on each training fold only", style="dashed,rounded", color="#c4471b",
+        f.attr(label="Fitted on each training fold", style="dashed,rounded", color="#c4471b",
                fontcolor="#c4471b", fontname=FONT, fontsize=FS)
         _node(f, "oh", _html("One-hot encoding", ["categorical variables"]), "orange", width="2.0")
         _node(f, "mm", _html("Min-Max scaling", ["to [0, 1]"]), "orange", width="2.0")
@@ -255,7 +255,7 @@ def curation_flow(cfg, paths, info):
     prev = n_raw
     for s in cur[1:]:
         if s["n"] is None:
-            lines.append(s["step"].replace("Dropped ", "").replace(" rows with", " with"))
+            lines.append(s["step"].replace("Dropped ", "").replace(" rows with >50% missing questionnaire items", " with > 50% items missing"))
         elif s["step"].startswith("Excluded cancer type"):
             types = s["step"].split("[", 1)[1].rstrip("]").replace("'", "")
             lines.append(f"cancer type '{types}' (n = {int(prev - s['n'])})")

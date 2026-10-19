@@ -1,0 +1,1 @@
+Feature set B with the hybrid FS method of the corresponding main task; 2 × 5 outer folds.
