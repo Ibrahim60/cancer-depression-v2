@@ -57,7 +57,7 @@ flowchart TB
 
 | Step | What happens | Key detail |
 | --- | --- | --- |
-| 1 | Clean and convert | Text answers become BDI 0–3 / FCRI 0–4. Personal info removed. Bad rows dropped. Known issue: the negated answers of BDI items 6 and 7 are mis-scored (see MODEL_FLOW.md). |
+| 1 | Clean and convert | Text answers become BDI 0–3 / FCRI 0–4. Personal info removed. Bad rows dropped. The negated answers of BDI items 6 and 7 were mis-scored until 2026-10-26; saved models predate the fix (see MODEL_FLOW.md). |
 | 2 | Create labels | Binary: BDI total ≥ 11. Multiclass: Normal → Extreme (6 bands). |
 | 3 | Feature matrix | BDI + FCRI items + encoded demographics. |
 | 4 | Split | 80 / 20 stratified, shared by both tasks. |

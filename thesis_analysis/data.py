@@ -2,8 +2,9 @@
 
 The questionnaire parsing re-uses ``ClinicalDataPreprocessor`` from
 ``depression_detection_pipeline.py`` so the thesis and the deployed app share
-one scoring implementation. The only deviation is the BDI items 6/7
-correction configured in ``config.yaml`` (``data.bdi_zero_statements``).
+one scoring implementation. The BDI items 6/7 correction configured in
+``config.yaml`` (``data.bdi_zero_statements``) is kept as a guard; since the
+app parser was fixed on 2026-10-26 it no longer changes any score.
 """
 from __future__ import annotations
 

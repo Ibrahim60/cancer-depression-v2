@@ -808,7 +808,7 @@ def build(ds, cfg: dict[str, Any], paths: Paths) -> Path:
         "Whether six severity classes are reported, or the two lowest classes are merged (five classes).",
         "Whether participants under 18 and the inconsistent gender/cancer-type answers are excluded.",
         "Whether the instrument is described as BDI-I/BDI-IA instead of BDI-II in the methodology.",
-        "Whether the BDI items 6/7 scoring fix is applied to the app and the saved models are retrained.",
+        "Whether the saved models in models/ are retrained now that the BDI items 6/7 scoring is fixed in the app parser.",
         "Whether the Streamlit app should switch to an FCRI-based hybrid model.",
     ], numbered=True)
 

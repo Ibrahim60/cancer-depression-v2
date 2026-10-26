@@ -212,7 +212,7 @@ class ClinicalDataPreprocessor:
         # Keyword matching for legacy text format (ordered highest→lowest severity)
         keywords = {
             3: ['so sad and unhappy', 'future is hopeless', 'complete failure',
-                'dissatisfied or bored', 'guilty all of the time', 'i am being punished',
+                'dissatisfied or bored', 'guilty all of the time', 'i feel i am being punished',
                 'hate myself', 'blame myself for everything', 'would kill myself if i had',
                 "can't cry even though", 'irritated all the time', 'lost all of my interest',
                 "can't make decisions at all", 'look ugly', "can't do any work",
@@ -229,7 +229,7 @@ class ClinicalDataPreprocessor:
                 'almost no interest in sex'],
             1: ['i feel sad', 'feel discouraged', 'failed more than',
                 "don't enjoy things", 'guilty a good part', 'may be punished',
-                'disappointed in myself', 'critical of myself',
+                'i am disappointed in myself', 'critical of myself',
                 'thoughts of killing myself, but', 'cry more now than',
                 'slightly more irritated', 'less interested in other people',
                 'put off making decisions', 'worried that i am looking',
