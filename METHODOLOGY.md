@@ -56,7 +56,7 @@ The system has two phases that share one set of persisted artifacts in
    ├─ 4. Split & scale      one stratified 80/20 split, one StandardScaler
    ├─ 5. Train (§7–§8)      LR, RF, XGBoost tuned by 5-fold CV (macro-F1)
    │                        → soft-voting ensemble, per task (binary, multiclass)
-   ├─ 6. Threshold (§9)     out-of-fold search for the binary cut-off (0.46)
+   ├─ 6. Threshold (§9)     out-of-fold search for the binary cut-off (0.60)
    ├─ 7. Importance (§10)   mean of normalised RF + XGBoost importances
    ├─ 8. Evaluate (§10)     held-out test set (307 patients)
    └─ 9. Export             models/*.joblib, feature_metadata.json,
@@ -71,7 +71,7 @@ The system has two phases that share one set of persisted artifacts in
    3. Collect              5 demographic fields → BDI items → FCRI items
    4. Feature vector (§13.1) answered items + training means for unasked items
                            + encoded demographics, in training column order
-   5. Predict (§13.2)      scale → binary ensemble (P(depression) vs 0.46)
+   5. Predict (§13.2)      scale → binary ensemble (P(depression) vs 0.60)
                            → multiclass ensemble (6 severity probabilities)
    6. Reference scores (§13.3) rule-based BDI total and FCRI subscale/severity scores
    7. Final verdict (§13.4) model severity × FCRI severity → YES / POSSIBLE / NO
@@ -250,6 +250,28 @@ Earlier corrections to the same table (recorded in the pipeline header) fixed
 the item 15 frequency mapping (e.g. "A few times a month" → 1, not 2) and the
 item 17 top category ("Several years" → 4).
 
+### 4.9 BDI Items 6 and 7 Scoring Defect Found and Corrected
+
+A cross-check of every BDI response option against the published BDI scoring
+(found 2026-10-18, corrected 2026-10-26) showed that the keyword matcher
+(§4.2) scored the score-0 statements of two items as symptomatic. The
+keywords `'i am being punished'` (item 6, score 3) and
+`'disappointed in myself'` (item 7, score 1) also occur inside the score-0
+statements "I don't feel I am being punished" and "I don't feel disappointed
+in myself", and the matcher accepts the first keyword found anywhere in the
+answer. On the current dataset this mis-scored **374 item-6 answers (0 → 3)
+and 343 item-7 answers (0 → 1)**, inflated the BDI total of 516 patients
+(34%) by 1–4 points, and placed 185 patients (12%) one severity band too high
+(none too low); 33 patients with BDI < 11 were labelled as depressed.
+
+The keywords were narrowed to `'i feel i am being punished'` and
+`'i am disappointed in myself'`. After the fix all 21 × 4 response options
+map to their published scores (0 mismatches over 32,172 answers), and the
+models were retrained. The figures in §5, §6, §8, §9 and §12 are from the
+retrained models; the pre-fix run gave a BDI total mean of 30.7 (SD 12.1),
+86 "Normal" patients, binary ensemble test accuracy 0.9935 and multiclass
+ensemble test accuracy 0.8730.
+
 ---
 
 ## 5. Target Variable Definition
@@ -281,11 +303,11 @@ to labels through the encoder before display (§13.2); this mapping was the
 source of an earlier label bug and is the reason per-class results in §12.2
 are reported by name.
 
-On the cleaned dataset (N = 1,531; BDI total mean 30.7, SD 12.1, range
-3–63): binary class counts are 1,445 positive (94.4%) vs. 86 negative (5.6%)
+On the cleaned dataset (N = 1,531; BDI total mean 29.7, SD 13.0, range
+0–63): binary class counts are 1,412 positive (92.2%) vs. 119 negative (7.8%)
 — a substantial class imbalance addressed explicitly in training (§8).
-Multiclass counts: Moderate 466, Extreme 409, Severe 331, Borderline 126,
-Mild 113, Normal 86.
+Multiclass counts: Moderate 425, Extreme 399, Severe 317, Borderline 138,
+Mild 133, Normal 119.
 
 **Note on target construction (important methodological caveat):** because
 both targets are deterministic thresholded functions of the same 21 BDI item
@@ -386,7 +408,7 @@ differently, based on empirical comparison of the three base learners:
   Forest and XGBoost are substantially weaker on this harder 6-class task
   (§12.2) and were dragging the ensemble average down. Re-weighting the vote
   toward the strongest individual learner closed this gap: on the current
-  run the weighted ensemble reaches 87.3% accuracy vs. 86.6% for standalone
+  run the weighted ensemble reaches 88.6% accuracy vs. 87.0% for standalone
   Logistic Regression.
 
 This is reported as a methodological decision rather than a default,
@@ -418,7 +440,7 @@ oversampling (e.g. SMOTE):
    further tune the binary classifier's operating point.
 
 Synthetic oversampling was deliberately avoided given (a) the small absolute
-minority-class count (86 patients), which limits the diversity of
+minority-class count (119 patients), which limits the diversity of
 interpolated synthetic samples and risks tight clustering around a few real
 points, and (b) all features being ordinal (BDI 0–3, FCRI 0–4) or categorical
 — SMOTE-style interpolation can generate non-integer "phantom" item
@@ -444,10 +466,12 @@ is persisted (`feature_metadata.json → binary_threshold`) and applied at
 inference time in place of the sklearn default (falling back to 0.5 if an
 older metadata file lacks it).
 
-On the current dataset, the tuned threshold was **0.46** (CV macro-F1 0.978
-vs. 0.974 at the default 0.50); applying it to the held-out test set raised
-"No Depression" precision from 0.94 to a perfect **1.00** at the same 0.94
-recall (§12.1).
+On the current dataset, the tuned threshold was **0.60** (CV macro-F1 0.949
+vs. 0.948 at the default 0.50). On the held-out test set it trades precision
+for recall in the "No Depression" class: recall rises from 0.88 to 0.96
+(21 → 23 of 24 patients) and precision falls from 1.00 to 0.85 (§12.1). The
+CV gain over 0.50 is small (0.001), so the choice between the two thresholds
+is close to a tie on this data.
 
 ---
 
@@ -493,7 +517,7 @@ and is persisted to `models/feature_importance.csv`.
 ## 12. Results
 
 Figures below are from the training run of the current code, incorporating
-all corrections described in §4.8, §7.4, §8, and §9 (the current deployed
+all corrections described in §4.8, §4.9, §7.4, §8, and §9 (the current deployed
 model artifacts).
 
 ### 12.1 Binary Task (Has Depression: Yes/No)
@@ -502,26 +526,27 @@ Cross-validated hyperparameter selection (macro-F1):
 
 | Model | Best hyperparameters | CV macro-F1 |
 |---|---|---|
-| Logistic Regression | `C=1` | 0.9495 |
-| Random Forest | `max_depth=10, min_samples_split=2, n_estimators=200` | 0.9526 |
-| XGBoost | `learning_rate=0.1, max_depth=3, n_estimators=200` | 0.9703 |
+| Logistic Regression | `C=1` | 0.9437 |
+| Random Forest | `max_depth=None, min_samples_split=5, n_estimators=200` | 0.9243 |
+| XGBoost | `learning_rate=0.1, max_depth=3, n_estimators=100` | 0.9625 |
 
 Held-out test-set performance (default 0.5 threshold):
 
 | Model | Accuracy | F1 (weighted) | ROC-AUC | "No Depression" P / R / F1 |
 |---|---|---|---|---|
-| Logistic Regression | 0.9805 | 0.9814 | 0.9986 | 0.76 / 0.94 / 0.84 |
-| Random Forest | 0.9935 | 0.9935 | 0.9972 | 0.94 / 0.94 / 0.94 |
-| XGBoost | 0.9739 | 0.9758 | 0.9933 | 0.70 / 0.94 / 0.80 |
-| **Voting Ensemble** | **0.9935** | **0.9935** | **0.9974** | **0.94 / 0.94 / 0.94** |
+| Logistic Regression | 0.9837 | 0.9839 | 0.9971 | 0.88 / 0.92 / 0.90 |
+| Random Forest | 0.9870 | 0.9870 | 0.9981 | 0.92 / 0.92 / 0.92 |
+| XGBoost | 0.9674 | 0.9695 | 0.9956 | 0.72 / 0.96 / 0.82 |
+| **Voting Ensemble** | **0.9902** | **0.9899** | **0.9987** | **1.00 / 0.88 / 0.93** |
 
-At the CV-tuned threshold (0.46) applied to the test set, the ensemble
-reaches **100% accuracy** (rounded), with "No Depression" precision/recall/F1
-of **1.00 / 0.94 / 0.97**.
+At the CV-tuned threshold (0.60) applied to the test set, the ensemble
+reaches **98% accuracy** (rounded), with "No Depression" precision/recall/F1
+of **0.85 / 0.96 / 0.90**.
 
-*Interpretation caveat:* the "No Depression" class has only 17 test-set
-members; a recall of 0.94 is 16 of 17, and single-percentage-point
-differences in its metrics correspond to roughly one patient. They should be
+*Interpretation caveat:* the "No Depression" class has only 24 test-set
+members; a recall of 0.88 is 21 of 24 and 0.96 is 23 of 24, so
+differences of about four percentage points in its metrics correspond to one
+patient. They should be
 read as indicative rather than statistically precise given this sample size.
 
 ### 12.2 Multiclass Task (6-Level Severity)
@@ -530,36 +555,36 @@ Cross-validated hyperparameter selection (macro-F1):
 
 | Model | Best hyperparameters | CV macro-F1 |
 |---|---|---|
-| Logistic Regression | `C=10` | 0.7890 |
-| Random Forest | `max_depth=10, min_samples_split=5, n_estimators=200` | 0.6711 |
-| XGBoost | `learning_rate=0.1, max_depth=3, n_estimators=100` | 0.6534 |
+| Logistic Regression | `C=10` | 0.7822 |
+| Random Forest | `max_depth=None, min_samples_split=2, n_estimators=200` | 0.6856 |
+| XGBoost | `learning_rate=0.1, max_depth=3, n_estimators=200` | 0.6551 |
 
 Held-out test-set performance:
 
 | Model | Accuracy | F1 (weighted) | ROC-AUC (macro OvR) |
 |---|---|---|---|
-| Logistic Regression | 0.8664 | 0.8688 | 0.9848 |
-| Random Forest | 0.7557 | 0.7470 | 0.9418 |
-| XGBoost | 0.7068 | 0.7097 | 0.9361 |
-| **Voting Ensemble (LR-weighted)** | **0.8730** | **0.8722** | **0.9832** |
+| Logistic Regression | 0.8697 | 0.8706 | 0.9873 |
+| Random Forest | 0.7199 | 0.7123 | 0.9386 |
+| XGBoost | 0.7036 | 0.7060 | 0.9264 |
+| **Voting Ensemble (LR-weighted)** | **0.8860** | **0.8860** | **0.9835** |
 
 Per-class F1 on the test set, all models (classes in severity order):
 
 | Severity class | n (test) | Logistic Regression | Random Forest | XGBoost | Voting Ensemble (P / R / F1) |
 |---|---|---|---|---|---|
-| Normal | 17 | 0.82 | 0.86 | 0.81 | 0.89 / 0.94 / **0.91** |
-| Mild mood disturbance | 23 | 0.74 | 0.60 | 0.49 | 0.82 / 0.78 / **0.80** |
-| Borderline clinical depression | 28 | 0.59 | 0.27 | 0.26 | 0.56 / 0.54 / **0.55** |
-| Moderate depression | 107 | 0.88 | 0.81 | 0.72 | 0.89 / 0.86 / **0.88** |
-| Severe depression | 55 | 0.91 | 0.68 | 0.68 | 0.85 / 0.96 / **0.91** |
-| Extreme depression | 77 | 0.97 | 0.90 | 0.93 | 0.99 / 0.96 / **0.97** |
+| Normal | 24 | 0.83 | 0.84 | 0.83 | 0.91 / 0.88 / **0.89** |
+| Mild mood disturbance | 27 | 0.75 | 0.56 | 0.52 | 0.84 / 0.78 / **0.81** |
+| Borderline clinical depression | 30 | 0.73 | 0.28 | 0.34 | 0.73 / 0.80 / **0.76** |
+| Moderate depression | 87 | 0.89 | 0.78 | 0.73 | 0.90 / 0.91 / **0.90** |
+| Severe depression | 59 | 0.88 | 0.66 | 0.67 | 0.89 / 0.85 / **0.87** |
+| Extreme depression | 80 | 0.95 | 0.86 | 0.87 | 0.94 / 0.96 / **0.95** |
 
 The **"Borderline clinical depression" class (BDI 17–20) is the hardest to
-classify** for every model (F1 0.26–0.59). It is the narrowest severity band
+classify** for every model (F1 0.28–0.76). It is the narrowest severity band
 (four score points) and sits between two neighbouring classes, so a one- or
 two-point disagreement in a few items moves a patient across a boundary. The
 "Normal" class, despite being the smallest, is classified well (ensemble F1
-0.91); like Extreme, it is an end band with only one neighbouring class to
+0.89); like Extreme, it is an end band with only one neighbouring class to
 be confused with. This is discussed further in §16.2.
 
 *Correction note:* an earlier version of this document listed per-class
@@ -572,15 +597,24 @@ figures in severity order against the encoder's alphabetical class order
 
 Top BDI items by combined Random Forest + XGBoost importance (binary task),
 in rank order — the first 10 form the Quick Assessment BDI item set (§14.1):
-item 18 (Appetite Changes), item 2 (Pessimism), item 16 (Sleep
-Disturbance), item 14 (Body Image), item 20 (Somatic Preoccupation), item 13
-(Indecisiveness), item 19 (Weight Loss), item 11 (Agitation), item 15 (Work
-Inhibition), item 4 (Loss of Pleasure).
+item 6 (Punishment Feelings), item 5 (Guilty Feelings), item 2
+(Pessimism), item 16 (Sleep Disturbance), item 15 (Work Inhibition), item 3
+(Past Failure), item 18 (Appetite Changes), item 4 (Loss of Pleasure), item
+14 (Body Image), item 11 (Agitation).
+
+Item 6 ranks first with a combined importance of 0.197, against 0.075 for
+item 5. Most of this comes from XGBoost (0.285 vs. 0.110 in Random Forest);
+gradient boosting tends to concentrate importance on one of several
+correlated predictors. Item 6's correlation with the binary label (0.36) is
+in line with the other top items (items 5 and 18: 0.37 and 0.36). Before the
+§4.9 fix, 374 item-6 "no symptom" answers were scored 3, which made the item
+noisy and kept it out of the top 10.
 
 Top 5 FCRI items — the Quick Assessment FCRI item set: item 14 (Perceived
-risk of recurrence), item 10 (Fear of recurrence), item 9 (Worry about
-recurrence), item 15 (Frequency of recurrence thoughts), item 13 (Belief in
-cure, reverse-scored). All five belong to the Severity subscale.
+risk of recurrence), item 25 (Ability to make future plans), item 15
+(Frequency of recurrence thoughts), item 9 (Worry about recurrence), item 16
+(Time spent thinking about recurrence). Four belong to the Severity subscale;
+item 25 belongs to the Functioning impairments subscale.
 
 These rankings are regenerated on every training run, so the specific items
 may shift as the underlying dataset grows or is corrected.
@@ -617,7 +651,7 @@ training means.
 The vector is standardised with the saved scaler, then:
 
 - **Binary ensemble** → P(depression). The patient is classed as "depression
-  detected" if P ≥ the tuned threshold (0.46, §9).
+  detected" if P ≥ the tuned threshold (0.60, §9).
 - **Multiclass ensemble** → six class probabilities. These are mapped from
   the encoder's alphabetical class ids back to severity order (§5); the
   predicted severity is the most probable class, and its probability is
@@ -676,9 +710,10 @@ a fixed clinical-default item set is used instead: BDI items 1, 2, 4, 5, 9,
 15, 16, 17, 18, 20 (covering the core DSM-5 depression domains) and the first
 five of a one-item-per-subscale FCRI set (items 9, 14, 15, 18, 22).
 
-Because the current top-5 FCRI items all come from the Severity subscale,
-Quick mode reports a Severity score extrapolated from 5 of 9 items and does
-not assess the other six FCRI subscales.
+Because four of the current top-5 FCRI items come from the Severity
+subscale, Quick mode reports a Severity score extrapolated from 4 of 9 items;
+the fifth item (25) is one of six Functioning impairments items, and the
+other five FCRI subscales are not assessed.
 
 ### 14.2 Full Assessment
 
@@ -775,13 +810,14 @@ mean-imputed) has not been separately evaluated and is expected to be lower.
 ### 16.2 Boundary-Class Performance
 
 Multiclass performance is weakest on the **Borderline clinical depression**
-band (ensemble F1 0.55; §12.2) and, to a lesser degree, the Mild band (F1
-0.80). Both are narrow bands sitting between neighbouring classes, so small
+band (ensemble F1 0.76; §12.2) and, to a lesser degree, the Mild band (F1
+0.81). Both are narrow bands sitting between neighbouring classes, so small
 item-level differences move patients across a boundary. This matters
 clinically because Borderline is exactly the band at which the final verdict
 (§13.4) switches from NO/POSSIBLE to YES. The "Normal" class is small in
-absolute terms (86 of 1,531 patients, 17 in the test set), so its strong
-figures (binary recall 16/17; multiclass F1 0.91) rest on very few patients;
+absolute terms (119 of 1,531 patients, 24 in the test set), so its strong
+figures (binary recall 21/24 at 0.50 and 23/24 at the tuned threshold;
+multiclass F1 0.89) rest on very few patients;
 recruiting more genuinely non-depressed and borderline patients is the most
 useful direction for future data collection.
 

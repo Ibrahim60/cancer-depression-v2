@@ -110,14 +110,14 @@ flowchart TD
 | 31–40 | Severe depression |
 | 41–63 | Extreme depression |
 
-> **Scoring issue in the training data (found 2026-10-18, parser fixed 2026-10-26).** `_parse_bdi()` matches
-> keywords inside the answer text, and the keywords `'i am being punished'` and `'disappointed in myself'`
+> **Scoring issue in the training data (found 2026-10-18, fixed and retrained 2026-10-26).** `_parse_bdi()`
+> matches keywords inside the answer text, and the keywords `'i am being punished'` and `'disappointed in myself'`
 > also matched the score-0 statements of BDI item 6 ("I don't feel I am being punished") and item 7
 > ("I don't feel disappointed in myself"), scoring them 3 and 1. This affected 717 answers and 185 severity
 > labels in `Data/cancer_psychology.csv`. The keywords are now `'i feel i am being punished'` and
-> `'i am disappointed in myself'`, and all 21 items score as in the official BDI. The saved models in
-> `models/` were trained before the fix and have not been retrained. The app is not affected at prediction
-> time, because the Assessment page scores answers by option position.
+> `'i am disappointed in myself'`, all 21 items score as in the official BDI, and the models in `models/`
+> were retrained on the corrected labels (METHODOLOGY.md §4.9). The app's own scoring was never affected,
+> because the Assessment page scores answers by option position.
 
 ---
 
@@ -176,7 +176,7 @@ flowchart TD
     SCL --> BIN["Binary voting ensemble<br/>predict_proba"]
     SCL --> MUL["Multiclass voting ensemble<br/>predict_proba"]
 
-    BIN --> TH{"P(depression) ≥ tuned threshold?<br/>(binary_threshold ≈ 0.46)"}
+    BIN --> TH{"P(depression) ≥ tuned threshold?<br/>(binary_threshold ≈ 0.60)"}
     TH -- Yes --> BP1["binary_pred = 1"]
     TH -- No --> BP0["binary_pred = 0"]
 

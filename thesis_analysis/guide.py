@@ -463,8 +463,8 @@ def build(ds, cfg: dict[str, Any], paths: Paths) -> Path:
         D.h("Data problems found", 2)
         D.bullets([
             f"{quality['bdi_items_6_7_rescored']} answers to BDI items 6 and 7 had been scored wrongly by the "
-            "original parser (\"I don't feel ...\" was scored as a symptom). They were corrected here; the saved "
-            "app models in models/ were trained before this fix.",
+            "original parser (\"I don't feel ...\" was scored as a symptom). They were corrected here, and the "
+            "app parser was fixed and its models in models/ retrained on 26 Oct 2026.",
             f"{quality['male_with_female_specific_cancer']} men report ovarian or cervical cancer and "
             f"{quality['female_with_prostate_cancer']} women report prostate cancer.",
             f"{quality['under_18']} participants are under 18 years old.",
@@ -808,7 +808,6 @@ def build(ds, cfg: dict[str, Any], paths: Paths) -> Path:
         "Whether six severity classes are reported, or the two lowest classes are merged (five classes).",
         "Whether participants under 18 and the inconsistent gender/cancer-type answers are excluded.",
         "Whether the instrument is described as BDI-I/BDI-IA instead of BDI-II in the methodology.",
-        "Whether the saved models in models/ are retrained now that the BDI items 6/7 scoring is fixed in the app parser.",
         "Whether the Streamlit app should switch to an FCRI-based hybrid model.",
     ], numbered=True)
 

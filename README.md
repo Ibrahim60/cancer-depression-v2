@@ -266,7 +266,7 @@ Binary Classification:
   - Voting Ensemble Accuracy: ~99%
   
 Multi-class Classification:
-  - Voting Ensemble Accuracy: ~99%
+  - Voting Ensemble Accuracy: ~89%
 
 Models saved to: models/
 ```
@@ -403,8 +403,8 @@ groups, CV design, search spaces, plot style) are in `thesis_analysis/config.yam
 - Every analysis is reported for all rows and for the subset that excludes rows matching
   mock-generator output in the git history (see `RESULTS_SUMMARY.md`).
 - The BDI parser's scoring of the negated answers of items 6 and 7 was fixed in
-  `depression_detection_pipeline.py` on 2026-10-26; this module also applies the correction from
-  `config.yaml`, so its results do not depend on that fix. The models in `models/` have not been retrained.
+  `depression_detection_pipeline.py` on 2026-10-26 and the models in `models/` were retrained; this module
+  also applies the correction from `config.yaml`, so its results do not depend on that fix.
 
 ## Depression Severity Levels
 
